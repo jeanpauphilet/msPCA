@@ -1,5 +1,6 @@
 include("utilities.jl")
 
+using Arpack
 using Printf
 function findmultPCs_deflation(Sigma::Array{Float64, 2}, r::Int64, ks::Array{Int64,1};
                     numIters::Int64 = 200, 
@@ -13,7 +14,6 @@ function findmultPCs_deflation(Sigma::Array{Float64, 2}, r::Int64, ks::Array{Int
     violation_best = n
     x_best = zeros(n,r)
     x_current = zeros(size(Sigma,1), r) # Trying this to see if it improves our results, which are sometimes not so great when we start at 0
-    violation_init = max(sum(abs.(x_init'*x_init .- Diagonal(ones(r)))),1e-7)
     ofv_prev = 0.0
     ofv_overall = 0.0
     

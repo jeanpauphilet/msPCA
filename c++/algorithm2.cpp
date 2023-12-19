@@ -1,6 +1,6 @@
-// pour compiler
+// to compile
 // g++ -shared -o algorithm2.so algorithm2.h -I/path/to/eigen3/includes
-// EXEMPLE : g++ -shared -o algorithm2.so algorithm2.h -I/usr/include/eigen3
+// EXAMPLE : g++ -shared -o algorithm2.so algorithm2.h -I/usr/include/eigen3
 
 #include <cstdio>
 #include <ctime>

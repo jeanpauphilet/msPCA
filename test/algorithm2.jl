@@ -1,6 +1,8 @@
 n = 5::Int
 r = 3::Int
 Sigma = rand(Float64, n, n)
+Sigma = Sigma*Sigma' #Make it PSD 
+
 ks = [1, 2, 3]::Vector{Int}
 numIters = 200::Int
 verbose = 1::Int
