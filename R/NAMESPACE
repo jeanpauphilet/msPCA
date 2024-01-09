@@ -1,0 +1,3 @@
+useDynLib(sPCAmPC)
+importFrom(Rcpp, evalCpp)
+export("cpp_findmultPCs_deflation")
