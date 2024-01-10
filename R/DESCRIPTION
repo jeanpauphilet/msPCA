@@ -1,11 +1,11 @@
 Package: sPCAmPC
 Type: Package
-Title: What the package does (short line)
+Title: Sparse Principal Component Analysis with Multiple Principal Components
 Version: 1.0
-Date: 2023-12-24
+Date: 2024-02-01
 Author: Jean Pauphilet
 Maintainer: Jean Pauphilet <jpauphilet@london.edu>
-Description: More about what it does (maybe more than one line).
+Description: Algorithm for computing multiple sparse principal components of a dataset. The algorithm is based on the paper "Sparse PCA with Multiple Principal Components" by Ryan Cory-Wright and Jean Pauphilet (2023) <arXiv:2209.14790>.
 License: MIT + file LICENSE
 Imports: Rcpp (>= 1.0.11)
 LinkingTo: Rcpp, RcppEigen
