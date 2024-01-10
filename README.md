@@ -11,7 +11,7 @@ IDE: RStudio<br />
 If you use RStudio, you can use this library by typing the following into the console,<br />
 `library(devtools)`<br />
 I guess devtools needs to be installed if it has never been installed. To install, use `install.packages("devtools")`.<br />
-`install_github('ChenkaiMa/R_try_dir')`<br />
+`install_github('jeanpauphilet/sPCAmPC')`<br />
 wait until the installation is finished<br />
 `library(sPCAmPC)`<br />
 Then, input the variables and call the function.<br />
