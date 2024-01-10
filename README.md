@@ -61,7 +61,7 @@ Then, input the variables and call the function.<br />
     - /sPCAmPC_R_CPP.cpp<br />
       It contains the implementation of the algorithm.
     - RcppExports.cpp<br />
-      It contains the converted function that can be used by R. Regenerate or change it manually if needed (e.g., if the interface changes). It can be generated using Rcpp::compileAttributes().
+      It contains the converted function that can be used by R. Regenerate or change it manually if needed (e.g., if the interface changes). It can be generated using `Rcpp::compileAttributes()`.
     - Makevars<br />
       This is not currently used. Use it to set attributes, such as the version of C++ for compilation.
     - Makevars.win<br />
