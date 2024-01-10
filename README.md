@@ -46,19 +46,19 @@ Then, input the variables and call the function.<br />
 <br />
 `cpp_findmultPCs_deflation(TestMat, TestRound, TestKS, TestNumIters)`
 ## Files
-- /sPCAmPC
-  - /R
-    - /RcppExports.R<br />
+- sPCAmPC
+  - R
+    - RcppExports.R<br />
       It offers the R interface, which will call the corresponding C++ interface. Regenerate or change it manually if needed (e.g., if the interface changes). It can be generated using `Rcpp::compileAttributes()`.
-  - /man
-    - /sPCAmPC-package.Rd<br />
+  - man
+    - sPCAmPC-package.Rd<br />
       It offers the information for entry "sPCAmPC-package" and entry "sPCAmPC" on "Help Pages". It introduces this package.
-    - /sPCAmPC_R_CPP.Rd<br />
+    - sPCAmPC_R_CPP.Rd<br />
       It offers the information for the entry "cpp_findmultPCs_deflation". It introduces the function, "cpp_findmultPCs_deflation".
-  - /src
-    - /ConstantArguments.h<br />
+  - src
+    - ConstantArguments.h<br />
       It contains the arguments used in the algorithm. (This file needs to change depending on your decision regarding issues written in "Notes".)
-    - /sPCAmPC_R_CPP.cpp<br />
+    - sPCAmPC_R_CPP.cpp<br />
       It contains the implementation of the algorithm.
     - RcppExports.cpp<br />
       It contains the converted function that can be used by R. Regenerate or change it manually if needed (e.g., if the interface changes). It can be generated using `Rcpp::compileAttributes()`.
@@ -66,11 +66,11 @@ Then, input the variables and call the function.<br />
       This is not currently used. Use it to set attributes, such as the version of C++ for compilation.
     - Makevars.win<br />
       This is not currently used. Use it to set attributes, such as the version of C++ for compilation.
-  - /NAMESPACE<br />
+  - NAMESPACE<br />
     It is used to build this package. Change it if needed (e.g., if the interface changes).
-  - /DESCRIPTION<br />
+  - DESCRIPTION<br />
     It contains the description of this package.
-  - /LICENSE<br />
+  - LICENSE<br />
     It contains the license information.
   - sPCAmPC.Rproj<br />
     It contains the settings of this R project. It is used by RStudio and often does not need to be changed.
