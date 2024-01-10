@@ -74,3 +74,6 @@ Then, input the variables and call the function.<br />
     It contains the license information.
   - sPCAmPC.Rproj<br />
     It contains the settings of this R project. It is used by RStudio and often does not need to be changed.
+## Guidance to future developers
+- Except for the C++ code, which is contained under the "/src", the files in this package are usually expected for an R package using C++ code. More information can be found by checking the documentation for R packages.
+- The essence of this algorithm is in the file "sPCAmPC_R_CPP.cpp" and the file "ConstantArguments.h", where "sPCAmPC_R_CPP.cpp" handles the computation and "ConstantArguments.h" lists all arguments. (This needs to change depending on your decisions on arguments.)
