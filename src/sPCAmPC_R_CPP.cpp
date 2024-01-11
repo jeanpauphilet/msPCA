@@ -15,6 +15,7 @@ double violation_best;
 double lambda_partial;
 Eigen::VectorXd x_output;
 
+// Absolute value of a double
 double absoluteDouble(double aNumber) {
   if (aNumber >= 0) {
     return aNumber;
@@ -40,13 +41,16 @@ int find_the_index(Rcpp::NumericVector aVector, double aNumber, const Rcpp::Nume
   return 0;
 }
 
-double evaluate(const Eigen::VectorXd& solution)
+// Compute the value x^T Sigma x 
+double evaluate(const Eigen::VectorXd& x)
 {
-  return (solution.transpose() * prob_Sigma * solution)[0];
+  return (x.transpose() * prob_Sigma * x)[0];
 }
 
+// Selects the k indices of x corresponding the k largest coordinates (in absolute value)
 Rcpp::NumericVector selectperm2(const Eigen::VectorXd& x, int k)
 {
+  // Question for Chenkai: We know the final size of the vector, so why not use a vector instead of a list?
   Rcpp::NumericVector numbers{};
   for (int i = 0; i < x.size(); i++) {
     numbers.push_back(absoluteDouble(x(i)));
@@ -57,15 +61,17 @@ Rcpp::NumericVector selectperm2(const Eigen::VectorXd& x, int k)
     originalNumbers.push_back(numbers[i]);
   }
 
+  // Question for Chenkai: Is there a faster/cleaner way to code a sortperm function? 
   numbers.sort();
   Rcpp::NumericVector indexes{};
   for (int i = 0, j = numbers.size() - 1; i < k; i++, j--) {
-    int index = find_the_index(originalNumbers, numbers[j], indexes);
+    int index = find_the_index(originalNumbers, numbers[j], indexes); // Question for Chenkai: I am not sure I understand what this line does
     indexes.push_back(index);
   }
   return indexes;
 }
 
+// Trucating heuristic: Takes a vector origlist, keeps only the k (k=sparsity) largest coordinates (in absolute value), and normalizes the vector 
 Eigen::VectorXd Hk(const Eigen::VectorXd& origlist, int sparsity, const Rcpp::NumericVector& support)
 {
   Eigen::VectorXd list = origlist;
@@ -76,7 +82,7 @@ Eigen::VectorXd Hk(const Eigen::VectorXd& origlist, int sparsity, const Rcpp::Nu
     nbIndicesToKeep += s == 1;
   }
 
-  double dummyValue = list(0) - 1;
+  double dummyValue = list(0) - 1; 
   for (size_t i = 0; i < list.size(); i++)
   {
     if (list(i) - 1 < dummyValue) {
@@ -87,6 +93,7 @@ Eigen::VectorXd Hk(const Eigen::VectorXd& origlist, int sparsity, const Rcpp::Nu
   {
     if (support[i] > -1)
     {
+      // kparse[i] = origlist[i]; // Question for Chenkai: I think this initialization is needed
       list[i] = dummyValue;
     }
   }
@@ -105,11 +112,12 @@ Eigen::VectorXd eigSubset(const Rcpp::NumericVector& support, int k, const Eigen
   Eigen::VectorXd beta = Hk(beta0, k, support);
   for (int i = 0; i < 100; i++)
   {
-    beta = Hk(prob_Sigma * beta, k, support);
+    beta = Hk(prob_Sigma * beta, k, support); // Question for Chenkai: Is prob_Sigma * beta a proper matrix-vector multiplication?
   }
   return beta;
 }
 
+// Note from Jean: support should be a vector of size n with +/- 1. If support[i] = 1, then the i-th coordinate needs to be included. Otherwise, it is free. Flexibility to be removed. 
 void subset(int k, int timeLimit, Rcpp::NumericVector& support, int countdown = 100)
 {
   int n = prob_Sigma.rows();
@@ -117,6 +125,7 @@ void subset(int k, int timeLimit, Rcpp::NumericVector& support, int countdown = 
   int index;
   solver.eigenvalues().maxCoeff(&index);
   Eigen::VectorXd beta0 = solver.eigenvectors().col(index);
+  
   if (support.size() == 1)
   {
     support[0] = -1;
@@ -136,7 +145,7 @@ void subset(int k, int timeLimit, Rcpp::NumericVector& support, int countdown = 
         beta(i, j) = R::rnorm(0, 1);
       }
     }
-    beta = beta / beta0.norm();
+    // beta = beta / beta0.norm();
     beta = eigSubset(support, k, beta);
     double obj = evaluate(beta);
     if (obj > bestObj)
