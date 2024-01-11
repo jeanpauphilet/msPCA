@@ -152,6 +152,7 @@ void subset(int k, int timeLimit, Rcpp::NumericVector& support, int countdown = 
   return;
 }
 
+// Computes the orthogonality violation of a family of r vectors x, defined as |x^T x - I_r|
 double fnviolation(const Eigen::MatrixXd& x)
 {
   double v = 0;
