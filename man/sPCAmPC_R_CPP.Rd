@@ -7,15 +7,15 @@
   Notice only cpp_findmultPCs_deflation is the interface for usage in R.
 }
 \usage{
-cpp_findmultPCs_deflation(Sigma, r, ks, numIters, verbose, violation_tolerance)
+cpp_findmultPCs_deflation(Sigma, r, ks, numIters = 200L, verbose = TRUE, violation_tolerance = 1e-4)
 }
 \arguments{
-  \item{Sigma}{a matrix. Notice these should be changed later.}
-  \item{r}{description for r. Notice these should be changed later.}
-  \item{ks}{description for ks. Notice these should be changed later.}
-  \item{numIters}{description for numIters. Notice these should be changed later.}
-  \item{verbose}{description for verbose. Notice these should be changed later.}
-  \item{violation_tolerance}{description for violation_tolerance. Notice these should be changed later.}
+  \item{Sigma}{Matrix. The correlation or covariance matrix, whose sparse PCs will be computed.}
+  \item{r}{Integer. Number of principal components (PCs) to be computed.}
+  \item{ks}{List of integers. Target sparsity of each PC.}
+  \item{numIters}{Integer. Maximum number of iterations of the algorithm. Default 200.}
+  \item{verbose}{Boolean. Default TRUE.}
+  \item{violation_tolerance}{Float. Tolerance for the violation of the orthogonality constraints.}
 }
 \value{
   \code{cpp_findmultPCs_deflation(Sigma, r, ks, numIters, verbose, violation_tolerance)} will return a value to indicate something, and may output some message on the console.
@@ -25,7 +25,8 @@ cpp_findmultPCs_deflation(Sigma, r, ks, numIters, verbose, violation_tolerance)
   Introduce these functions more.
 }
 \references{
-  Perhaps refer to your own paper?
+This function implements the iterative deflation heuristic (Algorithm 2) of:
+Cory-Wright, R., & Pauphilet, J. (2022). Sparse PCA With Multiple Components. arXiv preprint arXiv:2209.14790.
 }
 \examples{
   ## these are random numbers
@@ -60,5 +61,5 @@ TestNumIters <- 20
 
 cpp_findmultPCs_deflation(TestMat, TestRound, TestKS, TestNumIters)
 }
-\author{Dr Jean Pauphilet}
+\author{Dr. Jean Pauphilet}
 
