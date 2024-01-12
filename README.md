@@ -65,14 +65,10 @@ Here, we provide more information about the code structure and organization to h
 - R
   - RcppExports.R<br />
       It offers the R interface, which will call the corresponding C++ interface. Regenerate or change it manually if needed (e.g., if the interface changes). It can be generated using `Rcpp::compileAttributes()`.
-- man
-  - sPCAmPC-package.Rd<br />
-      It offers the information for entry "sPCAmPC-package" and entry "sPCAmPC" on "Help Pages". It introduces this package.
-  - sPCAmPC_R_CPP.Rd<br />
-      It offers the information for the entry "cpp_findmultPCs_deflation". It introduces the function, "cpp_findmultPCs_deflation".
-- src
+- man/ contains the pages of the manual: one page for the package and one per function. 
+- src/ contains the source files of the algorithm, in C++. 
   - ConstantArguments.h<br />
-      It contains the arguments used in the algorithm. (This file needs to change depending on your decision regarding issues written in "Notes".)
+      It contains some parameters of the algorithm that are not directly tuneable by the end user.
   - sPCAmPC_R_CPP.cpp<br />
       It contains the implementation of the algorithm.
   - RcppExports.cpp<br />
@@ -90,5 +86,4 @@ Here, we provide more information about the code structure and organization to h
 - sPCAmPC.Rproj<br />
     It contains the settings of this R project. It is used by RStudio and often does not need to be changed.
 ## Guidance to future developers
-- Except for the C++ code, which is contained under the "/src", the files in this package are usually expected for an R package using C++ code. Basic information can be found in the [Files section](#Files). More information can be found by checking the documentation for R packages.
 - The essence of this algorithm is in the file "sPCAmPC_R_CPP.cpp" and the file "ConstantArguments.h", where "sPCAmPC_R_CPP.cpp" handles the computation and "ConstantArguments.h" lists all arguments. (This needs to change depending on your decisions on arguments.)
