@@ -1,20 +1,26 @@
 # sPCAmPC
 An R Package for Sparse PCA with Multiple Principal Components
-## Notes
-- You can change the variable names.
-- You can decide if you want to assign names to plain numbers or add comments for them.
-- The help menu of the R package needs to change.
-## Tools
-IDE: RStudio<br />
-(It can be used without RStudio, though I have not yet tried this.) 
-## Usage
-If you use RStudio, you can use this library by typing the following into the console,<br />
-`library(devtools)`<br />
-I guess devtools needs to be installed if it has never been installed. To install, use `install.packages("devtools")`.<br />
+
+## Installation 
+This package can be installed in R directly from the Github repository. To do so, you will first need to install `devtools`:
+<br />`install.packages("devtools")`<br />
+And then run the following commands: 
+<br /> `library(devtools)`<br />
 `install_github('jeanpauphilet/sPCAmPC')`<br />
-wait until the installation is finished<br />
+
+## Getting started
+The package consists of one main function, `sPCAmPC`, which takes as input:
+- a data matrix (either the correlation or covariance matrix of the dataset),
+- the number of principal components (PCs) to be computed, r,
+- a list of r integers corresponding to the sparsity of each PC.
+  
+It returns...
+
+Here is a short example demonstrating how to use the package. First, you need to load the library. 
+<br />
 `library(sPCAmPC)`<br />
-Then, input the variables and call the function.<br />
+Then, define the input variables.
+<br />
 `TestMat <- matrix(`<br />
 `  c(0.907247, -0.00283434, 0.0259237, -0.0184396, -0.0179678,`<br />
 `    -0.0593399, 0.0556192, -0.0373431, -0.0370315, -0.00805812,`<br />
@@ -42,38 +48,46 @@ Then, input the variables and call the function.<br />
 `)`<br />
 `TestRound <- 2`<br />
 `TestKS <- c(4, 4)`<br />
-`TestNumIters <- 20`<br />
+And then simmply call the function
 <br />
-`cpp_findmultPCs_deflation(TestMat, TestRound, TestKS, TestNumIters)`
+`cpp_findmultPCs_deflation(TestMat, TestRound, TestKS)`
 <a id="Files"></a>
+
+## Development 
+Here, we provide more information about the code structure and organization to help developers that would like to improve the method or build up on it. 
+
+## Notes
+- You can change the variable names.
+- You can decide if you want to assign names to plain numbers or add comments for them.
+- The help menu of the R package needs to change.
+
 ## Files
-- sPCAmPC
-  - R
-    - RcppExports.R<br />
+- R
+  - RcppExports.R<br />
       It offers the R interface, which will call the corresponding C++ interface. Regenerate or change it manually if needed (e.g., if the interface changes). It can be generated using `Rcpp::compileAttributes()`.
-  - man
-    - sPCAmPC-package.Rd<br />
+- man
+  - sPCAmPC-package.Rd<br />
       It offers the information for entry "sPCAmPC-package" and entry "sPCAmPC" on "Help Pages". It introduces this package.
-    - sPCAmPC_R_CPP.Rd<br />
+  - sPCAmPC_R_CPP.Rd<br />
       It offers the information for the entry "cpp_findmultPCs_deflation". It introduces the function, "cpp_findmultPCs_deflation".
-  - src
-    - ConstantArguments.h<br />
+- src
+  - ConstantArguments.h<br />
       It contains the arguments used in the algorithm. (This file needs to change depending on your decision regarding issues written in "Notes".)
-    - sPCAmPC_R_CPP.cpp<br />
+  - sPCAmPC_R_CPP.cpp<br />
       It contains the implementation of the algorithm.
-    - RcppExports.cpp<br />
+  - RcppExports.cpp<br />
       It contains the converted function that can be used by R. Regenerate or change it manually if needed (e.g., if the interface changes). It can be generated using `Rcpp::compileAttributes()`.
-    - Makevars<br />
+  - Makevars<br />
       This is not currently used. Use it to set attributes, such as the version of C++ for compilation.
-    - Makevars.win<br />
+  - Makevars.win<br />
       This is not currently used. Use it to set attributes, such as the version of C++ for compilation.
-  - NAMESPACE<br />
+- NAMESPACE<br />
     It is used to build this package. Change it if needed (e.g., if the interface changes).
-  - DESCRIPTION<br />
+- DESCRIPTION<br />
     It contains the description of this package.
-  - LICENSE<br />
+- LICENSE<br />
     It contains the license information.
-  - sPCAmPC.Rproj<br />
+- sPCAmPC.Rproj<br />
     It contains the settings of this R project. It is used by RStudio and often does not need to be changed.
 ## Guidance to future developers
 - Except for the C++ code, which is contained under the "/src", the files in this package are usually expected for an R package using C++ code. Basic information can be found in the [Files section](#Files). More information can be found by checking the documentation for R packages.
