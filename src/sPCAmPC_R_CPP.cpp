@@ -72,11 +72,11 @@ Eigen::VectorXd Hk(const Eigen::VectorXd& origlist, int sparsity, const Rcpp::Nu
     {
       // kparse[i] = origlist[i]; // Question for Chenkai: I think this initialization is needed
       /* Response: to me, "support" is very mysterious in a way that under no circumstances will it be used.
-      In other words, I did not believe "support" could contain any value other than "-1" in the program.
-      I almost decided to delete all code related to "support",
-      but I kept it because I guess it might have some meaning to you or future developers
-      (e.g., as guidance for updates).
-      Also, I may be wrong, but I also think "support" is a red herring in Julia code.*/
+       In other words, I did not believe "support" could contain any value other than "-1" in the program.
+       I almost decided to delete all code related to "support",
+       but I kept it because I guess it might have some meaning to you or future developers
+       (e.g., as guidance for updates).
+       Also, I may be wrong, but I also think "support" is a red herring in Julia code.*/
       list[i] = dummyValue;
     }
   }
@@ -97,8 +97,8 @@ Eigen::VectorXd eigSubset(const Rcpp::NumericVector& support, int k, const Eigen
   {
     beta = Hk(prob_Sigma * beta, k, support); // Question for Chenkai: Is prob_Sigma * beta a proper matrix-vector multiplication?
     /*Response: I have no idea.
-    It is from the original code, and it looks similar to me compared to the Julia code.
-    If it is different from the Julia code, let's change it.*/
+     It is from the original code, and it looks similar to me compared to the Julia code.
+     If it is different from the Julia code, let's change it.*/
   }
   return beta;
 }
@@ -166,7 +166,7 @@ double fnviolation(const Eigen::MatrixXd& x)
 }
 
 // [[Rcpp::export]]
-Eigen::MatrixXd cpp_findmultPCs_deflation(
+List cpp_findmultPCs_deflation(
     Eigen::MatrixXd Sigma,
     int r,
     Rcpp::NumericVector ks, // size r
@@ -308,7 +308,14 @@ Eigen::MatrixXd cpp_findmultPCs_deflation(
       break;
     }
   }
+  auto stopTime = std::chrono::high_resolution_clock::now();
+  std::chrono::milliseconds allExecutionTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
+  double runtime = (double)allExecutionTime.count() / ConstantArguments::millisecondsToSeconds;
   violation_best = fnviolation(x_best);
   ofv_best = (x_best.transpose() * Sigma * x_best).trace();
-  return x_best;
+  List result = List::create(Named("ofv_best") = ofv_best,
+                             Named("violation_best") = violation_best,
+                             Named("runtime") = runtime,
+                             Named("x_best") = x_best);
+  return result;
 }
