@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // cpp_findmultPCs_deflation
-Eigen::MatrixXd cpp_findmultPCs_deflation(Eigen::MatrixXd Sigma, int r, Rcpp::NumericVector ks, int numIters, bool verbose, double violation_tolerance);
+List cpp_findmultPCs_deflation(Eigen::MatrixXd Sigma, int r, Rcpp::NumericVector ks, int numIters, bool verbose, double violation_tolerance);
 RcppExport SEXP _sPCAmPC_cpp_findmultPCs_deflation(SEXP SigmaSEXP, SEXP rSEXP, SEXP ksSEXP, SEXP numItersSEXP, SEXP verboseSEXP, SEXP violation_toleranceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
