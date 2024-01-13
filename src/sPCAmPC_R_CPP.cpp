@@ -245,11 +245,12 @@ List cpp_findmultPCs_deflation(
     }
 
     double violation = fnviolation(x_current);
-    // if (1e-7 > violation) {
-    //   violation = 1e-7;
-    // }
+    double violation_forStep = violation;
+    if (1e-7 > violation) {
+      violation_forStep = 1e-7;
+    }
 
-    stepSize = (theIter < fastPeriod ? ConstantArguments::changedRateLow : ConstantArguments::changedRateHigh) * (theIter < slowPeriod ? violation : ofv_overall / violation);
+    stepSize = (theIter < fastPeriod ? ConstantArguments::changedRateLow : ConstantArguments::changedRateHigh) * (theIter < slowPeriod ? violation_forStep : ofv_overall / violation_forStep);
     
     auto stopTime = chrono::high_resolution_clock::now();
     chrono::milliseconds executionTime = chrono::duration_cast<chrono::milliseconds>(stopTime - startTime);

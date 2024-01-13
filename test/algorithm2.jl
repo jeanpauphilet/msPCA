@@ -66,8 +66,8 @@ function findmultPCs_deflation(Sigma::Array{Float64, 2}, r::Int64, ks::Array{Int
         end
 
         violation = sum(abs.(x_current'*x_current .- Diagonal(ones(r))))
-        # violation = max(violation, 1e-7)
-        stepSize = (theIter < fastPeriod ? 0.01 : 0.05)*(theIter < slowPeriod ? violation : ofv_overall/violation) #OLD RULE
+        violation_for_step = max(violation, 1e-7)
+        stepSize = (theIter < fastPeriod ? 0.01 : 0.05)*(theIter < slowPeriod ? violation_for_step : ofv_overall/violation_for_step) #OLD RULE
 
         if verbose #Display progress at each iteration if less than 25, otherwise every 10 iteration
             if numIters <= 25 || theIter % 10 == 0
