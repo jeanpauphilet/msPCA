@@ -123,7 +123,7 @@ void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, double& lambda_
 double fnviolation(const Eigen::MatrixXd& x)
 {
   double v = 0;
-  Eigen::MatrixXd y = x.adjoint() * x;
+  Eigen::MatrixXd y = x.transpose() * x;
   for (size_t i = 0; i < y.rows(); i++) {
     for (size_t j = 0; j < y.cols(); j++) {
       if (i == j) {
@@ -224,7 +224,7 @@ List cpp_findmultPCs_deflation(
         sigma_current(i, i) += lambda0;
       }
       
-      // solver = Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>(sigma_current);
+      solver = Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>(sigma_current); // TBD: is this needed?
       prob_Sigma = sigma_current;
 
       singlePCHeuristic(ks[t], prob_Sigma, lambda_partial, x_output);
