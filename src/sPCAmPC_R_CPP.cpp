@@ -245,9 +245,9 @@ List cpp_findmultPCs_deflation(
     }
 
     double violation = fnviolation(x_current);
-    if (1e-7 > violation) {
-      violation = 1e-7;
-    }
+    // if (1e-7 > violation) {
+    //   violation = 1e-7;
+    // }
 
     stepSize = (theIter < fastPeriod ? ConstantArguments::changedRateLow : ConstantArguments::changedRateHigh) * (theIter < slowPeriod ? violation : ofv_overall / violation);
     
