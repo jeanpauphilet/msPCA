@@ -112,7 +112,7 @@ void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, double& lambda_
     {
       bestObj = obj;
       bestBeta = bestBeta;
-      // countdown = 100;
+      countdown = 100; // Reset the countdown if found a better solution via random restart
     }
     countdown--;
   }

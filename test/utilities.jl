@@ -153,7 +153,7 @@ end
 # end
 
 # Yuan and zhang algorithm with random restarts
-function subset(prob, k; timeLimit = 7200, support = zeros(1), countdown = 100)
+function subset(prob, k; timeLimit = 7200, support = zeros(1), countdown = 0)
 	n = size(prob.Sigma,1)
 	lambdas, betas, = Arpack.eigs(prob.Sigma, nev=1, which=:LR)
 	beta0=betas[:,1]
@@ -168,14 +168,14 @@ function subset(prob, k; timeLimit = 7200, support = zeros(1), countdown = 100)
 	#Tries a thousand random other starting points
 	margin = 1
 	while countdown > 0 && time()-start < timeLimit
-		beta = rand(size(prob.Sigma,1))
-		beta = beta / LinearAlgebra.norm(beta0)
+		beta = randn(size(prob.Sigma,1))
+		beta = beta / LinearAlgebra.norm(beta)
 		beta = eigSubset(prob, support, k, beta)
 		obj, ~ = evaluate(beta, prob)
 		if obj > bestObj
 			bestObj = obj
 			bestBeta = copy(beta)
-			# countdown = 100
+			countdown = 100 #Resets countdown if found a better solution via random restarts
 		end
 		countdown = countdown - 1
 	end

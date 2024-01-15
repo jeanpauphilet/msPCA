@@ -45,7 +45,7 @@ function findmultPCs_deflation(Sigma::Array{Float64, 2}, r::Int64, ks::Array{Int
             sigma_current = (sigma_current + sigma_current')/2
             λ0 = -eigmin(sigma_current)+1e-4 #Needed to ensure we work on PSD matrix
             if λ0 > 0
-                println("λ0: ", λ0)
+                # println("λ0: ", λ0)
                 sigma_current += λ0*I
             end
             
