@@ -19,13 +19,15 @@ double absoluteDouble(double aNumber) {
   return -aNumber;
 }
 
-// Compute the value x^T Sigma x
-double evaluate(const Eigen::VectorXd& x, const Eigen::MatrixXd& prob_Sigma)
+// Compute the value x^T A x -- x is a vector
+double evaluate(const Eigen::VectorXd& x, const Eigen::MatrixXd& A)
 {
-  // Rcout << "Direct: " << x.transpose() * prob_Sigma * x << endl;
-  // Rcout << "Via dot: " << x.dot(prob_Sigma * x) << endl;
-
-  return (x.transpose() * prob_Sigma * x)[0];
+  return (x.transpose() * A * x)[0];
+}
+// Compute the value tr(x^T A x) -- x is a matrix with r vectors (columns)
+double evaluate(const Eigen::MatrixXd& x, const Eigen::MatrixXd& A)
+{
+  return (x.transpose() * A * x).trace();
 }
 
 /*Response:
@@ -94,7 +96,7 @@ void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, double& lambda_
 
   // Applies the iterative truncation heuristic starting from random points
   time_t start = time(0);
-  while (countdown > 0 && difftime(time(0), start) < timeLimit*ConstantArguments::millisecondsToSeconds)
+  while (countdown > 0 && difftime(time(0), start) < timeLimit)
   {
     Eigen::VectorXd beta = Eigen::VectorXd::Zero(n);
     for (auto i = 0; i < beta.rows(); i++) {
@@ -245,7 +247,7 @@ List cpp_findmultPCs_deflation(
     }
 
     ofv_prev = ofv_overall;
-    ofv_overall = (x_current.transpose() * Sigma * x_current).trace();
+    ofv_overall = evaluate(x_current, Sigma);
 
     if (theIter == 1) // TBD if needed or if initialization with -1e10 is enough
     {
@@ -285,20 +287,20 @@ List cpp_findmultPCs_deflation(
 
     if (violation < violation_tolerance || (theIter == numIters && ofv_best < 0)) //If current solution is feasible (within tolerance) or if we reached the last iteration and no feasible solution was found (ofv_best still <0)
     {
-      double ofv_current = (x_current.transpose() * Sigma * x_current).trace();
-      if (ofv_best < ofv_current)
+      // double ofv_current = (x_current.transpose() * Sigma * x_current).trace();
+      if (ofv_best < ofv_overall)
       {
         x_best = x_current;
-        ofv_best = ofv_current;
+        ofv_best = ofv_overall;
       }
     }
 
-    if (fabs(ofv_prev - ofv_overall) < 1e-8 && violation < violation_tolerance) //If the algorithm is stalling (in terms of objective value) and the current solution is feasible (within tolerance)
+    if (std::fabs(ofv_prev - ofv_overall) < 1e-8 && violation < violation_tolerance) //If the algorithm is stalling (in terms of objective value) and the current solution is feasible (within tolerance)
     {
       if (ofv_best < 0) //Safety check: if no feasible solution was found yet, we take the current solution as the best solution
       {
         x_best = x_current;
-        ofv_best = (x_current.transpose() * Sigma * x_current).trace();
+        ofv_best = ofv_overall; //(x_current.transpose() * Sigma * x_current).trace();
       }
       break; //Stop the algorithm
     }
@@ -308,7 +310,7 @@ List cpp_findmultPCs_deflation(
   std::chrono::milliseconds allExecutionTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
   double runtime = (double)allExecutionTime.count() / ConstantArguments::millisecondsToSeconds;
   violation_best = fnviolation(x_best);
-  ofv_best = (x_best.transpose() * Sigma * x_best).trace();
+  ofv_best = evaluate(x_best, Sigma);
   List result = List::create(Named("objective_value") = ofv_best,
                              Named("orthogonality_violation") = violation_best,
                              Named("runtime") = runtime,
