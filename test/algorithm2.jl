@@ -54,7 +54,6 @@ function findmultPCs_deflation(Sigma::Array{Float64, 2}, r::Int64, ks::Array{Int
             lambda_partial = 0; x_output=zeros(n)
             
             lambda_partial, x_output = subset(problem(sqrt(sigma_current), sigma_current), ks[t], timeLimit = 20) #subset and problem defined in utilities.jl
-            println("lambda_partial: ", lambda_partial)
 
             x_current[:,t] .= x_output
 
@@ -65,7 +64,6 @@ function findmultPCs_deflation(Sigma::Array{Float64, 2}, r::Int64, ks::Array{Int
 
         ofv_prev = ofv_overall
         ofv_overall = tr(x_current'*Sigma*x_current) 
-        println("ofv_overall: ", ofv_overall)
         if theIter == 1
             ofv_prev = ofv_overall
         end

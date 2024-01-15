@@ -178,7 +178,6 @@ List cpp_findmultPCs_deflation(
       Rcout << " " << static_cast<int>(ks[t]);
     }
     Rcout << endl;
-    Rcout << endl;
 
 
     Rcout.width(ConstantArguments::separatorLengthLong + ConstantArguments::wordLengthShort);
@@ -236,7 +235,6 @@ List cpp_findmultPCs_deflation(
       prob_Sigma = sigma_current;
 
       singlePCHeuristic(ks[t], prob_Sigma, lambda_partial, x_output);
-      Rcout << lambda_partial  << endl;
 
       x_current.col(t) = x_output;
 
@@ -248,7 +246,6 @@ List cpp_findmultPCs_deflation(
 
     ofv_prev = ofv_overall;
     ofv_overall = (x_current.transpose() * Sigma * x_current).trace();
-    Rcout << ofv_overall  << endl;
 
     if (theIter == 1) // TBD if needed or if initialization with -1e10 is enough
     {
