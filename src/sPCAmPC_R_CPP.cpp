@@ -147,6 +147,7 @@ List cpp_findmultPCs_deflation(
     double violation_tolerance = 1e-4)
 {
   int n = Sigma.rows();
+
   double ofv_best = -1e10; // Objective value of the best solution found (solution = set of r PCs)
   double violation_best = n; // Orthogonality violation of the best solution found 
   Eigen::MatrixXd x_best = Eigen::MatrixXd::Zero(n, r); // Best solution found
@@ -219,6 +220,8 @@ List cpp_findmultPCs_deflation(
       // Make sigma_current PSD
       Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(sigma_current);
       double lambda0 = -solver.eigenvalues().minCoeff() + 1e-4;
+      Rcout << lambda0  << endl;
+
       for (int i = 0; i < sigma_current.rows(); i++)
       {
         sigma_current(i, i) += lambda0;
@@ -228,6 +231,8 @@ List cpp_findmultPCs_deflation(
       prob_Sigma = sigma_current;
 
       singlePCHeuristic(ks[t], prob_Sigma, lambda_partial, x_output);
+      Rcout << lambda_partial  << endl;
+
       x_current.col(t) = x_output;
 
       if (theIter == 1) // Initialize the weights on each PC at the first iteration
@@ -238,7 +243,8 @@ List cpp_findmultPCs_deflation(
 
     ofv_prev = ofv_overall;
     ofv_overall = (x_current.transpose() * Sigma * x_current).trace();
-    
+    Rcout << ofv_overall  << endl;
+
     if (theIter == 1) // TBD if needed or if initialization with -1e10 is enough
     {
       ofv_prev = ofv_overall;
