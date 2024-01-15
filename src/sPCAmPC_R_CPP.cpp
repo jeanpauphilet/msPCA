@@ -63,7 +63,7 @@ Eigen::VectorXd truncateVector(const Eigen::VectorXd& origlist, int k)
   for (auto index : newIndices) {
     kparse[index] = origlist[index];
   }
-  kparse = kparse / kparse.norm();
+  kparse.normalize(); // Normalization in place
   return kparse;
 }
 
