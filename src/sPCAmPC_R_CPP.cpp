@@ -220,12 +220,15 @@ List cpp_findmultPCs_deflation(
       // Make sigma_current PSD
       Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(sigma_current);
       double lambda0 = -solver.eigenvalues().minCoeff() + 1e-4;
-      Rcout << lambda0  << endl;
-
-      for (int i = 0; i < sigma_current.rows(); i++)
+      if (lambda0 > 0) 
       {
-        sigma_current(i, i) += lambda0;
+        Rcout << lambda0  << endl;
+        for (int i = 0; i < sigma_current.rows(); i++)
+        {
+          sigma_current(i, i) += lambda0;
+        }
       }
+
       
       solver = Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>(sigma_current); // TBD: is this needed?
       prob_Sigma = sigma_current;

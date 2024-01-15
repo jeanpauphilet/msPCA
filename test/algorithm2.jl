@@ -44,8 +44,11 @@ function findmultPCs_deflation(Sigma::Array{Float64, 2}, r::Int64, ks::Array{Int
             sigma_current = Sigma-theLambda*sum(weights[s]*x_current[:,s]*x_current[:,s]' for s=1:r if s != t);
             sigma_current = (sigma_current + sigma_current')/2
             λ0 = -eigmin(sigma_current)+1e-4 #Needed to ensure we work on PSD matrix
-            println("λ0: ", λ0)
-            sigma_current += λ0*I
+            if λ0 > 0
+                println("λ0: ", λ0)
+                sigma_current += λ0*I
+            end
+            
             sigma_current = real.(sigma_current)
             
             lambda_partial = 0; x_output=zeros(n)
