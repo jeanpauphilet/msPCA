@@ -74,7 +74,9 @@ Eigen::VectorXd iterativeTruncHeuristic(int k, const Eigen::VectorXd& beta0, con
   Eigen::VectorXd beta = truncateVector(beta0, k);
   for (int i = 0; i < 100; i++)
   {
-    beta = truncateVector(prob_Sigma * beta, k); 
+    // beta = truncateVector(prob_Sigma * beta, k); 
+    beta = prob_Sigma * beta; 
+    beta = truncateVector(beta, k); 
   }
   return beta;
 }
