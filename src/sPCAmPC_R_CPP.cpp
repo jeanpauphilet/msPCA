@@ -22,8 +22,8 @@ double absoluteDouble(double aNumber) {
 // Compute the value x^T Sigma x
 double evaluate(const Eigen::VectorXd& x, const Eigen::MatrixXd& prob_Sigma)
 {
-  Rcout << "Direct: " << x.transpose() * prob_Sigma * x << endl;
-  Rcout << "Via dot: " << x.dot(prob_Sigma * x) << endl;
+  // Rcout << "Direct: " << x.transpose() * prob_Sigma * x << endl;
+  // Rcout << "Via dot: " << x.dot(prob_Sigma * x) << endl;
 
   return (x.transpose() * prob_Sigma * x)[0];
 }

@@ -5,6 +5,7 @@ end
 
 # return obejctive and solution given a solution vector
 function evaluate(solution, prob)
+	# println("value: ", (transpose(solution)*prob.Sigma*solution)[1])
 	return (transpose(solution)*prob.Sigma*solution)[1], solution
 end
 
@@ -174,7 +175,7 @@ function subset(prob, k; timeLimit = 7200, support = zeros(1), countdown = 100)
 		if obj > bestObj
 			bestObj = obj
 			bestBeta = copy(beta)
-			countdown = 100
+			# countdown = 100
 		end
 		countdown = countdown - 1
 	end
