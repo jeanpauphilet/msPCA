@@ -235,10 +235,15 @@ List cpp_findmultPCs_deflation(
       }
 
       
-      solver = Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>(sigma_current); // TBD: is this needed?
-      prob_Sigma = sigma_current;
+      // solver = Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>(sigma_current); // TBD: is this needed?
+      // prob_Sigma = sigma_current;
 
-      singlePCHeuristic(ks[t], prob_Sigma, lambda_partial, x_output);
+      // beta0 = 
+      // int index;
+      // solver.eigenvalues().maxCoeff(&index);
+      // Eigen::VectorXd beta0 = solver.eigenvectors().col(index); 
+
+      singlePCHeuristic(ks[t], sigma_current, lambda_partial, x_output);
 
       x_current.col(t) = x_output;
 
