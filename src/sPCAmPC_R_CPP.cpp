@@ -22,6 +22,9 @@ double absoluteDouble(double aNumber) {
 // Compute the value x^T Sigma x
 double evaluate(const Eigen::VectorXd& x, const Eigen::MatrixXd& prob_Sigma)
 {
+  Rcout << "Direct: " << x.transpose() * prob_Sigma * x << endl;
+  Rcout << "Via dot: " << x.dot(prob_Sigma * x) << endl;
+
   return (x.transpose() * prob_Sigma * x)[0];
 }
 
@@ -127,10 +130,10 @@ double fnviolation(const Eigen::MatrixXd& x)
   for (size_t i = 0; i < y.rows(); i++) {
     for (size_t j = 0; j < y.cols(); j++) {
       if (i == j) {
-        v += double(fabs(y(i, j) - 1));
+        v += std::fabs(y(i, j) - 1);
       }
       else {
-        v += fabs(y(i, j));
+        v += std::fabs(y(i, j));
       }
     }
   }
@@ -222,7 +225,6 @@ List cpp_findmultPCs_deflation(
       double lambda0 = -solver.eigenvalues().minCoeff() + 1e-4;
       if (lambda0 > 0) 
       {
-        Rcout << lambda0  << endl;
         for (int i = 0; i < sigma_current.rows(); i++)
         {
           sigma_current(i, i) += lambda0;
