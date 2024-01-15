@@ -82,15 +82,15 @@ Eigen::VectorXd iterativeTruncHeuristic(int k, const Eigen::VectorXd& beta0, con
 }
 
 // sPCA heuristic for a single PC case: Yuan and Zhang (2013) + random restarts 
-void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, double& lambda_partial, Eigen::VectorXd& x_output, int timeLimit = 20,  int countdown = 100)
+void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, Eigen::VectorXd& beta0, double& lambda_partial, Eigen::VectorXd& x_output, int timeLimit = 20,  int countdown = 100)
 {
   int n = prob_Sigma.rows();
 
-  // Finds the largest eigenvector of prob_Sigma, beta0
-  Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(prob_Sigma);
-  int index;
-  solver.eigenvalues().maxCoeff(&index);
-  Eigen::VectorXd beta0 = solver.eigenvectors().col(index); 
+  // // Finds the largest eigenvector of prob_Sigma, beta0
+  // Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(prob_Sigma);
+  // int index;
+  // solver.eigenvalues().maxCoeff(&index);
+  // Eigen::VectorXd beta0 = solver.eigenvectors().col(index); 
 
   // Applies the iterative truncation heuristic starting from beta0
   Eigen::VectorXd bestBeta = iterativeTruncHeuristic(k, beta0, prob_Sigma);
@@ -239,11 +239,11 @@ List cpp_findmultPCs_deflation(
       // prob_Sigma = sigma_current;
 
       // beta0 = 
-      // int index;
-      // solver.eigenvalues().maxCoeff(&index);
-      // Eigen::VectorXd beta0 = solver.eigenvectors().col(index); 
+      int index;
+      solver.eigenvalues().maxCoeff(&index);
+      Eigen::VectorXd beta0 = solver.eigenvectors().col(index); 
 
-      singlePCHeuristic(ks[t], sigma_current, lambda_partial, x_output);
+      singlePCHeuristic(ks[t], sigma_current, beta0, lambda_partial, x_output);
 
       x_current.col(t) = x_output;
 
