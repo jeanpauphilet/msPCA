@@ -94,7 +94,7 @@ void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, double& lambda_
 
   // Applies the iterative truncation heuristic starting from random points
   time_t start = time(0);
-  while (countdown > 0 && difftime(time(0), start) < timeLimit)
+  while (countdown > 0 && difftime(time(0), start) < timeLimit*ConstantArguments::millisecondsToSeconds)
   {
     Eigen::VectorXd beta = Eigen::VectorXd::Zero(n);
     for (auto i = 0; i < beta.rows(); i++) {
