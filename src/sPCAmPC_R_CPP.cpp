@@ -82,7 +82,7 @@ Eigen::VectorXd iterativeTruncHeuristic(int k, const Eigen::VectorXd& beta0, con
 }
 
 // sPCA heuristic for a single PC case: Yuan and Zhang (2013) + random restarts 
-void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, Eigen::VectorXd& beta0, double& lambda_partial, Eigen::VectorXd& x_output, int timeLimit = 20,  int countdown = 100)
+void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, const Eigen::VectorXd& beta0, double& lambda_partial, Eigen::VectorXd& x_output, int timeLimit = 20,  int countdown = 100)
 {
   int n = prob_Sigma.rows();
 
@@ -200,7 +200,7 @@ List cpp_findmultPCs_deflation(
   }
 
   auto startTime = std::chrono::high_resolution_clock::now();
-  Eigen::MatrixXd prob_Sigma; // For memory: Current deflated covariance matrix
+  Eigen::MatrixXd sigma_current; // For memory: Current deflated covariance matrix
   Eigen::VectorXd x_output; // For memory: Current PC
   double lambda_partial = 0; // For memory: Fraction of the variance explained by the current PC 
 
@@ -211,7 +211,8 @@ List cpp_findmultPCs_deflation(
     // Iteratively updating each PC
     for (int t = 0; t < r; t++)
     {
-      Eigen::MatrixXd sigma_current = Sigma;
+      // Eigen::MatrixXd 
+      sigma_current = Sigma;
       for (int s = 0; s < r; s++)
       {
         if (s != t)
