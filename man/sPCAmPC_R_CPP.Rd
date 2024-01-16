@@ -2,9 +2,7 @@
 \alias{spca}
 \title{Set of functions used in sPCAmPC package}
 \description{
-  I only wrote the description for cpp_findmultPCs_deflation.
-  The description of other functions can also be added if needed.
-  Notice only cpp_findmultPCs_deflation is the interface for usage in R.
+  TO DO: Add description
 }
 \usage{
 spca(Sigma, r, ks, numIters = 200L, verbose = TRUE, violation_tolerance = 1e-4)
@@ -22,7 +20,7 @@ spca(Sigma, r, ks, numIters = 200L, verbose = TRUE, violation_tolerance = 1e-4)
 
 }
 \details{
-  Introduce these functions more.
+  TO DO: Introduce these functions more.
 }
 \references{
 This function implements the iterative deflation heuristic (Algorithm 2) of:

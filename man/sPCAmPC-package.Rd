@@ -1,5 +1,6 @@
 \name{sPCAmPC-package}
 \alias{sPCAmPC}
+\alias{sPCAmPC-package}
 \docType{package}
 \title{
 \packageTitle{sPCAmPC}
