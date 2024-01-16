@@ -145,7 +145,7 @@ double fnviolation(const Eigen::MatrixXd& x)
 }
 
 // [[Rcpp::export]]
-List cpp_findmultPCs_deflation(
+List iterativeDeflationHeuristic(
     Eigen::MatrixXd Sigma,
     int r,
     Rcpp::NumericVector ks, // size r

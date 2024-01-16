@@ -11,9 +11,9 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// cpp_findmultPCs_deflation
-List cpp_findmultPCs_deflation(Eigen::MatrixXd Sigma, int r, Rcpp::NumericVector ks, int numIters, bool verbose, double violation_tolerance);
-RcppExport SEXP _sPCAmPC_cpp_findmultPCs_deflation(SEXP SigmaSEXP, SEXP rSEXP, SEXP ksSEXP, SEXP numItersSEXP, SEXP verboseSEXP, SEXP violation_toleranceSEXP) {
+// iterativeDeflationHeuristic
+List iterativeDeflationHeuristic(Eigen::MatrixXd Sigma, int r, Rcpp::NumericVector ks, int numIters, bool verbose, double violation_tolerance);
+RcppExport SEXP _sPCAmPC_iterativeDeflationHeuristic(SEXP SigmaSEXP, SEXP rSEXP, SEXP ksSEXP, SEXP numItersSEXP, SEXP verboseSEXP, SEXP violation_toleranceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -23,13 +23,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type numIters(numItersSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< double >::type violation_tolerance(violation_toleranceSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_findmultPCs_deflation(Sigma, r, ks, numIters, verbose, violation_tolerance));
+    rcpp_result_gen = Rcpp::wrap(iterativeDeflationHeuristic(Sigma, r, ks, numIters, verbose, violation_tolerance));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_sPCAmPC_cpp_findmultPCs_deflation", (DL_FUNC) &_sPCAmPC_cpp_findmultPCs_deflation, 6},
+    {"_sPCAmPC_iterativeDeflationHeuristic", (DL_FUNC) &_sPCAmPC_iterativeDeflationHeuristic, 6},
     {NULL, NULL, 0}
 };
 
