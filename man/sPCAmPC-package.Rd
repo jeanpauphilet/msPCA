@@ -1,31 +1,31 @@
-\name{sPCAmPC-package}
-\alias{sPCAmPC}
-\alias{sPCAmPC-package}
+\name{msPCA-package}
+\alias{msPCA}
+\alias{msPCA-package}
 \docType{package}
 \title{
-\packageTitle{sPCAmPC}
+\packageTitle{msPCA}
 }
 \description{
-\packageDescription{sPCAmPC}
+\packageDescription{msPCA}
 }
 \details{
 
 The DESCRIPTION file:
-\packageDESCRIPTION{sPCAmPC}
-\packageIndices{sPCAmPC}
+\packageDESCRIPTION{msPCA}
+\packageIndices{msPCA}
  An overview of how to use the package, including the most important functions
 }
 \author{
-\packageAuthor{sPCAmPC}
+\packageAuthor{msPCA}
 
-Maintainer: \packageMaintainer{sPCAmPC}
+Maintainer: \packageMaintainer{msPCA}
 }
 \references{
 This package implements one of the methods proposed by:
 Cory-Wright, R., & Pauphilet, J. (2022). Sparse PCA With Multiple Components. arXiv preprint arXiv:2209.14790.
 
 If you find this package useful for your work, please cite
-Cory-Wright, R., & Pauphilet, J. (2024). sPCAmPC: An R Package for Sparse PCA with Multiple Principal Components.
+Cory-Wright, R., & Pauphilet, J. (2024). msPCA: An R Package for Sparse PCA with Multiple Principal Components.
 
 }
 \keyword{principal component analysis; sparsity; interpretability; penalized optimization}

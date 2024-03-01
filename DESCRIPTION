@@ -1,4 +1,4 @@
-Package: sPCAmPC
+Package: msPCA
 Type: Package
 Title: Sparse Principal Component Analysis with Multiple Principal Components
 Version: 1.0

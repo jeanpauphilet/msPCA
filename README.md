@@ -1,4 +1,4 @@
-# sPCAmPC
+# msPCA
 An R Package for Sparse PCA with Multiple Principal Components
 
 ## Installation 
@@ -6,10 +6,10 @@ This package can be installed in R directly from the Github repository. To do so
 <br />`install.packages("devtools")`<br />
 And then run the following commands: 
 <br /> `library(devtools)`<br />
-`install_github('jeanpauphilet/sPCAmPC')`<br />
+`install_github('jeanpauphilet/msPCA')`<br />
 
 ## Getting started
-The package consists of one main function, `sPCAmPC`, which takes as input:
+The package consists of one main function, `msPCA`, which takes as input:
 - a data matrix (either the correlation or covariance matrix of the dataset),
 - the number of principal components (PCs) to be computed, r,
 - a list of r integers corresponding to the sparsity of each PC.
@@ -18,7 +18,7 @@ It returns...
 
 Here is a short example demonstrating how to use the package. First, you need to load the library. 
 <br />
-`library(sPCAmPC)`<br />
+`library(msPCA)`<br />
 Then, define the input variables.
 <br />
 `TestMat <- matrix(`<br />
@@ -69,7 +69,7 @@ Here, we provide more information about the code structure and organization to h
 - src/ contains the source files of the algorithm, in C++. 
   - ConstantArguments.h<br />
       It contains some parameters of the algorithm that are not directly tuneable by the end user.
-  - sPCAmPC_R_CPP.cpp<br />
+  - msPCA_R_CPP.cpp<br />
       It contains the implementation of the algorithm.
   - RcppExports.cpp<br />
       It contains the converted function that can be used by R. Regenerate or change it manually if needed (e.g., if the interface changes). It can be generated using `Rcpp::compileAttributes()`.
@@ -83,7 +83,7 @@ Here, we provide more information about the code structure and organization to h
     It contains the description of this package.
 - LICENSE<br />
     It contains the license information.
-- sPCAmPC.Rproj<br />
+- msPCA.Rproj<br />
     It contains the settings of this R project. It is used by RStudio and often does not need to be changed.
 ## Guidance to future developers
-- The essence of this algorithm is in the file "sPCAmPC_R_CPP.cpp" and the file "ConstantArguments.h", where "sPCAmPC_R_CPP.cpp" handles the computation and "ConstantArguments.h" lists all arguments. (This needs to change depending on your decisions on arguments.)
+- The essence of this algorithm is in the file "msPCA_R_CPP.cpp" and the file "ConstantArguments.h", where "sPCAmPC_R_CPP.cpp" handles the computation and "ConstantArguments.h" lists all arguments. (This needs to change depending on your decisions on arguments.)

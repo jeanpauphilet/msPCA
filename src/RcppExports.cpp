@@ -13,7 +13,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // iterativeDeflationHeuristic
 List iterativeDeflationHeuristic(Eigen::MatrixXd Sigma, int r, Rcpp::NumericVector ks, int numIters, bool verbose, double violation_tolerance);
-RcppExport SEXP _sPCAmPC_iterativeDeflationHeuristic(SEXP SigmaSEXP, SEXP rSEXP, SEXP ksSEXP, SEXP numItersSEXP, SEXP verboseSEXP, SEXP violation_toleranceSEXP) {
+RcppExport SEXP _msPCA_iterativeDeflationHeuristic(SEXP SigmaSEXP, SEXP rSEXP, SEXP ksSEXP, SEXP numItersSEXP, SEXP verboseSEXP, SEXP violation_toleranceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -29,11 +29,11 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_sPCAmPC_iterativeDeflationHeuristic", (DL_FUNC) &_sPCAmPC_iterativeDeflationHeuristic, 6},
+    {"_msPCA_iterativeDeflationHeuristic", (DL_FUNC) &_msPCA_iterativeDeflationHeuristic, 6},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_sPCAmPC(DllInfo *dll) {
+RcppExport void R_init_msPCA(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }
