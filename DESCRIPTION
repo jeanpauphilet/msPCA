@@ -9,4 +9,5 @@ Description: Algorithm for computing multiple sparse principal components of a d
 License: MIT + file LICENSE
 Imports: Rcpp (>= 1.0.11)
 LinkingTo: Rcpp, RcppEigen
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
+Encoding: UTF-8
