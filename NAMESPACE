@@ -1,3 +1,4 @@
 useDynLib(msPCA)
 importFrom(Rcpp, evalCpp)
 export("iterativeDeflationHeuristic")
+export("truncatedPowerMethod")
