@@ -86,4 +86,4 @@ Here, we provide more information about the code structure and organization to h
 - msPCA.Rproj<br />
     It contains the settings of this R project. It is used by RStudio and often does not need to be changed.
 ## Guidance to future developers
-- The essence of this algorithm is in the file "msPCA_R_CPP.cpp" and the file "ConstantArguments.h", where "sPCAmPC_R_CPP.cpp" handles the computation and "ConstantArguments.h" lists all arguments. (This needs to change depending on your decisions on arguments.)
+- The essence of this algorithm is in the file "msPCA_R_CPP.cpp" and the file "ConstantArguments.h", where "msPCA_R_CPP.cpp" handles the computation and "ConstantArguments.h" lists all arguments. (This needs to change depending on your decisions on arguments.)

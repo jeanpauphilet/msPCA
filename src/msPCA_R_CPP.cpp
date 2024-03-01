@@ -1,5 +1,7 @@
-#include <RcppEigen.h>
 #include <Rcpp.h>
+// [[Rcpp::depends(RcppEigen)]]
+#include <RcppEigen.h>
+
 #include <algorithm>
 #include <chrono>
 #include <numeric>
