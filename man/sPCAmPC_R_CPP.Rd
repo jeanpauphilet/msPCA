@@ -1,6 +1,6 @@
-\name{sPCAmPC-Functions}
+\name{msPCA-Functions}
 \alias{spca}
-\title{Set of functions used in sPCAmPC package}
+\title{Set of functions used in msPCA package}
 \description{
   TO DO: Add description
 }
