@@ -83,7 +83,7 @@ Eigen::VectorXd iterativeTruncHeuristic(int k, const Eigen::VectorXd& beta0, con
   return beta;
 }
 
-// sPCA heuristic for a single PC case: Yuan and Zhang (2013) + random restarts 
+// Inner routine: sPCA heuristic for a single PC case: Truncated Power Method of Yuan and Zhang (2013) with random restarts 
 void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, const Eigen::VectorXd& beta0, double& lambda_partial, Eigen::VectorXd& x_output, int timeLimit = 20,  int countdown = 100)
 {
   int n = prob_Sigma.rows();
@@ -146,6 +146,7 @@ double fnviolation(const Eigen::MatrixXd& x)
   return v;
 }
 
+// Main function: Iterative deflation heuristic for sparse PCA with multiple PCs
 // [[Rcpp::export]]
 List iterativeDeflationHeuristic(
     Eigen::MatrixXd Sigma,
@@ -326,4 +327,42 @@ List iterativeDeflationHeuristic(
                              Named("runtime") = runtime,
                              Named("x_best") = x_best);
   return result;
+}
+
+// Main function: Truncated Power Method for sparse PCA with 1 PC
+// [[Rcpp::export]]
+List truncatedPowerMethod(
+    Eigen::MatrixXd Sigma,
+    int k, // Sparsity level
+    int numIters = 200,
+    bool verbose = true,
+    double violation_tolerance = 1e-4)
+{
+  int n = Sigma.rows();
+
+  auto startTime = std::chrono::high_resolution_clock::now();
+
+  Eigen::VectorXd x_output; // For memory: Current PC
+  double lambda_partial = 0; // For memory: Fraction of the variance explained by the current PC 
+
+  // Compute largest eigenvector of Sigma
+  Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(Sigma);
+  int index;
+  solver.eigenvalues().maxCoeff(&index);
+  Eigen::VectorXd beta0 = solver.eigenvectors().col(index); 
+
+
+  singlePCHeuristic(k, Sigma, beta0, lambda_partial, x_output);
+  // singlePCHeuristic(k, sigma_current, beta0, lambda_partial, x_output);
+
+  auto stopTime = std::chrono::high_resolution_clock::now();
+  std::chrono::milliseconds allExecutionTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
+  
+  double runtime = (double)allExecutionTime.count() / ConstantArguments::millisecondsToSeconds;
+
+  List result = List::create(Named("objective_value") = lambda_partial,
+                             Named("runtime") = runtime,
+                             Named("x_best") = x_output);
+  return result;
+
 }

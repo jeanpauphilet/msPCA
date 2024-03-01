@@ -5,3 +5,7 @@ iterativeDeflationHeuristic <- function(Sigma, r, ks, numIters = 200L, verbose =
     .Call('_msPCA_iterativeDeflationHeuristic', PACKAGE = 'msPCA', Sigma, r, ks, numIters, verbose, violation_tolerance)
 }
 
+truncatedPowerMethod <- function(Sigma, k, numIters = 200L, verbose = TRUE, violation_tolerance = 1e-4) {
+    .Call('_msPCA_truncatedPowerMethod', PACKAGE = 'msPCA', Sigma, k, numIters, verbose, violation_tolerance)
+}
+

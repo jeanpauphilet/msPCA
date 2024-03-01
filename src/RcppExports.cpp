@@ -27,9 +27,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// truncatedPowerMethod
+List truncatedPowerMethod(Eigen::MatrixXd Sigma, int k, int numIters, bool verbose, double violation_tolerance);
+RcppExport SEXP _msPCA_truncatedPowerMethod(SEXP SigmaSEXP, SEXP kSEXP, SEXP numItersSEXP, SEXP verboseSEXP, SEXP violation_toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type Sigma(SigmaSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< int >::type numIters(numItersSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< double >::type violation_tolerance(violation_toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(truncatedPowerMethod(Sigma, k, numIters, verbose, violation_tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_msPCA_iterativeDeflationHeuristic", (DL_FUNC) &_msPCA_iterativeDeflationHeuristic, 6},
+    {"_msPCA_truncatedPowerMethod", (DL_FUNC) &_msPCA_truncatedPowerMethod, 5},
     {NULL, NULL, 0}
 };
 
