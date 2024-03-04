@@ -20,7 +20,7 @@ S <- cor(df)
 library(msPCA)
 
 ## First method: Truncated Power Method for a single sparse PC
-tpw_results <- msPCA::truncatedPowerMethod(S, 4)
+tpw_results <- msPCA::truncatedPowerMethod(S, 4, timeLimit=10)
 U = as.matrix(tpw_results$x_best)
 #Sparsity
 colSums(abs(U) > 0)
