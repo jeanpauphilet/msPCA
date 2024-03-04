@@ -12,39 +12,42 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // iterativeDeflationHeuristic
-List iterativeDeflationHeuristic(Eigen::MatrixXd Sigma, int r, Rcpp::NumericVector ks, int numIters, bool verbose, double violation_tolerance);
-RcppExport SEXP _msPCA_iterativeDeflationHeuristic(SEXP SigmaSEXP, SEXP rSEXP, SEXP ksSEXP, SEXP numItersSEXP, SEXP verboseSEXP, SEXP violation_toleranceSEXP) {
+List iterativeDeflationHeuristic(Eigen::MatrixXd Sigma, int r, Rcpp::NumericVector ks, int maxIter, bool verbose, double violationTolerance, double stallingTolerance, int maxIterTPW, int timeLimitTPW);
+RcppExport SEXP _msPCA_iterativeDeflationHeuristic(SEXP SigmaSEXP, SEXP rSEXP, SEXP ksSEXP, SEXP maxIterSEXP, SEXP verboseSEXP, SEXP violationToleranceSEXP, SEXP stallingToleranceSEXP, SEXP maxIterTPWSEXP, SEXP timeLimitTPWSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type Sigma(SigmaSEXP);
     Rcpp::traits::input_parameter< int >::type r(rSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type ks(ksSEXP);
-    Rcpp::traits::input_parameter< int >::type numIters(numItersSEXP);
+    Rcpp::traits::input_parameter< int >::type maxIter(maxIterSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    Rcpp::traits::input_parameter< double >::type violation_tolerance(violation_toleranceSEXP);
-    rcpp_result_gen = Rcpp::wrap(iterativeDeflationHeuristic(Sigma, r, ks, numIters, verbose, violation_tolerance));
+    Rcpp::traits::input_parameter< double >::type violationTolerance(violationToleranceSEXP);
+    Rcpp::traits::input_parameter< double >::type stallingTolerance(stallingToleranceSEXP);
+    Rcpp::traits::input_parameter< int >::type maxIterTPW(maxIterTPWSEXP);
+    Rcpp::traits::input_parameter< int >::type timeLimitTPW(timeLimitTPWSEXP);
+    rcpp_result_gen = Rcpp::wrap(iterativeDeflationHeuristic(Sigma, r, ks, maxIter, verbose, violationTolerance, stallingTolerance, maxIterTPW, timeLimitTPW));
     return rcpp_result_gen;
 END_RCPP
 }
 // truncatedPowerMethod
-List truncatedPowerMethod(Eigen::MatrixXd Sigma, int k, int numIters, bool verbose, double violation_tolerance);
-RcppExport SEXP _msPCA_truncatedPowerMethod(SEXP SigmaSEXP, SEXP kSEXP, SEXP numItersSEXP, SEXP verboseSEXP, SEXP violation_toleranceSEXP) {
+List truncatedPowerMethod(Eigen::MatrixXd Sigma, int k, int maxIter, bool verbose, int timeLimit);
+RcppExport SEXP _msPCA_truncatedPowerMethod(SEXP SigmaSEXP, SEXP kSEXP, SEXP maxIterSEXP, SEXP verboseSEXP, SEXP timeLimitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type Sigma(SigmaSEXP);
     Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type numIters(numItersSEXP);
+    Rcpp::traits::input_parameter< int >::type maxIter(maxIterSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    Rcpp::traits::input_parameter< double >::type violation_tolerance(violation_toleranceSEXP);
-    rcpp_result_gen = Rcpp::wrap(truncatedPowerMethod(Sigma, k, numIters, verbose, violation_tolerance));
+    Rcpp::traits::input_parameter< int >::type timeLimit(timeLimitSEXP);
+    rcpp_result_gen = Rcpp::wrap(truncatedPowerMethod(Sigma, k, maxIter, verbose, timeLimit));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_msPCA_iterativeDeflationHeuristic", (DL_FUNC) &_msPCA_iterativeDeflationHeuristic, 6},
+    {"_msPCA_iterativeDeflationHeuristic", (DL_FUNC) &_msPCA_iterativeDeflationHeuristic, 9},
     {"_msPCA_truncatedPowerMethod", (DL_FUNC) &_msPCA_truncatedPowerMethod, 5},
     {NULL, NULL, 0}
 };

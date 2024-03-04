@@ -7,16 +7,19 @@ variance_explained <- function(C, U){
   }
   fve
 }
+
 # Compute the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix)
 fraction_variance_explained <- function(C, U){
   fve = variance_explained(C,U)
   fve = fve / sum(diag(C))
   fve
 }
+
 # Compute the orthogonality violation
 orthogonality_violation <- function(U){
   sum(abs(t(U) %*% U - diag(dim(U)[2])))
 }
+
 # Compress dataset
 compress_data <- function(df, U){
   data.frame(as.matrix(df) %*% U)

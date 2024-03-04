@@ -84,7 +84,7 @@ Eigen::VectorXd iterativeTruncHeuristic(int k, const Eigen::VectorXd& beta0, con
 }
 
 // Inner routine: sPCA heuristic for a single PC case: Truncated Power Method of Yuan and Zhang (2013) with random restarts 
-void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, const Eigen::VectorXd& beta0, double& lambda_partial, Eigen::VectorXd& x_output, int timeLimit = 20,  int countdown = 100)
+void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, const Eigen::VectorXd& beta0, double& lambda_partial, Eigen::VectorXd& x_output, int timeLimit = 20,  int maxIter = 100)
 {
   int n = prob_Sigma.rows();
 
@@ -99,6 +99,7 @@ void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, const Eigen::Ve
   double bestObj = evaluate(bestBeta, prob_Sigma);
 
   // Applies the iterative truncation heuristic starting from random points
+  int countdown = maxIter;
   time_t start = time(0);
   while (countdown > 0 && difftime(time(0), start) < timeLimit)
   {
@@ -118,7 +119,7 @@ void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, const Eigen::Ve
     {
       bestObj = obj;
       bestBeta = bestBeta;
-      countdown = 100; // Reset the countdown if found a better solution via random restart
+      countdown = maxIter; // Reset the countdown if found a better solution via random restart
     }
     countdown--;
   }
@@ -152,15 +153,21 @@ List iterativeDeflationHeuristic(
     Eigen::MatrixXd Sigma,
     int r,
     Rcpp::NumericVector ks, // size r
-    int numIters = 200,
+    int maxIter = 200,
     bool verbose = true,
-    double violation_tolerance = 1e-4)
+    double violationTolerance = 1e-4,
+    double stallingTolerance = 1e-8,
+    int maxIterTPW = 200, 
+    int timeLimitTPW = 20)
 {
   int n = Sigma.rows();
 
   double ofv_best = -1e10; // Objective value of the best solution found (solution = set of r PCs)
   double violation_best = n; // Orthogonality violation of the best solution found 
   Eigen::MatrixXd x_best = Eigen::MatrixXd::Zero(n, r); // Best solution found
+
+  double ofv_secondbest = -1e10; // Objective value of the second best solution found (solution = set of r PCs)
+  Eigen::MatrixXd x_secondbest = Eigen::MatrixXd::Zero(n, r); // Second best solution found
 
   Eigen::MatrixXd x_current = Eigen::MatrixXd::Zero(n, r); // Current solution (solution = set of r PCs)
   double ofv_prev = 0; // Objective value of the previous solution
@@ -171,8 +178,8 @@ List iterativeDeflationHeuristic(
   Eigen::VectorXd weights = Eigen::VectorXd::Zero(r); // Weights assigned to each PC in the penalization heuristic (initialized through the first iteration of the algorithm)
   
   double stepSize = 0;
-  int slowPeriod = ceil(ConstantArguments::slowPeriodRate * numIters); // Slow phase: smallest step size (for the penalty) in the beginning to encourage exploration
-  int fastPeriod = ceil(ConstantArguments::fastPeriodRate * numIters); // Faster phase: highest step size (for the penalty) in the end to encourage feasibility
+  int slowPeriod = ceil(ConstantArguments::slowPeriodRate * maxIter); // Slow phase: smallest step size (for the penalty) in the beginning to encourage exploration
+  int fastPeriod = ceil(ConstantArguments::fastPeriodRate * maxIter); // Faster phase: highest step size (for the penalty) in the end to encourage feasibility
 
   if (verbose)
   {
@@ -207,7 +214,7 @@ List iterativeDeflationHeuristic(
   Eigen::VectorXd x_output; // For memory: Current PC
   double lambda_partial = 0; // For memory: Fraction of the variance explained by the current PC 
 
-  for (int theIter = 1; theIter <= numIters; theIter++)
+  for (int theIter = 1; theIter <= maxIter; theIter++)
   {
     theLambda += stepSize;
     
@@ -247,7 +254,7 @@ List iterativeDeflationHeuristic(
       solver.eigenvalues().maxCoeff(&index);
       Eigen::VectorXd beta0 = solver.eigenvectors().col(index); 
 
-      singlePCHeuristic(ks[t], sigma_current, beta0, lambda_partial, x_output);
+      singlePCHeuristic(ks[t], sigma_current, beta0, lambda_partial, x_output, maxIter=maxIterTPW);
 
       x_current.col(t) = x_output;
 
@@ -260,13 +267,13 @@ List iterativeDeflationHeuristic(
     ofv_prev = ofv_overall;
     ofv_overall = evaluate(x_current, Sigma);
 
-    if (theIter == 1) // TBD if needed or if initialization with -1e10 is enough
-    {
-      ofv_prev = ofv_overall;
-    }
+    // if (theIter == 1) // TBD if needed or if initialization with -1e10 is enough
+    // {
+    //   ofv_prev = ofv_overall;
+    // }
 
     double violation = fnviolation(x_current);
-    double violation_forStep = violation;
+    double violation_forStep = violation; // For the step size: if truncate values that are too small for numerical stability
     if (1e-7 > violation) {
       violation_forStep = 1e-7;
     }
@@ -277,7 +284,7 @@ List iterativeDeflationHeuristic(
     chrono::milliseconds executionTime = chrono::duration_cast<chrono::milliseconds>(stopTime - startTime);
     if (verbose)
     {
-      if (numIters <= 25 || theIter % 10 == 0) // Display at every iteration if less than 25 iterations, or every 10 iterations otherwise
+      if (maxIter <= 25 || theIter % 10 == 1) // Display at every iteration if less than 25 iterations, or every 10 iterations otherwise
       {
         Rcout.width(ConstantArguments::separatorLengthShort + ConstantArguments::wordLengthShort);
         Rcout << theIter << " |";
@@ -296,17 +303,25 @@ List iterativeDeflationHeuristic(
       }
     }
 
-    if (violation < violation_tolerance || (theIter == numIters && ofv_best < 0)) //If current solution is feasible (within tolerance) or if we reached the last iteration and no feasible solution was found (ofv_best still <0)
+    if (violation < violationTolerance || (theIter == maxIter && ofv_best < 0)) //If current solution is feasible (within tolerance) or if we reached the last iteration and no feasible solution was found (ofv_best still <0)
     {
       // double ofv_current = (x_current.transpose() * Sigma * x_current).trace();
       if (ofv_best < ofv_overall)
       {
-        x_best = x_current;
+        x_secondbest = x_best; // Saving second-best solution
+        ofv_secondbest = ofv_best;
+
+        x_best = x_current; // Saving best solution
         ofv_best = ofv_overall;
+      }
+      if (ofv_best > ofv_overall && ofv_overall > ofv_secondbest)
+      {
+        x_secondbest = x_current; // Saving second-best solution
+        ofv_secondbest = ofv_overall;
       }
     }
 
-    if (std::fabs(ofv_prev - ofv_overall) < 1e-8 && violation < violation_tolerance) //If the algorithm is stalling (in terms of objective value) and the current solution is feasible (within tolerance)
+    if (std::fabs(ofv_prev - ofv_overall) < stallingTolerance && violation < violationTolerance) //If the algorithm is stalling (in terms of objective value) and the current solution is feasible (within tolerance)
     {
       if (ofv_best < 0) //Safety check: if no feasible solution was found yet, we take the current solution as the best solution
       {
@@ -334,9 +349,9 @@ List iterativeDeflationHeuristic(
 List truncatedPowerMethod(
     Eigen::MatrixXd Sigma,
     int k, // Sparsity level
-    int numIters = 200,
+    int maxIter = 200,
     bool verbose = true,
-    double violation_tolerance = 1e-4)
+    int timeLimit = 10)
 {
   int n = Sigma.rows();
 
@@ -351,9 +366,7 @@ List truncatedPowerMethod(
   solver.eigenvalues().maxCoeff(&index);
   Eigen::VectorXd beta0 = solver.eigenvectors().col(index); 
 
-
-  singlePCHeuristic(k, Sigma, beta0, lambda_partial, x_output);
-  // singlePCHeuristic(k, sigma_current, beta0, lambda_partial, x_output);
+  singlePCHeuristic(k, Sigma, beta0, lambda_partial, x_output, timeLimit=timeLimit, maxIter=maxIter);
 
   auto stopTime = std::chrono::high_resolution_clock::now();
   std::chrono::milliseconds allExecutionTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
@@ -361,7 +374,7 @@ List truncatedPowerMethod(
   double runtime = (double)allExecutionTime.count() / ConstantArguments::millisecondsToSeconds;
 
   Eigen::MatrixXd x_best = Eigen::MatrixXd::Zero(n, 1); // Best solution found
-  x_best.column(0) = x_output;
+  x_best.col(0) = x_output;
 
   List result = List::create(Named("objective_value") = lambda_partial,
                              Named("runtime") = runtime,

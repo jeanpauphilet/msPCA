@@ -78,7 +78,9 @@ for (iter in 1:5){ #Number of replications
  }
 
 library(readr)
-write_csv(resdf, "msPCA_synthetic_results.csv")
+#write_csv(resdf, "msPCA_synthetic_results.csv") #For saving results
+
+resdf <- read_csv("msPCA_synthetic_results.csv")
 
 library(dplyr)
 library(ggplot2)
