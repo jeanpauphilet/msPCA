@@ -360,9 +360,12 @@ List truncatedPowerMethod(
   
   double runtime = (double)allExecutionTime.count() / ConstantArguments::millisecondsToSeconds;
 
+  Eigen::MatrixXd x_best = Eigen::MatrixXd::Zero(n, 1); // Best solution found
+  x_best.column(0) = x_output;
+
   List result = List::create(Named("objective_value") = lambda_partial,
                              Named("runtime") = runtime,
-                             Named("x_best") = x_output);
+                             Named("x_best") = x_best);
   return result;
 
 }
