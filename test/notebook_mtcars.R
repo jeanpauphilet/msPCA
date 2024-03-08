@@ -19,7 +19,7 @@ S <- cor(df)
 ############################################################
 library(msPCA)
 
-## First method: Truncated Power Method for a single sparse PC
+h## First method: Truncated Power Method for a single sparse PC
 tpw_results <- msPCA::truncatedPowerMethod(S, 4, maxIter=100)
 U = as.matrix(tpw_results$x_best)
 #Sparsity

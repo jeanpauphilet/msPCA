@@ -1,6 +1,5 @@
 \name{msPCA-package}
 \alias{msPCA}
-\alias{msPCA-package}
 \docType{package}
 \title{
 \packageTitle{msPCA}
@@ -9,11 +8,10 @@
 \packageDescription{msPCA}
 }
 \details{
+\packageIndices{msPCA}
 
 The DESCRIPTION file:
 \packageDESCRIPTION{msPCA}
-\packageIndices{msPCA}
- An overview of how to use the package, including the most important functions
 }
 \author{
 \packageAuthor{msPCA}
@@ -38,5 +36,5 @@ TestMat <- cor(datasets::mtcars)
 TestRound <- 2
 TestKS <- c(4, 4)
 
-spca(TestMat, TestRound, TestKS)
+iterativeDeflationHeuristic(TestMat, TestRound, TestKS)
 }
