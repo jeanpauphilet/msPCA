@@ -57,7 +57,7 @@ fraction_variance_explained <- function(C, U){
   fve
 }
 
-#' Computes the orthogonality constraint violation defined as the distance (L infinity norm) between $U^\top U$ and the identity matrix
+#' Computes the orthogonality constraint violation defined as the distance (L infinity norm) between $U^T U$ and the identity matrix
 #' @param U A matrix. Each column correspond to an n-dimensional PC. 
 #' @return A float.
 orthogonality_violation <- function(U){
