@@ -47,9 +47,10 @@ resdf = data.frame(n=numeric(), package=character(),
 icol = 1
 for (iter in 1:5){ #Number of replications
 
-  Xfull = mvtnorm::rmvnorm(500, mean = numeric(p), sigma = Strue)
+  Xfull = mvtnorm::rmvnorm(2000, mean = numeric(p), sigma = Strue)
 
-  for (n in seq(25, 250, by = 25)){ #Size of the dataset used to recover the PCs
+  for (n in c(25,50,75,100,150,200,250,500,1000,1500)){ #Size of the dataset used to recover the PCs
+  #for (n in seq(25, 250, by = 25)){ #Size of the dataset used to recover the PCs
     print(n)
 
     X = Xfull[1:n,]
@@ -78,7 +79,7 @@ for (iter in 1:5){ #Number of replications
  }
 
 library(readr)
-#write_csv(resdf, "msPCA_synthetic_results.csv") #For saving results
+write_csv(resdf, "msPCA_synthetic_results.csv") #For saving results
 
 resdf <- read_csv("msPCA_synthetic_results.csv")
 
@@ -86,6 +87,7 @@ library(dplyr)
 library(ggplot2)
 library(RColorBrewer)
 std.error <- function(x){sd(x)/sqrt(length(x))}
+
 sumdf <- resdf %>%
   group_by(n,package) %>%
   summarise(accuracy=mean(accuracy),
@@ -102,27 +104,28 @@ sumdf <- resdf %>%
          varexplained_max=varexplained_mean+2*varexplained_se
          )
 
-
 sumdf %>%
+  #filter(n <= 500) %>%
   ggplot() + aes(x=n, y=ortho_viol_mean, group=package, color=package,shape=package) +
   geom_line(size=0.7) +
   geom_point(size=3) +
   geom_errorbar(aes(ymin=ortho_viol_min,ymax=ortho_viol_max), width=0.1) +
   theme_minimal() +
   scale_color_brewer(palette="Set1") +
-  labs(x="Sample size n", y="Orthogonality violation", legend="Package") +
+  labs(x="Sample size n", y="Orthogonality violation", group="Package", shape="Package", color="Package") +
   theme(legend.position="bottom",
         axis.line = element_line(colour = "black"),
         panel.grid.major = element_line(colour = "grey80"),
         panel.grid.minor = element_line(colour = "grey90"))
 
 sumdf %>%
+  #filter(n <= 500) %>%
   ggplot() + aes(x=n, y=varexplained_mean, group=package, color=package, shape=package) +
   geom_line(size=0.7) + geom_point(size=3) +
   geom_errorbar(aes(ymin=varexplained_min,ymax=varexplained_max), width=0.1) +
   theme_minimal() +
   scale_color_brewer(palette="Set1") +
-  labs(x="Sample size n", y="Out-of-sample variance explained (%)", legend="Package") +
+  labs(x="Sample size n", y="Out-of-sample variance explained (%)", group="Package", shape="Package", color="Package") +
   theme(legend.position="bottom",
         axis.line = element_line(colour = "black"),
         panel.grid.major = element_line(colour = "grey80"),
