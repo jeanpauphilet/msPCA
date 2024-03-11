@@ -93,13 +93,13 @@ orthogonality_violation <- function(U){
 #' mspcares <- mspca(TestMat, 2, c(4,4))
 #' print.mspca(mspcares, TestMat)
 print.mspca<-function(sol_object, C){
-  cat("\n msPCA solution:\n")
+  cat("\nmsPCA solution:\n")
   r <- dim(sol_object$x_best)[2] 
   cat("\n")
   cat(paste(r,"sparse PCs",sep=" "), "\n")
   
   fve <- fraction_variance_explained_perPC(C, sol_object$x_best)
-  cat("Pct. of exp. var. :", format(round(fve, 3)*100), "\n")
+  cat("Pct. of explained variance :", format(round(fve, 3)*100), "\n")
   
   v <- sol_object$x_best
   k <- 1:r
@@ -109,7 +109,7 @@ print.mspca<-function(sol_object, C){
   row.names(v) <- row.names(C)
   
   cat("Num. of non-zero loadings : ", k, "\n")
-  cat("Sparse loadings \n")
+  cat("Sparse PCs \n")
   print(round(v,3))
   
 }
