@@ -46,11 +46,9 @@ Then, define the input variables.
 `  ncol = 10,`<br />
 `  byrow = TRUE`<br />
 `)`<br />
-`TestRound <- 2`<br />
-`TestKS <- c(4, 4)`<br />
 And then simmply call the function
 <br />
-`cpp_findmultPCs_deflation(TestMat, TestRound, TestKS)`
+`mspca(TestMat, 2, c(4,4))`
 <a id="Files"></a>
 
 ## Development 
@@ -64,8 +62,10 @@ Here, we provide more information about the code structure and organization to h
 ## Files
 - R
   - RcppExports.R<br />
-      It offers the R interface, which will call the corresponding C++ interface. Regenerate or change it manually if needed (e.g., if the interface changes). It can be generated using `Rcpp::compileAttributes()`.
-- man/ contains the pages of the manual: one page for the package and one per function. 
+      It offers the R interface, which will call the corresponding C++ interface. Regenerate or change it manually if needed (e.g., if the interface changes). We recommend generating it automatically by using `Rcpp::compileAttributes()`.
+  - main.R<br />
+      It contains all the functions of the package. For the functions coded in Rcpp (and exported in the RcppExports.R file), this script provides (i) user-friendly names, (ii) documentation. This script also defines useful supporting functions.
+- man/ contains the pages of the manual: one page for the package and one per function. The are generated automatically from the comments in R/main.R via the `devtools::document()` command. 
 - src/ contains the source files of the algorithm, in C++. 
   - ConstantArguments.h<br />
       It contains some parameters of the algorithm that are not directly tuneable by the end user.
@@ -86,4 +86,4 @@ Here, we provide more information about the code structure and organization to h
 - msPCA.Rproj<br />
     It contains the settings of this R project. It is used by RStudio and often does not need to be changed.
 ## Guidance to future developers
-- The essence of this algorithm is in the file "msPCA_R_CPP.cpp" and the file "ConstantArguments.h", where "msPCA_R_CPP.cpp" handles the computation and "ConstantArguments.h" lists all arguments. (This needs to change depending on your decisions on arguments.)
+- The essence of this algorithm is in the file "msPCA_R_CPP.cpp" and the file "ConstantArguments.h", where "msPCA_R_CPP.cpp" handles the computation and "ConstantArguments.h" lists all internal arguments. 

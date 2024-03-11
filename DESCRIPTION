@@ -1,7 +1,7 @@
 Package: msPCA
 Type: Package
 Title: Sparse Principal Component Analysis with Multiple Principal Components
-Version: 0.1
+Version: 0.1.0
 Date: 2024-03-01
 Author: Ryan Cory-Wright, Jean Pauphilet
 Maintainer: Jean Pauphilet <jpauphilet@london.edu>
