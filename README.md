@@ -34,11 +34,6 @@ And then simmply call the function
 ## Development 
 Here, we provide more information about the code structure and organization to help developers that would like to improve the method or build up on it. 
 
-## Notes
-- You can change the variable names.
-- You can decide if you want to assign names to plain numbers or add comments for them.
-- The help menu of the R package needs to change.
-
 ## Files
 - R
   - RcppExports.R<br />
