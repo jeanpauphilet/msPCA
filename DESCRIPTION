@@ -1,11 +1,15 @@
 Package: msPCA
 Type: Package
-Title: Sparse Principal Component Analysis with Multiple Principal Components
-Version: 0.1.0
+Title: msPCA: Sparse Principal Component Analysis with Multiple Principal Components
+Version: 0.0.0
 Date: 2024-03-01
 Author: Ryan Cory-Wright, Jean Pauphilet
 Maintainer: Jean Pauphilet <jpauphilet@london.edu>
-Description: Algorithm for computing multiple sparse principal components of a dataset. The algorithm is based on the paper "Sparse PCA with Multiple Principal Components" by Ryan Cory-Wright and Jean Pauphilet (2023) <arXiv:2209.14790>.
+Description: An algorithm for computing multiple sparse principal components
+    of a dataset, based on Cory-Wright and Pauphilet "Sparse PCA with Multiple 
+    Principal Components" (2023) <arXiv:2209.14790>. The algorithm is an 
+    iterative deflation heuristic, with a truncated power method applied at 
+    each iteration.
 License: MIT + file LICENSE
 Imports: Rcpp (>= 1.0.11)
 LinkingTo: Rcpp, RcppEigen
