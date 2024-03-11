@@ -3,6 +3,12 @@ Type: Package
 Title: msPCA: Sparse Principal Component Analysis with Multiple Principal Components
 Version: 0.0.0
 Date: 2024-03-01
+Authors@R: c(
+    person("Ryan", "Cory-Wright", , "r.cory-wright@imperial.ac.uk", role = c("aut", "cph"),
+           comment = c(ORCID = "0000-0002-4485-0619")),
+    person("Jean", "Pauphilet", , "jpauphilet@london.edu", role = c("aut", "cre", "cph"),
+           comment = c(ORCID = "0000-0001-6352-0984"))
+    )
 Author: Ryan Cory-Wright, Jean Pauphilet
 Maintainer: Jean Pauphilet <jpauphilet@london.edu>
 Description: An algorithm for computing multiple sparse principal components
