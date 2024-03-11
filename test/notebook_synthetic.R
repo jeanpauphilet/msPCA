@@ -1,5 +1,3 @@
-source("utils.R")
-
 ############################################################
 ## In this notebook, we illustrate the use of the msPCA package on synthetic data.
 ## We generate a spiked-covariance matrix with 2 4-sparse spikes (or PCs).

@@ -7,12 +7,16 @@
 fraction_variance_explained(C, U)
 }
 \arguments{
-\item{U}{A matrix. The matrix containing the PCs (p x k).}
+\item{C}{A matrix. The correlation or covariance matrix (p x p).}
 
-\item{Sigma}{A matrix. The correlation or covariance matrix (p x p).}
+\item{U}{A matrix. The matrix containing the r PCs (p x r).}
 }
 \value{
 A float.
+library(datasets)
+TestMat <- cor(datasets::mtcars)
+mspcares <- mspca(TestMat, 2, c(4,4))
+fraction_variance_explained(mspcares$x_best, TestMat)
 }
 \description{
 Compute the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix)

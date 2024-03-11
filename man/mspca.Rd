@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{mspca}
 \alias{mspca}
-\title{Returns multiple sparse principal component of a matrix using an iterative deflation heuristic}
+\title{Returns multiple sparse principal component of a matrix using an iterative deflation heuristic.}
 \usage{
 mspca(
   Sigma,
@@ -23,23 +23,23 @@ mspca(
 
 \item{ks}{A l ist of integers. Target sparsity of each PC.}
 
-\item{maxIter}{An integer. Maximum number of iterations of the algorithm. Default 200.}
+\item{maxIter}{(optional) An integer. Maximum number of iterations of the algorithm. Default 200.}
 
-\item{verbose}{A Boolean. Controls console output. Default TRUE.}
+\item{verbose}{(optional) A Boolean. Controls console output. Default TRUE.}
 
-\item{violationTolerance}{A float. Tolerance for the violation of the orthogonality constraints. Default 1e-4}
+\item{violationTolerance}{(optional) A float. Tolerance for the violation of the orthogonality constraints. Default 1e-4}
 
-\item{stallingTolerance}{A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8}
+\item{stallingTolerance}{(optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8}
 
-\item{maxIterTPW}{An integer. Maximum number of iterations of the truncated power method (inner iteration). Default 200.}
+\item{maxIterTPW}{(optional) An integer. Maximum number of iterations of the truncated power method (inner iteration). Default 200.}
 
-\item{timeLimitTPW}{An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.}
+\item{timeLimitTPW}{(optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.}
 }
 \value{
-An object with 4 fields: x_best (array containing the sparse PCs), objective_value, orthogonality_violation, runtime.
+An object with 4 fields: x_best (p x r array containing the sparse PCs), objective_value, orthogonality_violation, runtime.
 }
 \description{
-Returns multiple sparse principal component of a matrix using an iterative deflation heuristic
+Returns multiple sparse principal component of a matrix using an iterative deflation heuristic.
 }
 \examples{
 library(datasets)

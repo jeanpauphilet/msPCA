@@ -63,6 +63,10 @@ fraction_variance_explained_perPC <- function(C, U){
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. The matrix containing the r PCs (p x r).
 #' @return A float.
+#' library(datasets)
+#' TestMat <- cor(datasets::mtcars)
+#' mspcares <- mspca(TestMat, 2, c(4,4))
+#' fraction_variance_explained(mspcares$x_best, TestMat)
 fraction_variance_explained <- function(C, U){
   sum(fraction_variance_explained_perPC(C, U))
 }
@@ -70,6 +74,11 @@ fraction_variance_explained <- function(C, U){
 #' Computes the orthogonality constraint violation defined as the distance (infinity norm) between $U^T U$ and the identity matrix
 #' @param U A matrix. Each column correspond to an n-dimensional PC.
 #' @return A float.
+#' #' @examples
+#' library(datasets)
+#' TestMat <- cor(datasets::mtcars)
+#' mspcares <- mspca(TestMat, 2, c(4,4))
+#' orthogonality_violation(mspcares$x_best)
 orthogonality_violation <- function(U){
   sum(abs(t(U) %*% U - diag(dim(U)[2])))
 }

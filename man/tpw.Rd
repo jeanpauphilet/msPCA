@@ -11,14 +11,14 @@ tpw(Sigma, k, maxIter = 200L, verbose = TRUE, timeLimit = 10L)
 
 \item{k}{An integer. Target sparsity of the PC.}
 
-\item{maxIter}{An integer. Maximum number of iterations of the algorithm. Default 200.}
+\item{maxIter}{(optional) An integer. Maximum number of iterations of the algorithm. Default 200.}
 
-\item{verbose}{A Boolean. Controls console output. Default TRUE.}
+\item{verbose}{(optional) A Boolean. Controls console output. Default TRUE.}
 
-\item{timeLimit}{An integer. Maximum time in seconds. Default 10.}
+\item{timeLimit}{(optional) An integer. Maximum time in seconds. Default 10.}
 }
 \value{
-An object with 3 fields: x_best (array containing the sparse PCs), objective_value, runtime.
+An object with 3 fields: x_best (p x 1 array containing the sparse PC), objective_value, runtime.
 }
 \description{
 Returns the leading sparse principal component of a matrix using the truncated power method
