@@ -2,7 +2,7 @@
 An R Package for Sparse PCA with Multiple Principal Components
 
 ## Installation 
-This package can be installed from CRAN directly: 
+This package can be installed from CRAN directly (pending CRAN registration): 
 <br />`install.packages("msPCA")`<br />
 Alternatively, it can be installed from the Github repository using the `devtools` package. You would first need to install `devtools`:
 <br />`install.packages("devtools")`<br />
