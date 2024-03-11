@@ -7,13 +7,13 @@
 orthogonality_violation(U)
 }
 \arguments{
-\item{U}{A matrix. Each column correspond to an n-dimensional PC.}
+\item{U}{A matrix. Each column correspond to an p-dimensional PC.}
 }
 \value{
 A float.
 }
 \description{
-Computes the orthogonality constraint violation defined as the distance (infinity norm) between $U^T U$ and the identity matrix.
+Computes the orthogonality constraint violation defined as the distance (infinity norm) between \eqn{U^T U} and the identity matrix.
 }
 \examples{
 library(datasets)

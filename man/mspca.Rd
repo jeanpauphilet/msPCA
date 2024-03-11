@@ -21,7 +21,7 @@ mspca(
 
 \item{r}{An integer. Number of principal components (PCs) to be computed.}
 
-\item{ks}{A l ist of integers. Target sparsity of each PC.}
+\item{ks}{A list of integers. Target sparsity of each PC.}
 
 \item{maxIter}{(optional) An integer. Maximum number of iterations of the algorithm. Default 200.}
 
@@ -36,7 +36,7 @@ mspca(
 \item{timeLimitTPW}{(optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.}
 }
 \value{
-An object with 4 fields: x_best (p x r array containing the sparse PCs), objective_value, orthogonality_violation, runtime.
+An object with 4 fields: `x_best` (p x r array containing the sparse PCs), `objective_value`, `orthogonality_violation`, `runtime`.
 }
 \description{
 Returns multiple sparse principal component of a matrix using an iterative deflation heuristic.

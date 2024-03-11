@@ -15,7 +15,7 @@ fraction_variance_explained(C, U)
 A float.
 }
 \description{
-Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by a seet of PCs.
+Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by a set of PCs.
 }
 \examples{
 library(datasets)

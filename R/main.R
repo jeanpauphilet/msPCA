@@ -9,14 +9,14 @@
 #' Returns multiple sparse principal component of a matrix using an iterative deflation heuristic.
 #' @param Sigma A matrix. The correlation or covariance matrix, whose sparse PCs will be computed.
 #' @param r An integer. Number of principal components (PCs) to be computed.
-#' @param ks A l ist of integers. Target sparsity of each PC.
+#' @param ks A list of integers. Target sparsity of each PC.
 #' @param maxIter (optional) An integer. Maximum number of iterations of the algorithm. Default 200.
 #' @param verbose (optional) A Boolean. Controls console output. Default TRUE.
 #' @param violationTolerance (optional) A float. Tolerance for the violation of the orthogonality constraints. Default 1e-4
 #' @param stallingTolerance (optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8
 #' @param maxIterTPW (optional) An integer. Maximum number of iterations of the truncated power method (inner iteration). Default 200.
 #' @param  timeLimitTPW (optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.
-#' @return An object with 4 fields: x_best (p x r array containing the sparse PCs), objective_value, orthogonality_violation, runtime.
+#' @return An object with 4 fields: `x_best` (p x r array containing the sparse PCs), `objective_value`, `orthogonality_violation`, `runtime`.
 #' @examples
 #' library(datasets)
 #' TestMat <- cor(datasets::mtcars)
@@ -31,7 +31,7 @@ mspca <- iterativeDeflationHeuristic
 #' @param maxIter (optional) An integer. Maximum number of iterations of the algorithm. Default 200.
 #' @param verbose (optional) A Boolean. Controls console output. Default TRUE.
 #' @param timeLimit (optional) An integer. Maximum time in seconds. Default 10.
-#' @return An object with 3 fields: x_best (p x 1 array containing the sparse PC), objective_value, runtime.
+#' @return An object with 3 fields: `x_best`` (p x 1 array containing the sparse PC), `objective_value`, `runtime`.
 #' @examples
 #' library(datasets)
 #' TestMat <- cor(datasets::mtcars)
@@ -69,7 +69,7 @@ fraction_variance_explained_perPC <- function(C, U){
 
 #' Fraction of variance explained
 #'
-#' Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by a seet of PCs.
+#' Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by a set of PCs.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. The matrix containing the r PCs (p x r).
 #' @return A float.
@@ -84,8 +84,8 @@ fraction_variance_explained <- function(C, U){
 
 #' Orthogonality constraint violation
 #'
-#' Computes the orthogonality constraint violation defined as the distance (infinity norm) between $U^T U$ and the identity matrix.
-#' @param U A matrix. Each column correspond to an n-dimensional PC.
+#' Computes the orthogonality constraint violation defined as the distance (infinity norm) between \eqn{U^T U} and the identity matrix.
+#' @param U A matrix. Each column correspond to an p-dimensional PC.
 #' @return A float.
 #' @examples
 #' library(datasets)
@@ -106,7 +106,7 @@ orthogonality_violation <- function(U){
 #' TestMat <- cor(datasets::mtcars)
 #' mspcares <- mspca(TestMat, 2, c(4,4))
 #' print.mspca(mspcares, TestMat)
-print.mspca<-function(sol_object, C){
+print_mspca <- function(sol_object, C){
   cat("\nmsPCA solution:\n")
   r <- dim(sol_object$x_best)[2] 
   cat("\n")
