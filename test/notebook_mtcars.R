@@ -28,7 +28,7 @@ msPCA::fraction_variance_explained(S,U)
 
 ## Second method: Iterative Deflation Heuristic for multiple sparse PCs
 mspca_results <- msPCA::mspca(S, 2, c(4,4), verbose=TRUE)
-print.mspca(mspca_results, S)
+msPCA::print_mspca(mspca_results, S)
 
 #Sparsity
 colSums(abs(mspca_results$x_best) > 0)
@@ -111,5 +111,3 @@ colSums(abs(sparsepca$loadings) > 0)
 msPCA::orthogonality_violation(sparsepca$loadings)
 #Fraction of variance explained
 msPCA::fraction_variance_explained(S,sparsepca$loadings)
-
-
