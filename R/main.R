@@ -4,6 +4,8 @@
 
 
 ## 1 - Interface with RcppExports
+#' Multiple Sparse PCA
+#'
 #' Returns multiple sparse principal component of a matrix using an iterative deflation heuristic.
 #' @param Sigma A matrix. The correlation or covariance matrix, whose sparse PCs will be computed.
 #' @param r An integer. Number of principal components (PCs) to be computed.
@@ -21,7 +23,9 @@
 #' mspca(TestMat, 2, c(4,4))
 mspca <- iterativeDeflationHeuristic
 
-#' Returns the leading sparse principal component of a matrix using the truncated power method
+#' Truncated Power Method
+#'
+#' Returns the leading sparse principal component of a matrix using the truncated power method.
 #' @param Sigma A matrix. The correlation or covariance matrix, whose sparse PCs will be computed.
 #' @param k An integer. Target sparsity of the PC.
 #' @param maxIter (optional) An integer. Maximum number of iterations of the algorithm. Default 200.
@@ -36,7 +40,9 @@ tpw <- truncatedPowerMethod
 
 
 ## 2 - Useful functions
-#' Compute the fraction of variance explained by each PC
+#' Variance explained per PC
+#'
+#' Computes the fraction of variance explained by each PC.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. The matrix containing the r PCs (p x r).
 #' @return An array.
@@ -49,7 +55,9 @@ variance_explained_perPC <- function(C, U){
   ve
 }
 
-#' Compute the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by each PC
+#' Fraction of variance explained per PC
+#'
+#' Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by each PC.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. The matrix containing the r PCs (p x r).
 #' @return An array.
@@ -59,7 +67,9 @@ fraction_variance_explained_perPC <- function(C, U){
   fve
 }
 
-#' Compute the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix)
+#' Fraction of variance explained
+#'
+#' Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by a seet of PCs.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. The matrix containing the r PCs (p x r).
 #' @return A float.
@@ -71,7 +81,9 @@ fraction_variance_explained <- function(C, U){
   sum(fraction_variance_explained_perPC(C, U))
 }
 
-#' Computes the orthogonality constraint violation defined as the distance (infinity norm) between $U^T U$ and the identity matrix
+#' Orthogonality constraint violation
+#'
+#' Computes the orthogonality constraint violation defined as the distance (infinity norm) between $U^T U$ and the identity matrix.
 #' @param U A matrix. Each column correspond to an n-dimensional PC.
 #' @return A float.
 #' #' @examples
@@ -83,8 +95,9 @@ orthogonality_violation <- function(U){
   sum(abs(t(U) %*% U - diag(dim(U)[2])))
 }
 
-
-#' Displays the output of the msPCA algorithm
+#' Print mspca output
+#'
+#' Displays the output of the msPCA algorithm.
 #' @param sol_object A list. The output of the mspca or twp function.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @examples

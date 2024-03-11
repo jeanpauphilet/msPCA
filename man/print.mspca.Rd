@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{print.mspca}
 \alias{print.mspca}
-\title{Displays the output of the msPCA algorithm}
+\title{Print mspca output}
 \usage{
 \method{print}{mspca}(sol_object, C)
 }
@@ -12,7 +12,7 @@
 \item{C}{A matrix. The correlation or covariance matrix (p x p).}
 }
 \description{
-Displays the output of the msPCA algorithm
+Displays the output of the msPCA algorithm.
 }
 \examples{
 library(datasets)

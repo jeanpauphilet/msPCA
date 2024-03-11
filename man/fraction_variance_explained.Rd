@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{fraction_variance_explained}
 \alias{fraction_variance_explained}
-\title{Compute the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix)}
+\title{Fraction of variance explained}
 \usage{
 fraction_variance_explained(C, U)
 }
@@ -19,5 +19,5 @@ mspcares <- mspca(TestMat, 2, c(4,4))
 fraction_variance_explained(mspcares$x_best, TestMat)
 }
 \description{
-Compute the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix)
+Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by a seet of PCs.
 }

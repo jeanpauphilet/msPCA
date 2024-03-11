@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{variance_explained_perPC}
 \alias{variance_explained_perPC}
-\title{Compute the fraction of variance explained by each PC}
+\title{Variance explained per PC}
 \usage{
 variance_explained_perPC(C, U)
 }
@@ -15,5 +15,5 @@ variance_explained_perPC(C, U)
 An array.
 }
 \description{
-Compute the fraction of variance explained by each PC
+Computes the fraction of variance explained by each PC.
 }

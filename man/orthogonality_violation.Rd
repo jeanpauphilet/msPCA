@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{orthogonality_violation}
 \alias{orthogonality_violation}
-\title{Computes the orthogonality constraint violation defined as the distance (infinity norm) between $U^T U$ and the identity matrix}
+\title{Orthogonality constraint violation}
 \usage{
 orthogonality_violation(U)
 }
@@ -18,5 +18,5 @@ mspcares <- mspca(TestMat, 2, c(4,4))
 orthogonality_violation(mspcares$x_best)
 }
 \description{
-Computes the orthogonality constraint violation defined as the distance (infinity norm) between $U^T U$ and the identity matrix
+Computes the orthogonality constraint violation defined as the distance (infinity norm) between $U^T U$ and the identity matrix.
 }

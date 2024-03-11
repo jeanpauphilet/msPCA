@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{fraction_variance_explained_perPC}
 \alias{fraction_variance_explained_perPC}
-\title{Compute the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by each PC}
+\title{Fraction of variance explained per PC}
 \usage{
 fraction_variance_explained_perPC(C, U)
 }
@@ -15,5 +15,5 @@ fraction_variance_explained_perPC(C, U)
 An array.
 }
 \description{
-Compute the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by each PC
+Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by each PC.
 }

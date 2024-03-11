@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{tpw}
 \alias{tpw}
-\title{Returns the leading sparse principal component of a matrix using the truncated power method}
+\title{Truncated Power Method}
 \usage{
 tpw(Sigma, k, maxIter = 200L, verbose = TRUE, timeLimit = 10L)
 }
@@ -21,7 +21,7 @@ tpw(Sigma, k, maxIter = 200L, verbose = TRUE, timeLimit = 10L)
 An object with 3 fields: x_best (p x 1 array containing the sparse PC), objective_value, runtime.
 }
 \description{
-Returns the leading sparse principal component of a matrix using the truncated power method
+Returns the leading sparse principal component of a matrix using the truncated power method.
 }
 \examples{
 library(datasets)

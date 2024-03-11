@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{mspca}
 \alias{mspca}
-\title{Returns multiple sparse principal component of a matrix using an iterative deflation heuristic.}
+\title{Multiple Sparse PCA}
 \usage{
 mspca(
   Sigma,
