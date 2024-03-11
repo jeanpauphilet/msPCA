@@ -13,11 +13,13 @@ fraction_variance_explained(C, U)
 }
 \value{
 A float.
+}
+\description{
+Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by a seet of PCs.
+}
+\examples{
 library(datasets)
 TestMat <- cor(datasets::mtcars)
 mspcares <- mspca(TestMat, 2, c(4,4))
 fraction_variance_explained(mspcares$x_best, TestMat)
-}
-\description{
-Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by a seet of PCs.
 }

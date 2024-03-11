@@ -11,12 +11,13 @@ orthogonality_violation(U)
 }
 \value{
 A float.
-#' @examples
+}
+\description{
+Computes the orthogonality constraint violation defined as the distance (infinity norm) between $U^T U$ and the identity matrix.
+}
+\examples{
 library(datasets)
 TestMat <- cor(datasets::mtcars)
 mspcares <- mspca(TestMat, 2, c(4,4))
 orthogonality_violation(mspcares$x_best)
-}
-\description{
-Computes the orthogonality constraint violation defined as the distance (infinity norm) between $U^T U$ and the identity matrix.
 }
