@@ -122,8 +122,10 @@ print_mspca <- function(sol_object, C){
   }
   row.names(v) <- row.names(C)
   
+  union_of_supports <- rowSums(abs(v) > 0) > 0
+
   cat("Num. of non-zero loadings : ", k, "\n")
   cat("Sparse PCs \n")
-  print(round(v,3))
+  print(round(v[union_of_supports,],3))
   
 }

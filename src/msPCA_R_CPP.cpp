@@ -32,11 +32,7 @@ double evaluate(const Eigen::MatrixXd& x, const Eigen::MatrixXd& A)
   return (x.transpose() * A * x).trace();
 }
 
-/*Response:
- I was not familiar with using C++ in R, so I implemented my own sort function to test.
- I then forgot about this issue.
- I have rewritten this function.
- */
+
 // Selects the k indices of x corresponding the k largest coordinates (in absolute value)
 Rcpp::NumericVector selectperm2(const Eigen::VectorXd& x, int k)
 {
@@ -87,12 +83,6 @@ Eigen::VectorXd iterativeTruncHeuristic(int k, const Eigen::VectorXd& beta0, con
 void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, const Eigen::VectorXd& beta0, double& lambda_partial, Eigen::VectorXd& x_output, int maxIter = 100, int timeLimit = 20)
 {
   int n = prob_Sigma.rows();
-
-  // // Finds the largest eigenvector of prob_Sigma, beta0
-  // Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(prob_Sigma);
-  // int index;
-  // solver.eigenvalues().maxCoeff(&index);
-  // Eigen::VectorXd beta0 = solver.eigenvectors().col(index); 
 
   // Applies the iterative truncation heuristic starting from beta0
   Eigen::VectorXd bestBeta = iterativeTruncHeuristic(k, beta0, prob_Sigma);
@@ -257,11 +247,7 @@ List iterativeDeflationHeuristic(
         }
       }
 
-      
-      // solver = Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>(sigma_current); // TBD: is this needed?
-      // prob_Sigma = sigma_current;
-
-      // beta0 = 
+      // Compute largest eigenvector of sigma_current, to start the TPW heuristic
       int index;
       solver.eigenvalues().maxCoeff(&index);
       Eigen::VectorXd beta0 = solver.eigenvectors().col(index); 
