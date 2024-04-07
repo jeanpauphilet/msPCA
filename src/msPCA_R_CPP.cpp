@@ -84,7 +84,7 @@ Eigen::VectorXd iterativeTruncHeuristic(int k, const Eigen::VectorXd& beta0, con
 }
 
 // Inner routine: sPCA heuristic for a single PC case: Truncated Power Method of Yuan and Zhang (2013) with random restarts 
-void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, const Eigen::VectorXd& beta0, double& lambda_partial, Eigen::VectorXd& x_output, int timeLimit = 20,  int maxIter = 100)
+void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, const Eigen::VectorXd& beta0, double& lambda_partial, Eigen::VectorXd& x_output, int maxIter = 100, int timeLimit = 20)
 {
   int n = prob_Sigma.rows();
 
@@ -162,6 +162,12 @@ List iterativeDeflationHeuristic(
 {
   int n = Sigma.rows();
 
+  if (ks.size() < r) //If sparsity pattern is not fully defined, we complete it with zeros//we reduce the number of PCs to the number of sparsity patterns
+  {
+    warning("Warning: You requested %i PCs but only provided %i sparsity levels. Ran the algorithm for %i PCs instead.", r, ks.size(), ks.size());
+    r = ks.size();
+  }
+
   double ofv_best = -1e10; // Objective value of the best solution found (solution = set of r PCs)
   double violation_best = n; // Orthogonality violation of the best solution found 
   Eigen::MatrixXd x_best = Eigen::MatrixXd::Zero(n, r); // Best solution found
@@ -221,6 +227,12 @@ List iterativeDeflationHeuristic(
     // Iteratively updating each PC
     for (int t = 0; t < r; t++)
     {
+      if (theIter == 1 && ks[t] > n) // Verifies that the sparsity level is not higher than the dimension
+      {
+        warning("Warning: For PC #%i, you requested a sparsity level (%i) that exceeds the dimension (%i). Ran the algorithm with a sparsity level of %i instead.", t+1, ks[t], n, n);
+        ks[t] = n;
+      }
+
       // Eigen::MatrixXd 
       sigma_current = Sigma;
       for (int s = 0; s < r; s++)
@@ -254,7 +266,7 @@ List iterativeDeflationHeuristic(
       solver.eigenvalues().maxCoeff(&index);
       Eigen::VectorXd beta0 = solver.eigenvectors().col(index); 
 
-      singlePCHeuristic(ks[t], sigma_current, beta0, lambda_partial, x_output, maxIter=maxIterTPW);
+      singlePCHeuristic(ks[t], sigma_current, beta0, lambda_partial, x_output, maxIterTPW);
 
       x_current.col(t) = x_output;
 
@@ -282,9 +294,11 @@ List iterativeDeflationHeuristic(
     
     auto stopTime = chrono::high_resolution_clock::now();
     chrono::milliseconds executionTime = chrono::duration_cast<chrono::milliseconds>(stopTime - startTime);
+    
+    bool stopCriterion = (theIter == maxIter) || (std::fabs(ofv_prev - ofv_overall) < stallingTolerance && violation < violationTolerance);
     if (verbose)
     {
-      if (maxIter <= 25 || theIter % 10 == 1) // Display at every iteration if less than 25 iterations, or every 10 iterations otherwise
+      if (maxIter <= 25 || theIter % 10 == 1 || stopCriterion) // Display at every iteration if less than 25 iterations, or every 10 iterations otherwise, or at the last iteration
       {
         Rcout.width(ConstantArguments::separatorLengthShort + ConstantArguments::wordLengthShort);
         Rcout << theIter << " |";
@@ -355,6 +369,11 @@ List truncatedPowerMethod(
 {
   int n = Sigma.rows();
 
+  if (k > n) //If sparsity level is higher than dimension, we reduce the sparsity level to the dimension
+  {
+    warning("You requested a sparsity level (%i) that exceeds the dimension (%i). Ran the algorithm with a sparsity level of %i instead.", k, n, n);
+    k = n;
+  }
   auto startTime = std::chrono::high_resolution_clock::now();
 
   Eigen::VectorXd x_output; // For memory: Current PC
@@ -366,7 +385,7 @@ List truncatedPowerMethod(
   solver.eigenvalues().maxCoeff(&index);
   Eigen::VectorXd beta0 = solver.eigenvectors().col(index); 
 
-  singlePCHeuristic(k, Sigma, beta0, lambda_partial, x_output, timeLimit=timeLimit, maxIter=maxIter);
+  singlePCHeuristic(k, Sigma, beta0, lambda_partial, x_output, maxIter, timeLimit);
 
   auto stopTime = std::chrono::high_resolution_clock::now();
   std::chrono::milliseconds allExecutionTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
