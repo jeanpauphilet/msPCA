@@ -3,12 +3,23 @@ An R Package for Sparse PCA with Multiple Principal Components
 
 ## Installation 
 This package can be installed from CRAN directly (pending CRAN registration): 
-<br />`install.packages("msPCA")`<br />
+
+```r
+install.packages("msPCA")
+```
+
 Alternatively, it can be installed from the Github repository using the `devtools` package. You would first need to install `devtools`:
-<br />`install.packages("devtools")`<br />
+
+```r
+install.packages("devtools")
+```
+
 and then run the following commands: 
-<br /> `library(devtools)`<br />
-`install_github('jeanpauphilet/msPCA')`<br />
+
+```r
+library(devtools)
+install_github('jeanpauphilet/msPCA')
+```
 
 ## Getting started
 The package consists of one main function, `msPCA`, which takes as input:
@@ -19,16 +30,21 @@ The package consists of one main function, `msPCA`, which takes as input:
 It returns...
 
 Here is a short example demonstrating how to use the package. First, you need to load the library. 
-<br />
-`library(msPCA)`<br />
+```r
+library(msPCA)
+```
 Then, define the input variables.
-<br />
-`library(datasets)` 
-`df <- datasets::mtcars`<br />
-`TestMat <- cor(df)`<br />
-And then simmply call the function
-<br />
-`mspca(TestMat, 2, c(4,4))`
+```r
+library(datasets)
+df <- datasets::mtcars
+TestMat <- cor(df)
+```
+And then simply call the function
+
+```r
+mspca(TestMat, 2, c(4,4))
+```
+
 <a id="Files"></a>
 
 ## Development 
@@ -62,3 +78,4 @@ Here, we provide more information about the code structure and organization to h
     It contains the settings of this R project. It is used by RStudio and often does not need to be changed.
 ## Guidance to future developers
 - The essence of this algorithm is in the file "msPCA_R_CPP.cpp" and the file "ConstantArguments.h", where "msPCA_R_CPP.cpp" handles the computation and "ConstantArguments.h" lists all internal arguments. 
+
