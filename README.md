@@ -8,7 +8,7 @@ This package can be installed from CRAN directly (pending CRAN registration):
 install.packages("msPCA")
 ```
 
-Alternatively, it can be installed from the Github repository using the `devtools` package. You would first need to install `devtools`:
+Alternatively, it can be installed from this Github repository using the `devtools` package. You would first need to install `devtools`:
 
 ```r
 install.packages("devtools")
@@ -50,10 +50,10 @@ mspca(TestMat, 2, c(4,4))
 ## Development 
 Here, we provide more information about the code structure and organization to help developers that would like to improve the method or build up on it. 
 
-## Files
+### Files
 - R
   - RcppExports.R<br />
-      It offers the R interface, which will call the corresponding C++ interface. Regenerate or change it manually if needed (e.g., if the interface changes). We recommend generating it automatically by using `Rcpp::compileAttributes()`.
+      It offers the R interface, which will call the corresponding C++ functions. Regenerate or change it manually if needed (e.g., if the interface changes). We recommend generating it automatically by using `Rcpp::compileAttributes()`.
   - main.R<br />
       It contains all the functions of the package. For the functions coded in Rcpp (and exported in the RcppExports.R file), this script provides (i) user-friendly names, (ii) documentation. This script also defines useful supporting functions.
 - man/ contains the pages of the manual: one page for the package and one per function. The are generated automatically from the comments in R/main.R via the `devtools::document()` command. 
