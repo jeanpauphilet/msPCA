@@ -28,10 +28,10 @@ The package consists of one main function, `msPCA`, which takes as input:
 - a list of r integers corresponding to the sparsity of each PC.
   
 It returns an objecti with 4 fields
-- 'x_best' (p x r array containing the sparse PCs), 
-- 'objective_value'
-- 'orthogonality_violation'
-- 'runtime'.
+- `x_best` (p x r array containing the sparse PCs), 
+- `objective_value`
+- `orthogonality_violation`
+- `runtime`.
 
 Here is a short example demonstrating how to use the package. First, you need to load the library. 
 ```r
