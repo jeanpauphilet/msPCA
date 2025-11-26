@@ -18,7 +18,7 @@ S <- cor(df)
 library(msPCA)
 
 ## First method: Truncated Power Method for a single sparse PC
-tpw_results <- msPCA::tpw(S, 12, maxIter=100)
+tpw_results <- msPCA::tpw(S, 4, maxIter=100)
 U <- as.matrix(tpw_results$x_best)
 #Sparsity
 colSums(abs(U) > 0)
@@ -27,7 +27,7 @@ msPCA::fraction_variance_explained(S,U)
 
 
 ## Second method: Iterative Deflation Heuristic for multiple sparse PCs
-mspca_results <- msPCA::mspca(S, 2, c(11,14), verbose=TRUE)
+mspca_results <- msPCA::mspca(S, 2, c(4,4), verbose=TRUE)
 msPCA::print_mspca(mspca_results, S)
 
 #Sparsity
@@ -79,8 +79,9 @@ msPCA::fraction_variance_explained(S,pma_results$v)
 library(sparsepca)
 
 sparsepca <- sparsepca::spca(S, k=2, alpha=0.01, verbose=F)
-sparsepca$loadings[,1] <- sparsepca$loadings[,1] / sum(sparsepca$loadings[,1]**2)
-sparsepca$loadings[,2] <- sparsepca$loadings[,2] / sum(sparsepca$loadings[,2]**2)
+sparsepca$loadings[,1] <- sparsepca$loadings[,1] / norm(as.matrix(sparsepca$loadings[,1]))
+sparsepca$loadings[,2] <- sparsepca$loadings[,2] / norm(as.matrix(sparsepca$loadings[,2]))
+
 #Sparsity
 colSums(abs(sparsepca$loadings) > 0)
 #Orthogonality
@@ -91,8 +92,9 @@ msPCA::fraction_variance_explained(S,sparsepca$loadings)
 
 #randomized PCA -> rpca
 sparsepca <- sparsepca::rspca(S, k=2, alpha=0.01, verbose=F)
-sparsepca$loadings[,1] <- sparsepca$loadings[,1] / sum(sparsepca$loadings[,1]**2)
-sparsepca$loadings[,2] <- sparsepca$loadings[,2] / sum(sparsepca$loadings[,2]**2)
+sparsepca$loadings[,1] <- sparsepca$loadings[,1] / norm(as.matrix(sparsepca$loadings[,1]))
+sparsepca$loadings[,2] <- sparsepca$loadings[,2] / norm(as.matrix(sparsepca$loadings[,2]))
+
 #Sparsity
 colSums(abs(sparsepca$loadings) > 0)
 #Orthogonality
@@ -103,11 +105,13 @@ msPCA::fraction_variance_explained(S,sparsepca$loadings)
 
 #robust PCA -> robpca
 sparsepca <- sparsepca::robspca(S, k=2, alpha=0.01, verbose=F)
-sparsepca$loadings[,1] <- sparsepca$loadings[,1] / sum(sparsepca$loadings[,1]**2)
-sparsepca$loadings[,2] <- sparsepca$loadings[,2] / sum(sparsepca$loadings[,2]**2)
+sparsepca$loadings[,1] <- sparsepca$loadings[,1] / norm(as.matrix(sparsepca$loadings[,1]))
+sparsepca$loadings[,2] <- sparsepca$loadings[,2] / norm(as.matrix(sparsepca$loadings[,2]))
+
 #Sparsity
 colSums(abs(sparsepca$loadings) > 0)
 #Orthogonality
 msPCA::orthogonality_violation(sparsepca$loadings)
 #Fraction of variance explained
 msPCA::fraction_variance_explained(S,sparsepca$loadings)
+

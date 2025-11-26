@@ -13,7 +13,7 @@ orthogonality_violation(U)
 A float.
 }
 \description{
-Computes the orthogonality constraint violation defined as the distance (infinity norm) between \eqn{U^T U} and the identity matrix.
+Computes the orthogonality constraint violation defined as the distance (infinity norm) between \eqn{U^\top U} and the identity matrix.
 }
 \examples{
 library(datasets)

@@ -31,7 +31,8 @@ mspca <- iterativeDeflationHeuristic
 #' @param maxIter (optional) An integer. Maximum number of iterations of the algorithm. Default 200.
 #' @param verbose (optional) A Boolean. Controls console output. Default TRUE.
 #' @param timeLimit (optional) An integer. Maximum time in seconds. Default 10.
-#' @return An object with 3 fields: `x_best`` (p x 1 array containing the sparse PC), `objective_value`, `runtime`.
+#' @return An object with 3 fields: `x_best` (p x 1 array containing the sparse PC), `objective_value`, `runtime`.
+#' @references Yuan, X. T., & Zhang, T. (2013). Truncated power method for sparse eigenvalue problems. The Journal of Machine Learning Research, 14(1), 899-925.
 #' @examples
 #' library(datasets)
 #' TestMat <- cor(datasets::mtcars)
@@ -42,7 +43,7 @@ tpw <- truncatedPowerMethod
 ## 2 - Useful functions
 #' Variance explained per PC
 #'
-#' Computes the fraction of variance explained by each PC.
+#' Computes the variance explained by each PC.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. The matrix containing the r PCs (p x r).
 #' @return An array.
@@ -50,7 +51,7 @@ variance_explained_perPC <- function(C, U){
   r <- dim(U)[2]
   ve <- numeric(r)
   for (i in 1:r){
-    ve[i] <- sum(U[, i] %*% C %*% U[, i])
+    ve[i] <- t(U[, i]) %*% C %*% U[, i]
   }
   ve
 }
@@ -77,14 +78,14 @@ fraction_variance_explained_perPC <- function(C, U){
 #' library(datasets)
 #' TestMat <- cor(datasets::mtcars)
 #' mspcares <- mspca(TestMat, 2, c(4,4))
-#' fraction_variance_explained(mspcares$x_best, TestMat)
+#' fraction_variance_explained(TestMat, mspcares$x_best)
 fraction_variance_explained <- function(C, U){
   sum(fraction_variance_explained_perPC(C, U))
 }
 
 #' Orthogonality constraint violation
 #'
-#' Computes the orthogonality constraint violation defined as the distance (infinity norm) between \eqn{U^T U} and the identity matrix.
+#' Computes the orthogonality constraint violation defined as the distance (infinity norm) between \eqn{U^\top U} and the identity matrix.
 #' @param U A matrix. Each column correspond to an p-dimensional PC.
 #' @return A float.
 #' @examples

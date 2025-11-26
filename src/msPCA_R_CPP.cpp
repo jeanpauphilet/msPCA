@@ -108,7 +108,7 @@ void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, const Eigen::Ve
     if (obj > bestObj)
     {
       bestObj = obj;
-      bestBeta = bestBeta;
+      bestBeta = beta;
       countdown = maxIter; // Reset the countdown if found a better solution via random restart
     }
     countdown--;

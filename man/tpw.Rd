@@ -18,7 +18,7 @@ tpw(Sigma, k, maxIter = 200L, verbose = TRUE, timeLimit = 10L)
 \item{timeLimit}{(optional) An integer. Maximum time in seconds. Default 10.}
 }
 \value{
-An object with 3 fields: `x_best`` (p x 1 array containing the sparse PC), `objective_value`, `runtime`.
+An object with 3 fields: `x_best` (p x 1 array containing the sparse PC), `objective_value`, `runtime`.
 }
 \description{
 Returns the leading sparse principal component of a matrix using the truncated power method.
@@ -27,4 +27,7 @@ Returns the leading sparse principal component of a matrix using the truncated p
 library(datasets)
 TestMat <- cor(datasets::mtcars)
 tpw(TestMat, 4)
+}
+\references{
+Yuan, X. T., & Zhang, T. (2013). Truncated power method for sparse eigenvalue problems. The Journal of Machine Learning Research, 14(1), 899-925.
 }
