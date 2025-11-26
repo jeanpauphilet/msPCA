@@ -106,7 +106,7 @@ orthogonality_violation <- function(U){
 #' library(datasets)
 #' TestMat <- cor(datasets::mtcars)
 #' mspcares <- mspca(TestMat, 2, c(4,4))
-#' print.mspca(mspcares, TestMat)
+#' print_mspca(mspcares, TestMat)
 print_mspca <- function(sol_object, C){
   cat("\nmsPCA solution:\n")
   r <- dim(sol_object$x_best)[2] 

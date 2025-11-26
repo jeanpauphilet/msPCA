@@ -21,5 +21,5 @@ Computes the fraction of variance explained (variance explained normalized by th
 library(datasets)
 TestMat <- cor(datasets::mtcars)
 mspcares <- mspca(TestMat, 2, c(4,4))
-fraction_variance_explained(mspcares$x_best, TestMat)
+fraction_variance_explained(TestMat, mspcares$x_best)
 }

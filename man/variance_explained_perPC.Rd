@@ -15,5 +15,5 @@ variance_explained_perPC(C, U)
 An array.
 }
 \description{
-Computes the fraction of variance explained by each PC.
+Computes the variance explained by each PC.
 }

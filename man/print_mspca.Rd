@@ -18,5 +18,5 @@ Displays the output of the msPCA algorithm.
 library(datasets)
 TestMat <- cor(datasets::mtcars)
 mspcares <- mspca(TestMat, 2, c(4,4))
-print.mspca(mspcares, TestMat)
+print_mspca(mspcares, TestMat)
 }
