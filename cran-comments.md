@@ -3,7 +3,7 @@
 0 errors | 0 warnings | 1 note
 
 * This is a new release.
-* The package implements the algorithm described in Cory-Wright and Pauphilet (2023) <doi:10.48550/arXiv.2209.14790>.
+* The package implements the algorithm described in Cory-Wright and Pauphilet (2022) <doi:10.48550/arXiv.2209.14790>.
 
 Note:
 * Possibly misspelled words in DESCRIPTION: "Pauphilet". This is the maintainer's surname and has been added to `inst/WORDLIST` to silence the spell-check NOTE.
