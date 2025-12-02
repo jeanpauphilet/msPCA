@@ -102,6 +102,7 @@ orthogonality_violation <- function(U){
 #' Displays the output of the msPCA algorithm.
 #' @param sol_object A list. The output of the mspca or twp function.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
+#' @return None. Prints output to console.
 #' @examples
 #' library(datasets)
 #' TestMat <- cor(datasets::mtcars)
