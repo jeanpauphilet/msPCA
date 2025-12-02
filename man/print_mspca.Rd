@@ -11,6 +11,9 @@ print_mspca(sol_object, C)
 
 \item{C}{A matrix. The correlation or covariance matrix (p x p).}
 }
+\value{
+None. Prints output to console.
+}
 \description{
 Displays the output of the msPCA algorithm.
 }
