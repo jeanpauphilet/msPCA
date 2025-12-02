@@ -16,10 +16,12 @@ library(ggforce)
 
 v <- mspca_results$x_best
 row.names(v) <- row.names(S)
+
 v
 
-dim1 <- row.names(v)[5]
-dim2 <- row.names(v)[7]
+#Pick the two (original) dimensions on which to represent the PCs
+dim1 <- row.names(v)[4]
+dim2 <- row.names(v)[5]
 
 data.frame(t(v)) %>%
   mutate(pc_id = paste("PC ", row_number(), sep=""), origin = 0) %>%

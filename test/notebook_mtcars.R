@@ -32,6 +32,8 @@ msPCA::print_mspca(mspca_results, S)
 
 #Sparsity
 colSums(abs(mspca_results$x_best) > 0)
+#Check PC norms
+diag( t(mspca_results$x_best) %*% mspca_results$x_best )
 #Orthogonality
 msPCA::orthogonality_violation(mspca_results$x_best)
 #Fraction of variance explained
@@ -45,6 +47,8 @@ library(elasticnet)
 enet_results <- elasticnet::spca(S, 2, sparse="varnum", para = c(4,4), type="Gram")
 #Sparsity
 colSums(abs(enet_results$loadings) > 0)
+#Check PC norms
+diag( t(enet_results$loadings) %*% enet_results$loadings )
 #Orthogonality
 msPCA::orthogonality_violation(enet_results$loadings)
 #Fraction of variance explained
@@ -59,6 +63,8 @@ library(PMA)
 pma_results <- PMA::SPC(as.matrix(df), sumabsv = sqrt(1.8291), niter = 20, K = 2, orth = FALSE, trace = TRUE)
 #Sparsity
 colSums(abs(pma_results$v) > 0)
+#Check PC norms
+diag( t(pma_results$v) %*% pma_results$v )
 #Orthogonality
 msPCA::orthogonality_violation(pma_results$v)
 #Fraction of variance explained
@@ -67,6 +73,8 @@ msPCA::fraction_variance_explained(S,pma_results$v)
 pma_results <- PMA::SPC(as.matrix(df), sumabsv = sqrt(1.83), niter = 20, K = 2, orth = TRUE, trace = TRUE)
 #Sparsity
 colSums(abs(pma_results$v) > 0)
+#Check PC norms
+diag( t(pma_results$v) %*% pma_results$v )
 #Orthogonality
 msPCA::orthogonality_violation(pma_results$v)
 #Fraction of variance explained
@@ -79,11 +87,14 @@ msPCA::fraction_variance_explained(S,pma_results$v)
 library(sparsepca)
 
 sparsepca <- sparsepca::spca(S, k=2, alpha=0.01, verbose=F)
-sparsepca$loadings[,1] <- sparsepca$loadings[,1] / norm(as.matrix(sparsepca$loadings[,1]))
-sparsepca$loadings[,2] <- sparsepca$loadings[,2] / norm(as.matrix(sparsepca$loadings[,2]))
 
 #Sparsity
 colSums(abs(sparsepca$loadings) > 0)
+#Check PC norms
+diag( t(sparsepca$loadings) %*% sparsepca$loadings )
+sparsepca$loadings[,1] <- sparsepca$loadings[,1] / sqrt(sum(sparsepca$loadings[,1]**2))
+sparsepca$loadings[,2] <- sparsepca$loadings[,2] / sqrt(sum(sparsepca$loadings[,2]**2))
+diag( t(sparsepca$loadings) %*% sparsepca$loadings )
 #Orthogonality
 msPCA::orthogonality_violation(sparsepca$loadings)
 #Fraction of variance explained
@@ -92,11 +103,14 @@ msPCA::fraction_variance_explained(S,sparsepca$loadings)
 
 #randomized PCA -> rpca
 sparsepca <- sparsepca::rspca(S, k=2, alpha=0.01, verbose=F)
-sparsepca$loadings[,1] <- sparsepca$loadings[,1] / norm(as.matrix(sparsepca$loadings[,1]))
-sparsepca$loadings[,2] <- sparsepca$loadings[,2] / norm(as.matrix(sparsepca$loadings[,2]))
 
 #Sparsity
 colSums(abs(sparsepca$loadings) > 0)
+#Check PC norms
+diag( t(sparsepca$loadings) %*% sparsepca$loadings )
+sparsepca$loadings[,1] <- sparsepca$loadings[,1] / sqrt(sum(sparsepca$loadings[,1]**2))
+sparsepca$loadings[,2] <- sparsepca$loadings[,2] / sqrt(sum(sparsepca$loadings[,2]**2))
+diag( t(sparsepca$loadings) %*% sparsepca$loadings )
 #Orthogonality
 msPCA::orthogonality_violation(sparsepca$loadings)
 #Fraction of variance explained
@@ -105,11 +119,14 @@ msPCA::fraction_variance_explained(S,sparsepca$loadings)
 
 #robust PCA -> robpca
 sparsepca <- sparsepca::robspca(S, k=2, alpha=0.01, verbose=F)
-sparsepca$loadings[,1] <- sparsepca$loadings[,1] / norm(as.matrix(sparsepca$loadings[,1]))
-sparsepca$loadings[,2] <- sparsepca$loadings[,2] / norm(as.matrix(sparsepca$loadings[,2]))
 
 #Sparsity
 colSums(abs(sparsepca$loadings) > 0)
+#Check PC norms
+diag( t(sparsepca$loadings) %*% sparsepca$loadings )
+sparsepca$loadings[,1] <- sparsepca$loadings[,1] / sqrt(sum(sparsepca$loadings[,1]**2))
+sparsepca$loadings[,2] <- sparsepca$loadings[,2] / sqrt(sum(sparsepca$loadings[,2]**2))
+diag( t(sparsepca$loadings) %*% sparsepca$loadings )
 #Orthogonality
 msPCA::orthogonality_violation(sparsepca$loadings)
 #Fraction of variance explained
