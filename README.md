@@ -2,7 +2,7 @@
 An R Package for Sparse PCA with Multiple Principal Components
 
 ## Installation 
-This package can be installed from CRAN directly (pending CRAN registration): 
+This package can be installed from [CRAN](https://cran.r-project.org/web/packages/msPCA/index.html) directly: 
 
 ```r
 install.packages("msPCA")
@@ -27,7 +27,7 @@ The package consists of one main function, `msPCA`, which takes as input:
 - the number of principal components (PCs) to be computed, r,
 - a list of r integers corresponding to the sparsity of each PC.
   
-It returns an objecti with 4 fields
+It returns an object with 4 fields
 - `x_best` (p x r array containing the sparse PCs), 
 - `objective_value`
 - `orthogonality_violation`
