@@ -126,11 +126,10 @@ pairwise_correlation <- function(C, U){
 print_mspca <- function(sol_object, C){
   cat("\nmsPCA solution:\n")
   r <- dim(sol_object$x_best)[2] 
-  cat("\n")
   cat(paste(r,"sparse PCs",sep=" "), "\n")
   
   fve <- fraction_variance_explained_perPC(C, sol_object$x_best)
-  cat("Pct. of explained variance :", format(round(fve, 3)*100), "\n")
+  cat("Pct. of variance explained:", format(round(fve, 3)*100), "\n")
   
   v <- sol_object$x_best
   k <- 1:r

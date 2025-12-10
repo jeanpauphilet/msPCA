@@ -198,7 +198,7 @@ List iterativeDeflationHeuristic(
 
 
     Rcout.width(ConstantArguments::separatorLengthLong + ConstantArguments::wordLengthLong);
-    Rcout << "Orthogonality Violation |";
+    Rcout << "Feasibility Violation |";
 
     Rcout.width(ConstantArguments::separatorLengthShort + ConstantArguments::wordLengthShort);
     Rcout << "Time";
