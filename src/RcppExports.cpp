@@ -12,8 +12,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // iterativeDeflationHeuristic
-List iterativeDeflationHeuristic(Eigen::MatrixXd Sigma, int r, Rcpp::NumericVector ks, int maxIter, bool verbose, double violationTolerance, double stallingTolerance, int maxIterTPW, int timeLimitTPW);
-RcppExport SEXP _msPCA_iterativeDeflationHeuristic(SEXP SigmaSEXP, SEXP rSEXP, SEXP ksSEXP, SEXP maxIterSEXP, SEXP verboseSEXP, SEXP violationToleranceSEXP, SEXP stallingToleranceSEXP, SEXP maxIterTPWSEXP, SEXP timeLimitTPWSEXP) {
+List iterativeDeflationHeuristic(Eigen::MatrixXd Sigma, int r, Rcpp::NumericVector ks, int maxIter, bool verbose, int feasibilityConstraintType, double violationTolerance, double stallingTolerance, int maxIterTPW, int timeLimitTPW);
+RcppExport SEXP _msPCA_iterativeDeflationHeuristic(SEXP SigmaSEXP, SEXP rSEXP, SEXP ksSEXP, SEXP maxIterSEXP, SEXP verboseSEXP, SEXP feasibilityConstraintTypeSEXP, SEXP violationToleranceSEXP, SEXP stallingToleranceSEXP, SEXP maxIterTPWSEXP, SEXP timeLimitTPWSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -22,11 +22,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type ks(ksSEXP);
     Rcpp::traits::input_parameter< int >::type maxIter(maxIterSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< int >::type feasibilityConstraintType(feasibilityConstraintTypeSEXP);
     Rcpp::traits::input_parameter< double >::type violationTolerance(violationToleranceSEXP);
     Rcpp::traits::input_parameter< double >::type stallingTolerance(stallingToleranceSEXP);
     Rcpp::traits::input_parameter< int >::type maxIterTPW(maxIterTPWSEXP);
     Rcpp::traits::input_parameter< int >::type timeLimitTPW(timeLimitTPWSEXP);
-    rcpp_result_gen = Rcpp::wrap(iterativeDeflationHeuristic(Sigma, r, ks, maxIter, verbose, violationTolerance, stallingTolerance, maxIterTPW, timeLimitTPW));
+    rcpp_result_gen = Rcpp::wrap(iterativeDeflationHeuristic(Sigma, r, ks, maxIter, verbose, feasibilityConstraintType, violationTolerance, stallingTolerance, maxIterTPW, timeLimitTPW));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -47,7 +48,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_msPCA_iterativeDeflationHeuristic", (DL_FUNC) &_msPCA_iterativeDeflationHeuristic, 9},
+    {"_msPCA_iterativeDeflationHeuristic", (DL_FUNC) &_msPCA_iterativeDeflationHeuristic, 10},
     {"_msPCA_truncatedPowerMethod", (DL_FUNC) &_msPCA_truncatedPowerMethod, 5},
     {NULL, NULL, 0}
 };

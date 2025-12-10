@@ -120,17 +120,47 @@ void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, const Eigen::Ve
 }
 
 // Computes the orthogonality violation of a family of r vectors x, defined as |x^T x - I_r|
-double fnviolation(const Eigen::MatrixXd& x)
+double fnviolation(const Eigen::MatrixXd& x,
+                    const Eigen::MatrixXd& Sigma,
+                    int feasibilityConstraintType)
 {
+  const int r = x.cols();
   double v = 0;
   Eigen::MatrixXd y = x.transpose() * x;
-  for (size_t i = 0; i < y.rows(); i++) {
-    for (size_t j = 0; j < y.cols(); j++) {
-      if (i == j) {
-        v += std::fabs(y(i, j) - 1);
+  // for (size_t i = 0; i < r; i++) {
+  //   for (size_t j = 0; j < r; j++) {
+  //     if (i == j) {
+  //       v += std::fabs(y(i, j) - 1);
+  //     }
+  //     else {
+  //       v += std::fabs(y(i, j));
+  //     }
+  //   }
+  // }
+  // return v;
+
+  if (feasibilityConstraintType == 0) {
+    // Orthogonality: sum of |x_i^T x_j - delta_ij| 
+    for (int i = 0; i < r; ++i) {
+      for (int j = i; j < r; ++j) {
+        if (i == j) {
+          v += std::fabs(y(i, j) - 1.0);
+        } else {
+          v += std::fabs(y(i, j));
+        }
       }
-      else {
-        v += std::fabs(y(i, j));
+    }
+  } else {
+    // Uncorrelatedness: sum of |x_i^T Sigma x_j| for i > j and ||x_i||^2 - 1 for i == j
+    Eigen::MatrixXd C = x.transpose() * Sigma * x; // Xᵀ Σ X
+
+    for (int i = 0; i < r; ++i) {
+      for (int j = i; j < r; ++j) {
+        if (i == j) {
+          v += std::fabs(y(i, j) - 1.0);
+        } else {
+          v += std::fabs(C(i, j));
+        }
       }
     }
   }
@@ -145,6 +175,7 @@ List iterativeDeflationHeuristic(
     Rcpp::NumericVector ks, // size r
     int maxIter = 200,
     bool verbose = true,
+    int feasibilityConstraintType = 0, // NEW v2: 0 = orthogonality constraints, 1 = uncorrelatedness constraints
     double violationTolerance = 1e-4,
     double stallingTolerance = 1e-8,
     int maxIterTPW = 200, 
@@ -229,7 +260,17 @@ List iterativeDeflationHeuristic(
       {
         if (s != t)
         {
-          sigma_current -= theLambda * weights[s] * x_current.col(s) * x_current.col(s).transpose();
+          // sigma_current -= theLambda * weights[s] * x_current.col(s) * x_current.col(s).transpose();
+
+          Eigen::VectorXd w;
+          if (feasibilityConstraintType == 0) {
+            // Orthogonality: penalty matrix is \sum_s u_s u_s^\top
+            w = x_current.col(s);
+          } else {
+            // Uncorrelatedness: penalty matrix is \sum_s (Σ u_s)(Σ u_s)ᵀ
+            w = Sigma * x_current.col(s);
+          }
+          sigma_current -= theLambda * weights[s] * (w * w.transpose());
         }
       }
 
@@ -270,7 +311,7 @@ List iterativeDeflationHeuristic(
     //   ofv_prev = ofv_overall;
     // }
 
-    double violation = fnviolation(x_current);
+    double violation = fnviolation(x_current, Sigma, feasibilityConstraintType);
     double violation_forStep = violation; // For the step size: if truncate values that are too small for numerical stability
     if (1e-7 > violation) {
       violation_forStep = 1e-7;
@@ -335,10 +376,10 @@ List iterativeDeflationHeuristic(
   auto stopTime = std::chrono::high_resolution_clock::now();
   std::chrono::milliseconds allExecutionTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
   double runtime = (double)allExecutionTime.count() / ConstantArguments::millisecondsToSeconds;
-  violation_best = fnviolation(x_best);
+  violation_best = fnviolation(x_best, Sigma, feasibilityConstraintType);
   ofv_best = evaluate(x_best, Sigma);
   List result = List::create(Named("objective_value") = ofv_best,
-                             Named("orthogonality_violation") = violation_best,
+                             Named("feasibility_violation") = violation_best,
                              Named("runtime") = runtime,
                              Named("x_best") = x_best);
   return result;

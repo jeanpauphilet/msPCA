@@ -27,7 +27,7 @@ msPCA::fraction_variance_explained(S,U)
 
 
 ## Second method: Iterative Deflation Heuristic for multiple sparse PCs
-mspca_results <- msPCA::mspca(S, 2, c(4,4), verbose=TRUE)
+mspca_results <- msPCA::mspca(S, 2, c(4,4), verbose=TRUE, feasibilityConstraintType = 0)
 msPCA::print_mspca(mspca_results, S)
 
 #Sparsity
