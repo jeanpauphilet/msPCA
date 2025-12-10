@@ -377,6 +377,10 @@ List iterativeDeflationHeuristic(
   std::chrono::milliseconds allExecutionTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
   double runtime = (double)allExecutionTime.count() / ConstantArguments::millisecondsToSeconds;
   violation_best = fnviolation(x_best, Sigma, feasibilityConstraintType);
+  if (violation_best > violationTolerance) // Warning if the best solution found is not feasible (within tolerance)
+  {
+    warning("Warning: Algorithm terminated without finding a feasible solution (within %i tolerance). Best solution found is %i feasible", violationTolerance, violation_best);
+  }
   ofv_best = evaluate(x_best, Sigma);
   List result = List::create(Named("objective_value") = ofv_best,
                              Named("feasibility_violation") = violation_best,
