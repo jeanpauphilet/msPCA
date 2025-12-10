@@ -97,6 +97,21 @@ orthogonality_violation <- function(U){
   sum(abs(t(U) %*% U - diag(dim(U)[2])))
 }
 
+
+#' Pairwsise correlation
+#'
+#' Computes the pairwise correlations between PCs defined as \eqn{u_{t}^\top C u_{s}}.
+#' @param C A matrix. The correlation or covariance matrix (p x p).
+#' @param U A matrix. Each column correspond to an p-dimensional PC.
+#' @return A float matrix (r x r).
+#' @examples
+#' library(datasets)
+#' TestMat <- cor(datasets::mtcars)
+#' mspcares <- mspca(TestMat, 2, c(4,4))
+#' pairwise_correlation(TestMat, mspcares$x_best)
+pairwise_correlation <- function(C, U){
+  t(U) %*% C %*% U
+}
 #' Print mspca output
 #'
 #' Displays the output of the msPCA algorithm.
