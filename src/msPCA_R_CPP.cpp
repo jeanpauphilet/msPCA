@@ -176,7 +176,7 @@ List iterativeDeflationHeuristic(
     int maxIter = 200,
     bool verbose = true,
     int feasibilityConstraintType = 0, // NEW v2: 0 = orthogonality constraints, 1 = uncorrelatedness constraints
-    double violationTolerance = 1e-4,
+    double feasibilityTolerance = 1e-4,
     double stallingTolerance = 1e-8,
     int maxIterTPW = 200, 
     int timeLimitTPW = 20)
@@ -322,7 +322,7 @@ List iterativeDeflationHeuristic(
     auto stopTime = chrono::high_resolution_clock::now();
     chrono::milliseconds executionTime = chrono::duration_cast<chrono::milliseconds>(stopTime - startTime);
     
-    bool stopCriterion = (theIter == maxIter) || (std::fabs(ofv_prev - ofv_overall) < stallingTolerance && violation < violationTolerance);
+    bool stopCriterion = (theIter == maxIter) || (std::fabs(ofv_prev - ofv_overall) < stallingTolerance && violation < feasibilityTolerance);
     if (verbose)
     {
       if (maxIter <= 25 || theIter % 10 == 1 || stopCriterion) // Display at every iteration if less than 25 iterations, or every 10 iterations otherwise, or at the last iteration
@@ -344,7 +344,7 @@ List iterativeDeflationHeuristic(
       }
     }
 
-    if (violation < violationTolerance || (theIter == maxIter && ofv_best < 0)) //If current solution is feasible (within tolerance) or if we reached the last iteration and no feasible solution was found (ofv_best still <0)
+    if (violation < feasibilityTolerance || (theIter == maxIter && ofv_best < 0)) //If current solution is feasible (within tolerance) or if we reached the last iteration and no feasible solution was found (ofv_best still <0)
     {
       // double ofv_current = (x_current.transpose() * Sigma * x_current).trace();
       if (ofv_best < ofv_overall)
@@ -362,7 +362,7 @@ List iterativeDeflationHeuristic(
       }
     }
 
-    if (std::fabs(ofv_prev - ofv_overall) < stallingTolerance && violation < violationTolerance) //If the algorithm is stalling (in terms of objective value) and the current solution is feasible (within tolerance)
+    if (std::fabs(ofv_prev - ofv_overall) < stallingTolerance && violation < feasibilityTolerance) //If the algorithm is stalling (in terms of objective value) and the current solution is feasible (within tolerance)
     {
       if (ofv_best < 0) //Safety check: if no feasible solution was found yet, we take the current solution as the best solution
       {
@@ -377,9 +377,9 @@ List iterativeDeflationHeuristic(
   std::chrono::milliseconds allExecutionTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
   double runtime = (double)allExecutionTime.count() / ConstantArguments::millisecondsToSeconds;
   violation_best = fnviolation(x_best, Sigma, feasibilityConstraintType);
-  if (violation_best > violationTolerance) // Warning if the best solution found is not feasible (within tolerance)
+  if (violation_best > feasibilityTolerance) // Warning if the best solution found is not feasible (within tolerance)
   {
-    warning("Warning: Algorithm terminated without finding a feasible solution (within %i tolerance). Best solution found is %i feasible", violationTolerance, violation_best);
+    warning("Warning: Algorithm terminated without finding a feasible solution (within %i tolerance). Best solution found is %i feasible", feasibilityTolerance, violation_best);
   }
   ofv_best = evaluate(x_best, Sigma);
   List result = List::create(Named("objective_value") = ofv_best,
