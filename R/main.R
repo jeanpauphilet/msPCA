@@ -99,7 +99,7 @@ orthogonality_violation <- function(U){
 }
 
 
-#' Pairwsise correlation
+#' Pairwise correlation
 #'
 #' Computes the pairwise correlations between PCs defined as \eqn{u_{t}^\top C u_{s}}.
 #' @param C A matrix. The correlation or covariance matrix (p x p).

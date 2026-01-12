@@ -33,3 +33,4 @@ data.frame(t(v)) %>%
                arrow = arrow(angle = 20, length = unit(0.15, "inches"))) +
   geom_point(aes(x=0, y=0), inherit.aes=FALSE) +
   geom_circle(aes(x0=0, y0=0, r=1), inherit.aes=FALSE) + coord_fixed()
+

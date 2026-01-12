@@ -10,7 +10,8 @@ mspca(
   ks,
   maxIter = 200L,
   verbose = TRUE,
-  violationTolerance = 1e-04,
+  feasibilityConstraintType = 0L,
+  feasibilityTolerance = 1e-04,
   stallingTolerance = 1e-08,
   maxIterTPW = 200L,
   timeLimitTPW = 20L
@@ -27,7 +28,9 @@ mspca(
 
 \item{verbose}{(optional) A Boolean. Controls console output. Default TRUE.}
 
-\item{violationTolerance}{(optional) A float. Tolerance for the violation of the orthogonality constraints. Default 1e-4}
+\item{feasibilityConstraintType}{(optional) An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. Default 0.}
+
+\item{feasibilityTolerance}{(optional) A float. Tolerance for the violation of the orthogonality constraints. Default 1e-4}
 
 \item{stallingTolerance}{(optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8}
 
@@ -36,7 +39,7 @@ mspca(
 \item{timeLimitTPW}{(optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.}
 }
 \value{
-An object with 4 fields: `x_best` (p x r array containing the sparse PCs), `objective_value`, `orthogonality_violation`, `runtime`.
+An object with 4 fields: `x_best` (p x r array containing the sparse PCs), `objective_value`, `feasibility_violation`, `runtime`.
 }
 \description{
 Returns multiple sparse principal component of a matrix using an iterative deflation heuristic.
