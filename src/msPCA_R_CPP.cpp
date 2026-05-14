@@ -93,7 +93,7 @@ void singlePCHeuristic(int k,
                        double& lambda_partial,
                        Eigen::VectorXd& x_output,
                        int outerIter = 1,
-                       int maxIterTPW = 100,
+                       int maxIterTPW = 2,
                        int timeLimitTPW = 20,
                        int restartsAfterFirstIter = 2)
 {
@@ -280,6 +280,7 @@ List iterativeDeflationHeuristic(
         if (nOther > 0) {
           Eigen::VectorXd c = W.transpose() * beta;
           y.noalias() -= W * (d.asDiagonal() * c);
+          y.noalias() += d.sum() * beta;
         }
         return y;
       };
@@ -287,7 +288,8 @@ List iterativeDeflationHeuristic(
       // Warm start: power iterations on iteration 1 (no eigensolver), previous solution thereafter.
       Eigen::VectorXd beta0;
       if (theIter == 1) {
-        beta0 = powerIterWarmStart(applyM, n, 20);
+        beta0 =  Eigen::VectorXd::Ones(n);// powerIterWarmStart(applyM, n, 20);
+        beta0.normalize();
       } else {
         beta0 = x_current.col(t);
       }

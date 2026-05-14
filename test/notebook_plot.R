@@ -8,6 +8,8 @@ df <- datasets::mtcars
 S <- cor(df)
 
 library(msPCA)
+mspca_results <- msPCA::mspca(S, 2, c(6,6), verbose=TRUE)
+
 mspca_results <- msPCA::mspca(S, 3, c(6,6,6), verbose=TRUE)
 
 library(dplyr)
