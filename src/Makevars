@@ -5,3 +5,6 @@
 ## With R 3.1.0 or later, you can uncomment the following line to tell R to 
 ## enable compilation with C++11 (or even C++14) where available
 CXX_STD = CXX17
+
+## Disable Eigen bounds checks and assert overhead in inner loops (CRAN-acceptable).
+PKG_CXXFLAGS = -DEIGEN_NO_DEBUG -DNDEBUG
