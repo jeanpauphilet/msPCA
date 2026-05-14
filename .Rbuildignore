@@ -1,0 +1,9 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^cran-comments\.md$
+^\.vscode$
+^test$
+^XXX --- data$
+^msPCA_.*\.tar\.gz$
+^msPCA_.*\.pdf$
+^msPCA_.*\.csv$
