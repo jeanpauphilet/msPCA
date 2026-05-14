@@ -67,21 +67,6 @@ Eigen::VectorXd iterativeTruncHeuristic(int k, const Eigen::VectorXd& beta0,
   return beta;
 }
 
-// Build a warm-start vector via plain power iterations — no eigensolver required.
-Eigen::VectorXd powerIterWarmStart(const std::function<Eigen::VectorXd(const Eigen::VectorXd&)>& applyM,
-                                    int n, int nIter = 20)
-{
-  Eigen::VectorXd v = Eigen::VectorXd::Ones(n);
-  v.normalize();
-  for (int i = 0; i < nIter; ++i)
-  {
-    v = applyM(v);
-    double nrm = v.norm();
-    if (nrm < 1e-14) v = Eigen::VectorXd::Random(n);
-    v.normalize();
-  }
-  return v;
-}
 
 // Inner routine: sPCA heuristic for a single PC — functor version.
 // outerIter gates the random restart budget: full budget on outer iteration 1,
@@ -93,7 +78,7 @@ void singlePCHeuristic(int k,
                        double& lambda_partial,
                        Eigen::VectorXd& x_output,
                        int outerIter = 1,
-                       int maxIterTPW = 2,
+                       int maxIterTPW = 10,
                        int timeLimitTPW = 20,
                        int restartsAfterFirstIter = 2)
 {
@@ -177,7 +162,7 @@ List iterativeDeflationHeuristic(
     int feasibilityConstraintType = 0, // 0 = orthogonality constraints, 1 = uncorrelatedness constraints
     double feasibilityTolerance = 1e-4,
     double stallingTolerance = 1e-8,
-    int maxIterTPW = 200,
+    int maxIterTPW = 10,
     int timeLimitTPW = 20,
     int restartsAfterFirstIter = 2) // random restart budget for outer iterations >= 2
 {
@@ -288,7 +273,7 @@ List iterativeDeflationHeuristic(
       // Warm start: power iterations on iteration 1 (no eigensolver), previous solution thereafter.
       Eigen::VectorXd beta0;
       if (theIter == 1) {
-        beta0 =  Eigen::VectorXd::Ones(n);// powerIterWarmStart(applyM, n, 20);
+        beta0 =  Eigen::VectorXd::Ones(n);
         beta0.normalize();
       } else {
         beta0 = x_current.col(t);
