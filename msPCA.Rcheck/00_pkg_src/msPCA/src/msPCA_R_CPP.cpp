@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <functional>
 #include <numeric>
 #include <vector>
 #include "ConstantArguments.h"
@@ -13,18 +14,30 @@ using namespace std;
 
 // [[Rcpp::depends(RcppEigen)]]
 
-// Absolute value of a double
-double absoluteDouble(double aNumber) {
-  if (aNumber >= 0) {
-    return aNumber;
+// Truncation operator: keeps the k largest coordinates (by absolute value) and normalizes.
+// Uses nth_element (O(n) average) to avoid O(n log k) partial_sort and R-side allocation.
+inline Eigen::VectorXd truncateVector(const Eigen::VectorXd& v, int k)
+{
+  const int n = static_cast<int>(v.size());
+  if (k >= n) {
+    Eigen::VectorXd y = v;
+    y.normalize();
+    return y;
   }
-  return -aNumber;
+  std::vector<int> idx(n);
+  std::iota(idx.begin(), idx.end(), 0);
+  std::nth_element(idx.begin(), idx.begin() + k, idx.end(),
+                   [&](int a, int b){ return std::abs(v[a]) > std::abs(v[b]); });
+  Eigen::VectorXd y = Eigen::VectorXd::Zero(n);
+  for (int i = 0; i < k; ++i) y[idx[i]] = v[idx[i]];
+  y.normalize();
+  return y;
 }
 
 // Compute the value x^T A x -- x is a vector
-double evaluate(const Eigen::VectorXd& x, const Eigen::MatrixXd& A)
+inline double evaluate(const Eigen::VectorXd& x, const Eigen::MatrixXd& A)
 {
-  return (x.transpose() * A * x)[0];
+  return x.dot(A * x);
 }
 // Compute the value tr(x^T A x) -- x is a matrix with r vectors (columns)
 double evaluate(const Eigen::MatrixXd& x, const Eigen::MatrixXd& A)
@@ -32,94 +45,82 @@ double evaluate(const Eigen::MatrixXd& x, const Eigen::MatrixXd& A)
   return (x.transpose() * A * x).trace();
 }
 
-
-// Selects the k indices of x corresponding the k largest coordinates (in absolute value)
-Rcpp::NumericVector selectperm2(const Eigen::VectorXd& x, int k)
+// Evaluate x^T M x using a matvec functor
+inline double evaluateFunctor(const Eigen::VectorXd& x,
+                               const std::function<Eigen::VectorXd(const Eigen::VectorXd&)>& applyM)
 {
-  std::vector<int> indexes(x.size());
-  std::iota(indexes.begin(), indexes.end(), 0);
-  std::partial_sort(
-    indexes.begin(), indexes.begin() + k, indexes.end(),
-    [&](int i, int j) -> bool {
-      return absoluteDouble(x(i)) > absoluteDouble(x(j));
-    });
-  indexes.resize(k);
-  Rcpp::NumericVector numbers{};
-  for (auto index : indexes) {
-    numbers.push_back(index);
-  }
-  return numbers;
+  return x.dot(applyM(x));
 }
 
-// Trucation operator: Takes a vector origlist, keeps only the k largest coordinates (in absolute value), and normalizes the vector
-Eigen::VectorXd truncateVector(const Eigen::VectorXd& origlist, int k)
+// Iterative truncation heuristic (Yuan & Zhang 2013) using a matvec functor.
+// Includes early-exit convergence check to avoid unnecessary iterations.
+Eigen::VectorXd iterativeTruncHeuristic(int k, const Eigen::VectorXd& beta0,
+                                         const std::function<Eigen::VectorXd(const Eigen::VectorXd&)>& applyM)
 {
-  Eigen::VectorXd list = origlist;
-  Eigen::VectorXd kparse = Eigen::VectorXd::Zero(list.size());
-
-  Rcpp::NumericVector newIndices = selectperm2(list, k);
-  for (auto index : newIndices) {
-    kparse[index] = origlist[index];
-  }
-  kparse.normalize(); // Normalization in place
-  return kparse;
-}
-
-// Iterative truncation heuristic from Yuan and Zhang (2013): Looking for a sparse fixed point of x = Sigma*x
-Eigen::VectorXd iterativeTruncHeuristic(int k, const Eigen::VectorXd& beta0, const Eigen::MatrixXd& prob_Sigma)
-{
-
   Eigen::VectorXd beta = truncateVector(beta0, k);
-  for (int i = 0; i < 100; i++)
+  for (int i = 0; i < 100; ++i)
   {
-    // beta = truncateVector(prob_Sigma * beta, k); 
-    beta = prob_Sigma * beta; 
-    beta = truncateVector(beta, k); 
+    Eigen::VectorXd prev = beta;
+    beta = truncateVector(applyM(beta), k);
+    if ((beta - prev).squaredNorm() < 1e-12) break;
   }
   return beta;
 }
 
-// Inner routine: sPCA heuristic for a single PC case: Truncated Power Method of Yuan and Zhang (2013) with random restarts 
-void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, const Eigen::VectorXd& beta0, double& lambda_partial, Eigen::VectorXd& x_output, int maxIter = 100, int timeLimit = 20)
+
+// Inner routine: sPCA heuristic for a single PC — functor version.
+// outerIter gates the random restart budget: full budget on outer iteration 1,
+// restartsAfterFirstIter restarts on all subsequent iterations.
+void singlePCHeuristic(int k,
+                       const std::function<Eigen::VectorXd(const Eigen::VectorXd&)>& applyM,
+                       int n,
+                       const Eigen::VectorXd& beta0,
+                       double& lambda_partial,
+                       Eigen::VectorXd& x_output,
+                       int maxIterTPM = 10,
+                       int timeLimitTPM = 20)
 {
-  int n = prob_Sigma.rows();
+  Eigen::VectorXd bestBeta = iterativeTruncHeuristic(k, beta0, applyM);
+  double bestObj = evaluateFunctor(bestBeta, applyM);
 
-  // Applies the iterative truncation heuristic starting from beta0
-  Eigen::VectorXd bestBeta = iterativeTruncHeuristic(k, beta0, prob_Sigma);
-  double bestObj = evaluate(bestBeta, prob_Sigma);
-
-  // Applies the iterative truncation heuristic starting from random points
-  int countdown = maxIter;
+  int countdown = maxIterTPM;
   time_t start = time(0);
-  while (countdown > 0 && difftime(time(0), start) < timeLimit)
+  while (countdown > 0 && difftime(time(0), start) < timeLimitTPM)
   {
-    Eigen::VectorXd beta = Eigen::VectorXd::Zero(n);
-    for (auto i = 0; i < beta.rows(); i++) {
-      beta(i) = R::rnorm(0, 1);
-      // for (auto j = 0; j < beta.cols(); j++) {
-      //   beta(i, j) = R::rnorm(0, 1);
-      // }
-    }
-    beta = beta / beta.norm();
+    Eigen::VectorXd beta(n);
+    for (int i = 0; i < n; ++i) beta(i) = R::rnorm(0, 1);
+    beta.normalize();
 
-    beta = iterativeTruncHeuristic(k, beta, prob_Sigma);
-    double obj = evaluate(beta, prob_Sigma);
+    beta = iterativeTruncHeuristic(k, beta, applyM);
+    double obj = evaluateFunctor(beta, applyM);
 
     if (obj > bestObj)
     {
       bestObj = obj;
       bestBeta = beta;
-      countdown = maxIter; // Reset the countdown if found a better solution via random restart
+      countdown = maxIterTPM;
     }
     countdown--;
   }
 
   lambda_partial = bestObj;
   x_output = bestBeta;
-  return;
 }
 
-// Computes the orthogonality violation of a family of r vectors x, defined as |x^T x - I_r|
+// Matrix-based convenience overload for truncatedPowerMethod (single-PC, no deflation).
+void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, const Eigen::VectorXd& beta0,
+                       double& lambda_partial, Eigen::VectorXd& x_output,
+                       int maxIter = 10, int timeLimit = 20)
+{
+  int n = prob_Sigma.rows();
+  auto applyM = [&](const Eigen::VectorXd& v) -> Eigen::VectorXd {
+    return prob_Sigma * v;
+  };
+  singlePCHeuristic(k, applyM, n, beta0, lambda_partial, x_output,
+                      maxIter, timeLimit);
+}
+
+// Computes the orthogonality/uncorrelatedness violation of a family of r vectors x.
 double fnviolation(const Eigen::MatrixXd& x,
                     const Eigen::MatrixXd& Sigma,
                     int feasibilityConstraintType)
@@ -127,40 +128,20 @@ double fnviolation(const Eigen::MatrixXd& x,
   const int r = x.cols();
   double v = 0;
   Eigen::MatrixXd y = x.transpose() * x;
-  // for (size_t i = 0; i < r; i++) {
-  //   for (size_t j = 0; j < r; j++) {
-  //     if (i == j) {
-  //       v += std::fabs(y(i, j) - 1);
-  //     }
-  //     else {
-  //       v += std::fabs(y(i, j));
-  //     }
-  //   }
-  // }
-  // return v;
 
   if (feasibilityConstraintType == 0) {
-    // Orthogonality: sum of |x_i^T x_j - delta_ij| 
+    // Orthogonality: sum of |x_i^T x_j - delta_ij|
     for (int i = 0; i < r; ++i) {
       for (int j = i; j < r; ++j) {
-        if (i == j) {
-          v += std::fabs(y(i, j) - 1.0);
-        } else {
-          v += std::fabs(y(i, j));
-        }
+        v += std::fabs(y(i, j) - (i == j ? 1.0 : 0.0));
       }
     }
   } else {
-    // Uncorrelatedness: sum of |x_i^T Sigma x_j| for i > j and ||x_i||^2 - 1 for i == j
-    Eigen::MatrixXd C = x.transpose() * Sigma * x; // Xᵀ Σ X
-
+    // Uncorrelatedness: sum of |x_i^T Sigma x_j| for i != j, plus ||x_i||^2 - 1 on diagonal
+    Eigen::MatrixXd C = x.transpose() * Sigma * x;
     for (int i = 0; i < r; ++i) {
       for (int j = i; j < r; ++j) {
-        if (i == j) {
-          v += std::fabs(y(i, j) - 1.0);
-        } else {
-          v += std::fabs(C(i, j));
-        }
+        v += std::fabs(i == j ? y(i, j) - 1.0 : C(i, j));
       }
     }
   }
@@ -175,11 +156,12 @@ List iterativeDeflationHeuristic(
     Rcpp::NumericVector ks, // size r
     int maxIter = 200,
     bool verbose = true,
-    int feasibilityConstraintType = 0, // NEW v2: 0 = orthogonality constraints, 1 = uncorrelatedness constraints
+    int feasibilityConstraintType = 0, // 0 = orthogonality constraints, 1 = uncorrelatedness constraints
     double feasibilityTolerance = 1e-4,
     double stallingTolerance = 1e-8,
-    int maxIterTPW = 200, 
-    int timeLimitTPW = 20)
+    int maxIterTPM = 20,
+    int timeLimitTPM = 20,
+    int restartsAfterFirstIter = 10) // random restart budget for outer iterations >= 2
 {
   int n = Sigma.rows();
 
@@ -201,6 +183,7 @@ List iterativeDeflationHeuristic(
   double ofv_overall = 0; // Objective value of the current solution 
 
   double theLambda = 0; // Penalty parameter on the orthogonality constraint
+  double scalingLambda = 1; // For memory: Scaling factor used to ensure the matrix passed to TPW is PSD
 
   Eigen::VectorXd weights = Eigen::VectorXd::Zero(r); // Weights assigned to each PC in the penalization heuristic (initialized through the first iteration of the algorithm)
   
@@ -237,9 +220,8 @@ List iterativeDeflationHeuristic(
   }
 
   auto startTime = std::chrono::high_resolution_clock::now();
-  Eigen::MatrixXd sigma_current; // For memory: Current deflated covariance matrix
   Eigen::VectorXd x_output; // For memory: Current PC
-  double lambda_partial = 0; // For memory: Fraction of the variance explained by the current PC 
+  double lambda_partial = 0; // For memory: Fraction of the variance explained by the current PC
 
   for (int theIter = 1; theIter <= maxIter; theIter++)
   {
@@ -254,52 +236,62 @@ List iterativeDeflationHeuristic(
         ks[t] = n;
       }
 
-      // Eigen::MatrixXd 
-      sigma_current = Sigma;
-      for (int s = 0; s < r; s++)
+      // Build deflation functor — avoids materialising sigma_current (saves O(n^2) allocation + symmetrisation).
+      // applyM(beta) = Sigma*beta - W * diag(d) * W^T * beta, where s-th column of W is w_s and d_s = lambda * weight_s.
+      int nOther = r - 1;
+      Eigen::MatrixXd W(n, nOther);
+      Eigen::VectorXd d(nOther);
       {
-        if (s != t)
+        int col = 0;
+        for (int s = 0; s < r; s++)
         {
-          // sigma_current -= theLambda * weights[s] * x_current.col(s) * x_current.col(s).transpose();
-
-          Eigen::VectorXd w;
-          if (feasibilityConstraintType == 0) {
-            // Orthogonality: penalty matrix is \sum_s u_s u_s^\top
-            w = x_current.col(s);
-          } else {
-            // Uncorrelatedness: penalty matrix is \sum_s (Σ u_s)(Σ u_s)ᵀ
-            w = Sigma * x_current.col(s);
+          if (s != t)
+          {
+            if (feasibilityConstraintType == 0) {
+              W.col(col) = x_current.col(s);
+            } else {
+              W.col(col) = Sigma * x_current.col(s);
+            }
+            d(col) = theLambda * weights[s];
+            col++;
           }
-          sigma_current -= theLambda * weights[s] * (w * w.transpose());
         }
       }
 
-      // Ensure sigma_current is symmetric (increase numerical accuracy)
-      sigma_current = (sigma_current + sigma_current.transpose()) / 2;
-      
-      // Make sigma_current PSD
-      Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(sigma_current);
-      double lambda0 = -solver.eigenvalues().minCoeff() + 1e-4;
-      if (lambda0 > 0) 
-      {
-        for (int i = 0; i < sigma_current.rows(); i++)
-        {
-          sigma_current(i, i) += lambda0;
+      auto applyM = [&Sigma, &W, &d, &scalingLambda, nOther](const Eigen::VectorXd& beta) -> Eigen::VectorXd {
+        Eigen::VectorXd y = Sigma * beta;
+        if (nOther > 0) {
+          Eigen::VectorXd c = W.transpose() * beta;
+          y.noalias() -= W * (d.asDiagonal() * c);
+          y.noalias() += scalingLambda * d.sum() * beta;
         }
+        return y;
+      };
+
+      // Warm start: power iterations on iteration 1 (no eigensolver), previous solution thereafter.
+      Eigen::VectorXd beta0;
+      if (theIter == 1) {
+        beta0 =  Eigen::VectorXd::Ones(n);
+        beta0.normalize();
+      } else {
+        beta0 = x_current.col(t);
       }
 
-      // Compute largest eigenvector of sigma_current, to start the TPW heuristic
-      int index;
-      solver.eigenvalues().maxCoeff(&index);
-      Eigen::VectorXd beta0 = solver.eigenvectors().col(index); 
-
-      singlePCHeuristic(ks[t], sigma_current, beta0, lambda_partial, x_output, maxIterTPW);
+      singlePCHeuristic(ks[t], applyM, n, beta0, lambda_partial, x_output,
+            (theIter == 1 ? maxIterTPM : restartsAfterFirstIter), timeLimitTPM);
 
       x_current.col(t) = x_output;
 
       if (theIter == 1) // Initialize the weights on each PC at the first iteration
       {
-        weights[t] = lambda_partial;
+        if (t==1 && feasibilityConstraintType == 1) { // For the uncorrelatedness constraints, we need to ensure the matrix passed to TPW is PSD, which requires an appropriate scaling of the penalty parameter lambda (scalingLambda). We set this scaling to lambda_partial^2, where lambda_partial is the variance explained by the first PC, which is an upper bound on the largest sparse eigenvalue of Sigma and thus ensures the matrix passed to TPW is PSD.
+          scalingLambda = lambda_partial*lambda_partial; // Initial upper bound on the largest sparse eigenvalue of Sigma for the PSD shift
+        }
+        if (feasibilityConstraintType == 0) {
+              weights[t] = lambda_partial;
+        } else {
+          weights[t] = 1.0;
+        }        
       }
     }
 

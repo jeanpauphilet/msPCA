@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.7.17)  12 JAN 2026 14:52
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.7.17)  15 MAY 2026 15:35
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -22,10 +22,10 @@ File: bk10.clo 2022/07/02 v1.4n Standard LaTeX file (size option)
 \belowcaptionskip=\skip49
 \bibindent=\dimen140
 )
-(/Library/Frameworks/R.framework/Resources/share/texmf/tex/latex/Rd.sty
+(/Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/share/texmf/tex/l
+atex/Rd.sty
 Package: Rd 
-
-(/usr/local/texlive/2023/texmf-dist/tex/latex/base/ifthen.sty
+ (/usr/local/texlive/2023/texmf-dist/tex/latex/base/ifthen.sty
 Package: ifthen 2022/04/13 v1.1d Standard LaTeX ifthen package (DPC)
 )
 (/usr/local/texlive/2023/texmf-dist/tex/generic/iftex/iftex.sty
@@ -349,8 +349,8 @@ File: l3backend-pdftex.def 2023-01-16 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count290
 \l__pdf_internal_box=\box58
 )
-(/private/var/folders/tw/x4vcf7js2pdbgpn_tmnglgj40000gp/T/RtmpcnhWzD/Rd2pdf1475
-11c60bac5/Rd2.aux)
+(/private/var/folders/tw/x4vcf7js2pdbgpn_tmnglgj40000gp/T/RtmpVfcIlN/Rd2pdf809f
+3a20991/Rd2.aux)
 \openout1 = `Rd2.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 8.
@@ -388,10 +388,10 @@ LaTeX Font Info:    ... okay on input line 8.
 )
 Package hyperref Info: Link coloring ON on input line 8.
 
-(/private/var/folders/tw/x4vcf7js2pdbgpn_tmnglgj40000gp/T/RtmpcnhWzD/Rd2pdf1475
-11c60bac5/Rd2.out)
-(/private/var/folders/tw/x4vcf7js2pdbgpn_tmnglgj40000gp/T/RtmpcnhWzD/Rd2pdf1475
-11c60bac5/Rd2.out)
+(/private/var/folders/tw/x4vcf7js2pdbgpn_tmnglgj40000gp/T/RtmpVfcIlN/Rd2pdf809f
+3a20991/Rd2.out)
+(/private/var/folders/tw/x4vcf7js2pdbgpn_tmnglgj40000gp/T/RtmpVfcIlN/Rd2pdf809f
+3a20991/Rd2.out)
 \@outlinefile=\write4
 \openout4 = `Rd2.out'.
 
@@ -403,38 +403,36 @@ Package textcomp Info: Symbol \textasciigrave not provided by
 (textcomp)             Default family used instead on input line 26.
 LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 2
 6.
-
-(/usr/local/texlive/2023/texmf-dist/tex/latex/psnfss/ts1ptm.fd
+ (/usr/local/texlive/2023/texmf-dist/tex/latex/psnfss/ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 )
-LaTeX Font Info:    Trying to load font information for T1+zi4 on input line 36
+LaTeX Font Info:    Trying to load font information for T1+zi4 on input line 35
 .
-
-(/usr/local/texlive/2023/texmf-dist/tex/latex/inconsolata/t1zi4.fd
+ (/usr/local/texlive/2023/texmf-dist/tex/latex/inconsolata/t1zi4.fd
 File: t1zi4.fd 2018/01/14 T1/zi4 (Inconsolata)
 )
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 10.0pt on input line 36.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 36.
+(Font)              scaled to size 10.0pt on input line 35.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 35.
 
 
 (/usr/local/texlive/2023/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 36.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 35.
 
 
 (/usr/local/texlive/2023/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-LaTeX Font Info:    Trying to load font information for U+rsfs on input line 36
+LaTeX Font Info:    Trying to load font information for U+rsfs on input line 35
 .
 
 (/usr/local/texlive/2023/texmf-dist/tex/latex/jknapltx/ursfs.fd
 File: ursfs.fd 1998/03/24 rsfs font definition file (jk)
 )
-(/private/var/folders/tw/x4vcf7js2pdbgpn_tmnglgj40000gp/T/RtmpcnhWzD/Rd2pdf1475
-11c60bac5/Rd2.toc)
+(/private/var/folders/tw/x4vcf7js2pdbgpn_tmnglgj40000gp/T/RtmpVfcIlN/Rd2pdf809f
+3a20991/Rd2.toc)
 \tf@toc=\write5
 \openout5 = `Rd2.toc'.
 
@@ -446,27 +444,27 @@ al/texlive/2023/texmf-dist/fonts/enc/dvips/base/8r.enc}{/usr/local/texlive/2023
 /texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc}{/usr/local/texlive/2023/
 texmf-dist/fonts/enc/dvips/inconsolata/i4-t1-0.enc}]
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 9.0pt on input line 67.
+(Font)              scaled to size 9.0pt on input line 66.
 
-[2] [3] [4] [5]
-(/private/var/folders/tw/x4vcf7js2pdbgpn_tmnglgj40000gp/T/RtmpcnhWzD/Rd2pdf1475
-11c60bac5/Rd2.ind [6] [7
+[2] [3] [4] [5] [6]
+(/private/var/folders/tw/x4vcf7js2pdbgpn_tmnglgj40000gp/T/RtmpVfcIlN/Rd2pdf809f
+3a20991/Rd2.ind [7] [8
 
 
 ])
-(/private/var/folders/tw/x4vcf7js2pdbgpn_tmnglgj40000gp/T/RtmpcnhWzD/Rd2pdf1475
-11c60bac5/Rd2.aux)
+(/private/var/folders/tw/x4vcf7js2pdbgpn_tmnglgj40000gp/T/RtmpVfcIlN/Rd2pdf809f
+3a20991/Rd2.aux)
 Package rerunfilecheck Info: File `Rd2.out' has not changed.
-(rerunfilecheck)             Checksum: 86544F2B5C0F4B88CACE2BAC92A92DF7;1332.
+(rerunfilecheck)             Checksum: 74DC184CC97D847A4AB10595E533FA2D;1332.
  ) 
 Here is how much of TeX's memory you used:
  10386 strings out of 476025
- 161443 string characters out of 5790017
+ 161475 string characters out of 5790017
  1864388 words of memory out of 5000000
- 30586 multiletter control sequences out of 15000+600000
+ 30585 multiletter control sequences out of 15000+600000
  546489 words of font info for 76 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 92i,5n,92p,382b,728s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 92i,5n,92p,382b,620s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2023/texmf-dist/fonts/type1/public/inconsolata/Inconsolat
 a-zi4r.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/c
 mmi10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cm
@@ -476,10 +474,10 @@ pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/
 local/texlive/2023/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/local/texl
 ive/2023/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/local/texlive/2023/t
 exmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on Rd2.pdf (7 pages, 118556 bytes).
+Output written on Rd2.pdf (8 pages, 119523 bytes).
 PDF statistics:
- 207 PDF objects out of 1000 (max. 8388607)
- 178 compressed objects within 2 object streams
- 66 named destinations out of 1000 (max. 500000)
+ 212 PDF objects out of 1000 (max. 8388607)
+ 182 compressed objects within 2 object streams
+ 67 named destinations out of 1000 (max. 500000)
  73 words of extra memory for PDF output out of 10000 (max. 10000000)
 

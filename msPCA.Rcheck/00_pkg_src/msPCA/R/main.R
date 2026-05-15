@@ -15,8 +15,9 @@
 #' @param feasibilityConstraintType (optional) An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. Default 0.
 #' @param feasibilityTolerance (optional) A float. Tolerance for the violation of the orthogonality constraints. Default 1e-4
 #' @param stallingTolerance (optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8
-#' @param maxIterTPW (optional) An integer. Maximum number of iterations of the truncated power method (inner iteration). Default 200.
-#' @param  timeLimitTPW (optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.
+#' @param maxIterTPM (optional) An integer. Maximum number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 20.
+#' @param  timeLimitTPM (optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.
+#' @param restartsAfterFirstIter (optional) An integer. Maximum number of random restarts of the truncated power method (inner iteration) for outer iterations >= 2. Default 10.
 #' @return An object with 4 fields: `x_best` (p x r array containing the sparse PCs), `objective_value`, `feasibility_violation`, `runtime`.
 #' @examples
 #' library(datasets)
@@ -37,8 +38,8 @@ mspca <- iterativeDeflationHeuristic
 #' @examples
 #' library(datasets)
 #' TestMat <- cor(datasets::mtcars)
-#' tpw(TestMat, 4)
-tpw <- truncatedPowerMethod
+#' tpm(TestMat, 4)
+tpm <- truncatedPowerMethod
 
 
 ## 2 - Useful functions

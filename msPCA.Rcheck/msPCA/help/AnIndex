@@ -4,5 +4,5 @@ mspca	mspca
 orthogonality_violation	orthogonality_violation
 pairwise_correlation	pairwise_correlation
 print_mspca	print_mspca
-tpw	tpw
+tpm	tpm
 variance_explained_perPC	variance_explained_perPC

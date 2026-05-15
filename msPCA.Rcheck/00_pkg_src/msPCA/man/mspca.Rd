@@ -13,8 +13,9 @@ mspca(
   feasibilityConstraintType = 0L,
   feasibilityTolerance = 1e-04,
   stallingTolerance = 1e-08,
-  maxIterTPW = 200L,
-  timeLimitTPW = 20L
+  maxIterTPM = 20L,
+  timeLimitTPM = 20L,
+  restartsAfterFirstIter = 10L
 )
 }
 \arguments{
@@ -34,9 +35,11 @@ mspca(
 
 \item{stallingTolerance}{(optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8}
 
-\item{maxIterTPW}{(optional) An integer. Maximum number of iterations of the truncated power method (inner iteration). Default 200.}
+\item{maxIterTPM}{(optional) An integer. Maximum number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 20.}
 
-\item{timeLimitTPW}{(optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.}
+\item{timeLimitTPM}{(optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.}
+
+\item{restartsAfterFirstIter}{(optional) An integer. Maximum number of random restarts of the truncated power method (inner iteration) for outer iterations >= 2. Default 10.}
 }
 \value{
 An object with 4 fields: `x_best` (p x r array containing the sparse PCs), `objective_value`, `feasibility_violation`, `runtime`.
