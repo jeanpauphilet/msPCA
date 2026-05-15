@@ -78,14 +78,14 @@ void singlePCHeuristic(int k,
                        double& lambda_partial,
                        Eigen::VectorXd& x_output,
                        int maxIterTPW = 10,
-                       int timeLimitTPW = 20)
+                       int timeLimitTPM = 20)
 {
   Eigen::VectorXd bestBeta = iterativeTruncHeuristic(k, beta0, applyM);
   double bestObj = evaluateFunctor(bestBeta, applyM);
 
   int countdown = maxIterTPW;
   time_t start = time(0);
-  while (countdown > 0 && difftime(time(0), start) < timeLimitTPW)
+  while (countdown > 0 && difftime(time(0), start) < timeLimitTPM)
   {
     Eigen::VectorXd beta(n);
     for (int i = 0; i < n; ++i) beta(i) = R::rnorm(0, 1);
@@ -160,7 +160,7 @@ List iterativeDeflationHeuristic(
     double feasibilityTolerance = 1e-4,
     double stallingTolerance = 1e-8,
     int maxIterTPW = 20,
-    int timeLimitTPW = 20,
+    int timeLimitTPM = 20,
     int restartsAfterFirstIter = 10) // random restart budget for outer iterations >= 2
 {
   int n = Sigma.rows();
@@ -278,7 +278,7 @@ List iterativeDeflationHeuristic(
       }
 
       singlePCHeuristic(ks[t], applyM, n, beta0, lambda_partial, x_output,
-            (theIter == 1 ? maxIterTPW : restartsAfterFirstIter), timeLimitTPW);
+            (theIter == 1 ? maxIterTPW : restartsAfterFirstIter), timeLimitTPM);
 
       x_current.col(t) = x_output;
 
