@@ -183,6 +183,7 @@ List iterativeDeflationHeuristic(
   double ofv_overall = 0; // Objective value of the current solution 
 
   double theLambda = 0; // Penalty parameter on the orthogonality constraint
+  double scalingLambda = 1; // For memory: Scaling factor used to ensure the matrix passed to TPW is PSD
 
   Eigen::VectorXd weights = Eigen::VectorXd::Zero(r); // Weights assigned to each PC in the penalization heuristic (initialized through the first iteration of the algorithm)
   
@@ -257,12 +258,12 @@ List iterativeDeflationHeuristic(
         }
       }
 
-      auto applyM = [&Sigma, &W, &d, nOther](const Eigen::VectorXd& beta) -> Eigen::VectorXd {
+      auto applyM = [&Sigma, &W, &d, &scalingLambda, nOther](const Eigen::VectorXd& beta) -> Eigen::VectorXd {
         Eigen::VectorXd y = Sigma * beta;
         if (nOther > 0) {
           Eigen::VectorXd c = W.transpose() * beta;
           y.noalias() -= W * (d.asDiagonal() * c);
-          y.noalias() += d.sum() * beta;
+          y.noalias() += scalingLambda * d.sum() * beta;
         }
         return y;
       };
@@ -283,7 +284,14 @@ List iterativeDeflationHeuristic(
 
       if (theIter == 1) // Initialize the weights on each PC at the first iteration
       {
-        weights[t] = lambda_partial;
+        if (t==1 && feasibilityConstraintType == 1) { // For the uncorrelatedness constraints, we need to ensure the matrix passed to TPW is PSD, which requires an appropriate scaling of the penalty parameter lambda (scalingLambda). We set this scaling to lambda_partial^2, where lambda_partial is the variance explained by the first PC, which is an upper bound on the largest sparse eigenvalue of Sigma and thus ensures the matrix passed to TPW is PSD.
+          scalingLambda = lambda_partial*lambda_partial; // Initial upper bound on the largest sparse eigenvalue of Sigma for the PSD shift
+        }
+        if (feasibilityConstraintType == 0) {
+              weights[t] = lambda_partial;
+        } else {
+          weights[t] = 1.0;
+        }        
       }
     }
 
