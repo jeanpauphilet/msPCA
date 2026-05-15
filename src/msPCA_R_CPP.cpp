@@ -77,16 +77,13 @@ void singlePCHeuristic(int k,
                        const Eigen::VectorXd& beta0,
                        double& lambda_partial,
                        Eigen::VectorXd& x_output,
-                       int outerIter = 1,
                        int maxIterTPW = 10,
-                       int timeLimitTPW = 20,
-                       int restartsAfterFirstIter = 2)
+                       int timeLimitTPW = 20)
 {
   Eigen::VectorXd bestBeta = iterativeTruncHeuristic(k, beta0, applyM);
   double bestObj = evaluateFunctor(bestBeta, applyM);
 
-  int restartBudget = (outerIter == 1) ? maxIterTPW : restartsAfterFirstIter;
-  int countdown = restartBudget;
+  int countdown = maxIterTPW;
   time_t start = time(0);
   while (countdown > 0 && difftime(time(0), start) < timeLimitTPW)
   {
@@ -101,7 +98,7 @@ void singlePCHeuristic(int k,
     {
       bestObj = obj;
       bestBeta = beta;
-      countdown = restartBudget;
+      countdown = maxIterTPW;
     }
     countdown--;
   }
@@ -113,14 +110,14 @@ void singlePCHeuristic(int k,
 // Matrix-based convenience overload for truncatedPowerMethod (single-PC, no deflation).
 void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, const Eigen::VectorXd& beta0,
                        double& lambda_partial, Eigen::VectorXd& x_output,
-                       int maxIter = 100, int timeLimit = 20)
+                       int maxIter = 10, int timeLimit = 20)
 {
   int n = prob_Sigma.rows();
   auto applyM = [&](const Eigen::VectorXd& v) -> Eigen::VectorXd {
     return prob_Sigma * v;
   };
   singlePCHeuristic(k, applyM, n, beta0, lambda_partial, x_output,
-                    /*outerIter=*/1, maxIter, timeLimit, maxIter);
+                      maxIter, timeLimit);
 }
 
 // Computes the orthogonality/uncorrelatedness violation of a family of r vectors x.
@@ -162,9 +159,9 @@ List iterativeDeflationHeuristic(
     int feasibilityConstraintType = 0, // 0 = orthogonality constraints, 1 = uncorrelatedness constraints
     double feasibilityTolerance = 1e-4,
     double stallingTolerance = 1e-8,
-    int maxIterTPW = 10,
+    int maxIterTPW = 20,
     int timeLimitTPW = 20,
-    int restartsAfterFirstIter = 2) // random restart budget for outer iterations >= 2
+    int restartsAfterFirstIter = 10) // random restart budget for outer iterations >= 2
 {
   int n = Sigma.rows();
 
@@ -280,7 +277,7 @@ List iterativeDeflationHeuristic(
       }
 
       singlePCHeuristic(ks[t], applyM, n, beta0, lambda_partial, x_output,
-                        theIter, maxIterTPW, timeLimitTPW, restartsAfterFirstIter);
+            (theIter == 1 ? maxIterTPW : restartsAfterFirstIter), timeLimitTPW);
 
       x_current.col(t) = x_output;
 
