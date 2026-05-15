@@ -1,7 +1,7 @@
 useDynLib(msPCA)
 importFrom(Rcpp, evalCpp)
 export("mspca")
-export("tpw")
+export("tpm")
 export("print_mspca")
 export("orthogonality_violation")
 export("pairwise_correlation")
