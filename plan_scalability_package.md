@@ -60,11 +60,11 @@ Then `iterativeTruncHeuristic`, `singlePCHeuristic`, and `evaluate` operate via 
 
 ### 1.3 Gate the random restarts inside `singlePCHeuristic`
 
-**Current behaviour.** Each call to `singlePCHeuristic` runs up to `maxIterTPW` (default 200) random restarts, each doing 100 truncated-power iterations. That's up to 20 000 matvecs per PC per outer iteration. nsprcomp uses ~50–200 iterations *total* per PC.
+**Current behaviour.** Each call to `singlePCHeuristic` runs up to `maxIterTPM` (default 200) random restarts, each doing 100 truncated-power iterations. That's up to 20 000 matvecs per PC per outer iteration. nsprcomp uses ~50–200 iterations *total* per PC.
 
 **Change.**
 - Add an `int outerIter` parameter to `singlePCHeuristic`.
-- Set `restartBudget = (outerIter == 1) ? maxIterTPW : k_small` where `k_small` is a small constant (default 2).
+- Set `restartBudget = (outerIter == 1) ? maxIterTPM : k_small` where `k_small` is a small constant (default 2).
 - Optional refinement: skip restarts entirely if the warm-started run already produced an objective ≥ the previous outer-iteration's per-PC objective.
 
 **Expected gain.** 10–50× reduction in the per-PC inner work for outer iterations ≥ 2, which is where most of the wall time goes once the warm start is good.
