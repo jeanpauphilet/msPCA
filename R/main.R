@@ -87,7 +87,7 @@ fraction_variance_explained <- function(C, U){
 
 #' Orthogonality constraint violation
 #'
-#' Computes the orthogonality constraint violation defined as the distance (L1 norm) between \eqn{U^\top U} and the identity matrix.
+#' Computes the orthogonality constraint violation defined as the distance (sum of absolute values) between \eqn{U^\top U} and the identity matrix.
 #' @param U A matrix. Each column correspond to an p-dimensional PC.
 #' @return A float.
 #' @examples
@@ -102,7 +102,7 @@ orthogonality_violation <- function(U){
 
 #' Pairwise correlation
 #'
-#' Computes the pairwise correlations between PCs defined as \eqn{u_{t}^\top C u_{s}}.
+#' Computes the pairwise correlations between PCs defined as \eqn{u_{t}^\top C u_{s}} / tr(C).
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. Each column correspond to an p-dimensional PC.
 #' @return A float matrix (r x r).
@@ -112,7 +112,7 @@ orthogonality_violation <- function(U){
 #' mspcares <- mspca(TestMat, 2, c(4,4))
 #' pairwise_correlation(TestMat, mspcares$x_best)
 pairwise_correlation <- function(C, U){
-  t(U) %*% C %*% U
+  (t(U) %*% C %*% U) / sum(diag(C))
 }
 #' Print mspca output
 #'
