@@ -117,7 +117,7 @@ pairwise_correlation <- function(C, U){
 #' Print mspca output
 #'
 #' Displays the output of the msPCA algorithm.
-#' @param sol_object A list. The output of the mspca or twp function.
+#' @param sol_object A list. The output of the mspca or tpm function.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @return None. Prints output to console.
 #' @examples
