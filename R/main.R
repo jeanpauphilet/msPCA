@@ -85,35 +85,27 @@ fraction_variance_explained <- function(C, U){
   sum(fraction_variance_explained_perPC(C, U))
 }
 
-#' Orthogonality constraint violation
+#' Feasibility violation
 #'
-#' Computes the orthogonality constraint violation defined as the distance (sum of absolute values) between \eqn{U^\top U} and the identity matrix.
+#' Computes the feasibility violation defined as \eqn{\sum_{t > s} u_{t}^\top u_{s}} if orthogonality constraints are enforced (feasibilityConstraintType = 0) and \eqn{\sum_{t > s} u_{t}^\top C u_{s}} if zero-correlation constraints are enforced (feasibilityConstraintType = 1).
+#' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. Each column correspond to an p-dimensional PC.
+#' @param feasibilityConstraintType An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. 
 #' @return A float.
 #' @examples
 #' library(datasets)
 #' TestMat <- cor(datasets::mtcars)
 #' mspcares <- mspca(TestMat, 2, c(4,4))
-#' orthogonality_violation(mspcares$x_best)
-orthogonality_violation <- function(U){
-  sum(abs(t(U) %*% U - diag(dim(U)[2])))
+#' feasibility_violation_off(TestMat, mspcares$x_best, 0)
+feasibility_violation_off <- function(C, U, feasibilityConstraintType){
+  M = if (feasibilityConstraintType == 0) {
+    t(U) %*% U
+  } else {
+   t(U) %*% C %*% U
+  }
+  sum(abs(M[upper.tri(M, diag=FALSE)]))
 }
 
-
-#' Pairwise correlation
-#'
-#' Computes the pairwise correlations between PCs defined as \eqn{u_{t}^\top C u_{s}} / tr(C).
-#' @param C A matrix. The correlation or covariance matrix (p x p).
-#' @param U A matrix. Each column correspond to an p-dimensional PC.
-#' @return A float matrix (r x r).
-#' @examples
-#' library(datasets)
-#' TestMat <- cor(datasets::mtcars)
-#' mspcares <- mspca(TestMat, 2, c(4,4))
-#' pairwise_correlation(TestMat, mspcares$x_best)
-pairwise_correlation <- function(C, U){
-  (t(U) %*% C %*% U) / sum(diag(C))
-}
 #' Print mspca output
 #'
 #' Displays the output of the msPCA algorithm.
