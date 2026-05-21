@@ -16,8 +16,8 @@
 #' @param feasibilityTolerance (optional) A float. Tolerance for the violation of the orthogonality constraints. Default 1e-4
 #' @param stallingTolerance (optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8
 #' @param timeLimitTPM (optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.
-#' @param maxRestartTPM (optional) An integer. Maximum number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 20.
-#' @param minRestartTPM (optional) An integer. Maximum number of random restarts of the truncated power method (inner iteration) for outer iterations >= 2. Default 10.
+#' @param maxRestartTPM (optional) An integer. Number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 20.
+#' @param minRestartTPM (optional) An integer. Number of random restarts of the truncated power method (inner iteration) for outer iterations >= 2. Default 10.
 #' @return An object with 4 fields: `x_best` (p x r array containing the sparse PCs), `objective_value`, `feasibility_violation`, `runtime`.
 #' @examples
 #' library(datasets)
