@@ -15,9 +15,9 @@
 #' @param feasibilityConstraintType (optional) An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. Default 0.
 #' @param feasibilityTolerance (optional) A float. Tolerance for the violation of the orthogonality constraints. Default 1e-4
 #' @param stallingTolerance (optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8
-#' @param maxIterTPM (optional) An integer. Maximum number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 20.
+#' @param maxRestartTPM (optional) An integer. Maximum number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 20.
 #' @param  timeLimitTPM (optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.
-#' @param restartsAfterFirstIter (optional) An integer. Maximum number of random restarts of the truncated power method (inner iteration) for outer iterations >= 2. Default 10.
+#' @param minRestartTPM (optional) An integer. Maximum number of random restarts of the truncated power method (inner iteration) for outer iterations >= 2. Default 10.
 #' @return An object with 4 fields: `x_best` (p x r array containing the sparse PCs), `objective_value`, `feasibility_violation`, `runtime`.
 #' @examples
 #' library(datasets)
@@ -85,39 +85,31 @@ fraction_variance_explained <- function(C, U){
   sum(fraction_variance_explained_perPC(C, U))
 }
 
-#' Orthogonality constraint violation
+#' Feasibility violation
 #'
-#' Computes the orthogonality constraint violation defined as the distance (infinity norm) between \eqn{U^\top U} and the identity matrix.
+#' Computes the feasibility violation defined as \eqn{\sum_{t > s} u_{t}^\top u_{s}} if orthogonality constraints are enforced (feasibilityConstraintType = 0) and \eqn{\sum_{t > s} u_{t}^\top C u_{s}} if zero-correlation constraints are enforced (feasibilityConstraintType = 1).
+#' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. Each column correspond to an p-dimensional PC.
+#' @param feasibilityConstraintType An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. 
 #' @return A float.
 #' @examples
 #' library(datasets)
 #' TestMat <- cor(datasets::mtcars)
 #' mspcares <- mspca(TestMat, 2, c(4,4))
-#' orthogonality_violation(mspcares$x_best)
-orthogonality_violation <- function(U){
-  sum(abs(t(U) %*% U - diag(dim(U)[2])))
+#' feasibility_violation_off(TestMat, mspcares$x_best, 0)
+feasibility_violation_off <- function(C, U, feasibilityConstraintType){
+  M = if (feasibilityConstraintType == 0) {
+    t(U) %*% U
+  } else {
+   t(U) %*% C %*% U
+  }
+  sum(abs(M[upper.tri(M, diag=FALSE)]))
 }
 
-
-#' Pairwise correlation
-#'
-#' Computes the pairwise correlations between PCs defined as \eqn{u_{t}^\top C u_{s}}.
-#' @param C A matrix. The correlation or covariance matrix (p x p).
-#' @param U A matrix. Each column correspond to an p-dimensional PC.
-#' @return A float matrix (r x r).
-#' @examples
-#' library(datasets)
-#' TestMat <- cor(datasets::mtcars)
-#' mspcares <- mspca(TestMat, 2, c(4,4))
-#' pairwise_correlation(TestMat, mspcares$x_best)
-pairwise_correlation <- function(C, U){
-  t(U) %*% C %*% U
-}
 #' Print mspca output
 #'
 #' Displays the output of the msPCA algorithm.
-#' @param sol_object A list. The output of the mspca or twp function.
+#' @param sol_object A list. The output of the mspca or tpm function.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @return None. Prints output to console.
 #' @examples

@@ -1,11 +1,10 @@
+feasibility_violation_off
+                        Feasibility violation
 fraction_variance_explained
                         Fraction of variance explained
 fraction_variance_explained_perPC
                         Fraction of variance explained per PC
 mspca                   Multiple Sparse PCA
-orthogonality_violation
-                        Orthogonality constraint violation
-pairwise_correlation    Pairwise correlation
 print_mspca             Print mspca output
 tpm                     Truncated Power Method
 variance_explained_perPC

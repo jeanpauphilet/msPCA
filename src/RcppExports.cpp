@@ -12,23 +12,23 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // iterativeDeflationHeuristic
-List iterativeDeflationHeuristic(Eigen::MatrixXd Sigma, int r, Rcpp::NumericVector ks, int maxIter, bool verbose, int feasibilityConstraintType, double feasibilityTolerance, double stallingTolerance, int maxRestartTPM, int timeLimitTPM, int minRestartTPM);
-RcppExport SEXP _msPCA_iterativeDeflationHeuristic(SEXP SigmaSEXP, SEXP rSEXP, SEXP ksSEXP, SEXP maxIterSEXP, SEXP verboseSEXP, SEXP feasibilityConstraintTypeSEXP, SEXP feasibilityToleranceSEXP, SEXP stallingToleranceSEXP, SEXP maxRestartTPMSEXP, SEXP timeLimitTPMSEXP, SEXP minRestartTPMSEXP) {
+List iterativeDeflationHeuristic(Eigen::MatrixXd Sigma, int r, Rcpp::NumericVector ks, int feasibilityConstraintType, bool verbose, int maxIter, double feasibilityTolerance, double stallingTolerance, int timeLimitTPM, int maxRestartTPM, int minRestartTPM);
+RcppExport SEXP _msPCA_iterativeDeflationHeuristic(SEXP SigmaSEXP, SEXP rSEXP, SEXP ksSEXP, SEXP feasibilityConstraintTypeSEXP, SEXP verboseSEXP, SEXP maxIterSEXP, SEXP feasibilityToleranceSEXP, SEXP stallingToleranceSEXP, SEXP timeLimitTPMSEXP, SEXP maxRestartTPMSEXP, SEXP minRestartTPMSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type Sigma(SigmaSEXP);
     Rcpp::traits::input_parameter< int >::type r(rSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type ks(ksSEXP);
-    Rcpp::traits::input_parameter< int >::type maxIter(maxIterSEXP);
-    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< int >::type feasibilityConstraintType(feasibilityConstraintTypeSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< int >::type maxIter(maxIterSEXP);
     Rcpp::traits::input_parameter< double >::type feasibilityTolerance(feasibilityToleranceSEXP);
     Rcpp::traits::input_parameter< double >::type stallingTolerance(stallingToleranceSEXP);
-    Rcpp::traits::input_parameter< int >::type maxRestartTPM(maxRestartTPMSEXP);
     Rcpp::traits::input_parameter< int >::type timeLimitTPM(timeLimitTPMSEXP);
+    Rcpp::traits::input_parameter< int >::type maxRestartTPM(maxRestartTPMSEXP);
     Rcpp::traits::input_parameter< int >::type minRestartTPM(minRestartTPMSEXP);
-    rcpp_result_gen = Rcpp::wrap(iterativeDeflationHeuristic(Sigma, r, ks, maxIter, verbose, feasibilityConstraintType, feasibilityTolerance, stallingTolerance, maxRestartTPM, timeLimitTPM, minRestartTPM));
+    rcpp_result_gen = Rcpp::wrap(iterativeDeflationHeuristic(Sigma, r, ks, feasibilityConstraintType, verbose, maxIter, feasibilityTolerance, stallingTolerance, timeLimitTPM, maxRestartTPM, minRestartTPM));
     return rcpp_result_gen;
 END_RCPP
 }

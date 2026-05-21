@@ -7,7 +7,7 @@
 print_mspca(sol_object, C)
 }
 \arguments{
-\item{sol_object}{A list. The output of the mspca or twp function.}
+\item{sol_object}{A list. The output of the mspca or tpm function.}
 
 \item{C}{A matrix. The correlation or covariance matrix (p x p).}
 }

@@ -18,6 +18,28 @@ library('msPCA')
 base::assign(".oldSearch", base::search(), pos = 'CheckExEnv')
 base::assign(".old_wd", base::getwd(), pos = 'CheckExEnv')
 cleanEx()
+nameEx("feasibility_violation_off")
+### * feasibility_violation_off
+
+flush(stderr()); flush(stdout())
+
+base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+### Name: feasibility_violation_off
+### Title: Feasibility violation
+### Aliases: feasibility_violation_off
+
+### ** Examples
+
+library(datasets)
+TestMat <- cor(datasets::mtcars)
+mspcares <- mspca(TestMat, 2, c(4,4))
+feasibility_violation_off(TestMat, mspcares$x_best, 0)
+
+
+
+base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+base::cat("feasibility_violation_off", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+cleanEx()
 nameEx("fraction_variance_explained")
 ### * fraction_variance_explained
 
@@ -60,50 +82,6 @@ mspca(TestMat, 2, c(4,4))
 
 base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
 base::cat("mspca", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
-cleanEx()
-nameEx("orthogonality_violation")
-### * orthogonality_violation
-
-flush(stderr()); flush(stdout())
-
-base::assign(".ptime", proc.time(), pos = "CheckExEnv")
-### Name: orthogonality_violation
-### Title: Orthogonality constraint violation
-### Aliases: orthogonality_violation
-
-### ** Examples
-
-library(datasets)
-TestMat <- cor(datasets::mtcars)
-mspcares <- mspca(TestMat, 2, c(4,4))
-orthogonality_violation(mspcares$x_best)
-
-
-
-base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
-base::cat("orthogonality_violation", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
-cleanEx()
-nameEx("pairwise_correlation")
-### * pairwise_correlation
-
-flush(stderr()); flush(stdout())
-
-base::assign(".ptime", proc.time(), pos = "CheckExEnv")
-### Name: pairwise_correlation
-### Title: Pairwise correlation
-### Aliases: pairwise_correlation
-
-### ** Examples
-
-library(datasets)
-TestMat <- cor(datasets::mtcars)
-mspcares <- mspca(TestMat, 2, c(4,4))
-pairwise_correlation(TestMat, mspcares$x_best)
-
-
-
-base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
-base::cat("pairwise_correlation", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
 cleanEx()
 nameEx("print_mspca")
 ### * print_mspca

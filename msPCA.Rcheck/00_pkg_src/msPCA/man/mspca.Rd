@@ -8,14 +8,14 @@ mspca(
   Sigma,
   r,
   ks,
-  maxIter = 200L,
-  verbose = TRUE,
   feasibilityConstraintType = 0L,
+  verbose = TRUE,
+  maxIter = 200L,
   feasibilityTolerance = 1e-04,
   stallingTolerance = 1e-08,
-  maxIterTPM = 20L,
   timeLimitTPM = 20L,
-  restartsAfterFirstIter = 10L
+  maxRestartTPM = 20L,
+  minRestartTPM = 10L
 )
 }
 \arguments{
@@ -25,21 +25,21 @@ mspca(
 
 \item{ks}{A list of integers. Target sparsity of each PC.}
 
-\item{maxIter}{(optional) An integer. Maximum number of iterations of the algorithm. Default 200.}
+\item{feasibilityConstraintType}{(optional) An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. Default 0.}
 
 \item{verbose}{(optional) A Boolean. Controls console output. Default TRUE.}
 
-\item{feasibilityConstraintType}{(optional) An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. Default 0.}
+\item{maxIter}{(optional) An integer. Maximum number of iterations of the algorithm. Default 200.}
 
 \item{feasibilityTolerance}{(optional) A float. Tolerance for the violation of the orthogonality constraints. Default 1e-4}
 
 \item{stallingTolerance}{(optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8}
 
-\item{maxIterTPM}{(optional) An integer. Maximum number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 20.}
-
 \item{timeLimitTPM}{(optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.}
 
-\item{restartsAfterFirstIter}{(optional) An integer. Maximum number of random restarts of the truncated power method (inner iteration) for outer iterations >= 2. Default 10.}
+\item{maxRestartTPM}{(optional) An integer. Maximum number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 20.}
+
+\item{minRestartTPM}{(optional) An integer. Maximum number of random restarts of the truncated power method (inner iteration) for outer iterations >= 2. Default 10.}
 }
 \value{
 An object with 4 fields: `x_best` (p x r array containing the sparse PCs), `objective_value`, `feasibility_violation`, `runtime`.

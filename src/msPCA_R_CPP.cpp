@@ -298,11 +298,6 @@ List iterativeDeflationHeuristic(
     ofv_prev = ofv_overall;
     ofv_overall = evaluate(x_current, Sigma);
 
-    // if (theIter == 1) // TBD if needed or if initialization with -1e10 is enough
-    // {
-    //   ofv_prev = ofv_overall;
-    // }
-
     double violation = fnviolation(x_current, Sigma, feasibilityConstraintType);
     double violation_forStep = violation; // For the step size: if truncate values that are too small for numerical stability
     if (1e-7 > violation) {

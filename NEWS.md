@@ -1,3 +1,9 @@
+# msPCA 0.4.0
+
+* Renamed hyperparameters controlling truncated power method restart budgets for clearer and more consistent API naming.
+* Documentation polish across function docs and package materials.
+* Removed `pairwise_correlation()` and `orthogonality_violation()` and replaced them with a unified `feasibility_violation_off()` helper for feasibility diagnostics across constraint types.
+
 # msPCA 0.3.0
 
 * Improved scalability of `mspca()` and `tpw()` through algorithmic and implementation optimizations.

@@ -2,8 +2,8 @@ Package: msPCA
 Type: Package
 Title: Sparse Principal Component Analysis with Multiple Principal
         Components
-Version: 0.3.0
-Date: 2026-05-15
+Version: 0.4.0
+Date: 2026-05-21
 Authors@R: c(
     person("Ryan", "Cory-Wright", , "r.cory-wright@imperial.ac.uk", role = c("aut", "cph"),
            comment = c(ORCID = "0000-0002-4485-0619")),
@@ -22,9 +22,9 @@ LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.3.3
 Encoding: UTF-8
 NeedsCompilation: yes
-Packaged: 2026-05-15 14:35:05 UTC; jeanpauphilet
+Packaged: 2026-05-21 11:13:01 UTC; jeanpauphilet
 Author: Ryan Cory-Wright [aut, cph] (<https://orcid.org/0000-0002-4485-0619>),
   Jean Pauphilet [aut, cre, cph]
     (<https://orcid.org/0000-0001-6352-0984>)
 Maintainer: Jean Pauphilet <jpauphilet@london.edu>
-Built: R 4.4.3; aarch64-apple-darwin20; 2026-05-15 14:35:13 UTC; unix
+Built: R 4.4.3; aarch64-apple-darwin20; 2026-05-21 11:13:33 UTC; unix
