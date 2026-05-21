@@ -8,7 +8,7 @@
 ## Changes in this version
 
 * Improved scalability of `mspca()` and `tpm()` through algorithmic and implementation optimizations.
-* Function `mspca()` now accepts a new hyper-parameter `restartsAfterFirstIter` that limits the number of random restarts for the truncated power method after the first outer iteration
+* Function `mspca()` now accepts a new hyper-parameter `minRestartTPM` that limits the number of random restarts for the truncated power method after the first outer iteration
 * Improved scaling of the penalty parameters for the case of zero-correlation constraints
 * Fixed incorrect acronym for truncated power method (TPW <- TPM) 
 
