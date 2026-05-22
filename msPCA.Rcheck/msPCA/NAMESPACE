@@ -1,8 +1,0 @@
-useDynLib(msPCA)
-importFrom(Rcpp, evalCpp)
-export("mspca")
-export("tpm")
-export("print_mspca")
-export("feasibility_violation_off")
-export("fraction_variance_explained")
-export("fraction_variance_explained_perPC")

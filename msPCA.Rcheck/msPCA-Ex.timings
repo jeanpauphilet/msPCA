@@ -1,6 +1,0 @@
-name	user	system	elapsed
-feasibility_violation_off	0.017	0.001	0.019	
-fraction_variance_explained	0.016	0.000	0.020	
-mspca	0.018	0.001	0.022	
-print_mspca	0.020	0.001	0.026	
-tpm	0.001	0.000	0.001	

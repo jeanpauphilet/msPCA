@@ -366,13 +366,31 @@ List iterativeDeflationHeuristic(
   violation_best = fnviolation(x_best, Sigma, feasibilityConstraintType);
   if (violation_best > feasibilityTolerance) // Warning if the best solution found is not feasible (within tolerance)
   {
-    warning("Warning: Algorithm terminated without finding a feasible solution (within %i tolerance). Best solution found is %i feasible", feasibilityTolerance, violation_best);
+    warning("Warning: Algorithm terminated without finding a feasible solution (within %i tolerance). Best solution found is %i feasible. You may want to rerun the algorithm with more iterations (maxIter)", feasibilityTolerance, violation_best);
   }
   ofv_best = evaluate(x_best, Sigma);
+
+  // Sort columns of x_best by descending explained variance
+  //// Compute per-PC explained variance
+  Eigen::VectorXd fve(r);
+  for (int t = 0; t < r; ++t) {
+    fve(t) = x_best.col(t).dot(Sigma * x_best.col(t));
+  }
+
+  std::vector<int> order(r);
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(),
+            [&](int a, int b) { return fve(a) > fve(b); });
+
+  Eigen::MatrixXd x_sorted(n, r);
+  for (int j = 0; j < r; ++j) {
+    x_sorted.col(j) = x_best.col(order[j]);
+  }
+
   List result = List::create(Named("objective_value") = ofv_best,
                              Named("feasibility_violation") = violation_best,
                              Named("runtime") = runtime,
-                             Named("x_best") = x_best);
+                             Named("x_best") = x_sorted);
   return result;
 }
 

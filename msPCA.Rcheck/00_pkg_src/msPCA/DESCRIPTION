@@ -12,7 +12,7 @@ Authors@R: c(
     )
 Description: Implements an algorithm for computing multiple sparse principal 
     components of a dataset. The method is based on Cory-Wright and Pauphilet 
-    "Sparse PCA with Multiple Principal Components" (2022) 
+    "Sparse PCA with Multiple Principal Components" (2026) 
     <doi:10.48550/arXiv.2209.14790>. The algorithm uses an iterative deflation 
     heuristic with a truncated power method applied at each iteration to compute 
     sparse principal components with controlled sparsity.
@@ -22,7 +22,7 @@ LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.3.3
 Encoding: UTF-8
 NeedsCompilation: yes
-Packaged: 2026-05-21 11:13:01 UTC; jeanpauphilet
+Packaged: 2026-05-22 13:43:12 UTC; jeanpauphilet
 Author: Ryan Cory-Wright [aut, cph] (<https://orcid.org/0000-0002-4485-0619>),
   Jean Pauphilet [aut, cre, cph]
     (<https://orcid.org/0000-0001-6352-0984>)
