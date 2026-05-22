@@ -73,3 +73,17 @@ In file included from /Users/jeanpauphilet/Library/R/arm64/4.4/library/RcppEigen
 /Users/jeanpauphilet/Library/R/arm64/4.4/library/RcppEigen/include/unsupported/Eigen/src/SparseExtra/MarketIO.h:246:7: warning: variable 'count' set but not used [-Wunused-but-set-variable]
   246 |   int count = 0;
       |       ^
+5 warnings generated.
+clang++ -arch arm64 -std=gnu++17 -dynamiclib -Wl,-headerpad_max_install_names -undefined dynamic_lookup -L/Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib -L/opt/R/arm64/lib -o msPCA.so RcppExports.o msPCA_R_CPP.o -F/Library/Frameworks/R.framework/Versions/4.4-arm64 -framework R -Wl,-framework -Wl,CoreFoundation
+installing to /Users/jeanpauphilet/Library/CloudStorage/Dropbox-LBS/Jean Pauphilet/Work/1 - Research/msPCA - dev/msPCA/msPCA.Rcheck/00LOCK-msPCA/00new/msPCA/libs
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** testing if installed package can be loaded from temporary location
+** checking absolute paths in shared objects and dynamic libraries
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (msPCA)
