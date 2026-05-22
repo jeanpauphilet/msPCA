@@ -59,7 +59,7 @@ for (iter in 1:5){ #Number of replications
     resdf[icol,] <- list(n,"msPCA",
                    sum(abs(mspca_results$x_best) > 0), #Sparsity level
                    accuracy(xtrue, mspca_results$x_best), #Support recovery accuracy
-                   orthogonality_violation(mspca_results$x_best), #Orthogonality violation
+                   feasibility_violation_off(S, mspca_results$x_best, 0), #Orthogonality violation
                    fraction_variance_explained(Strue,mspca_results$x_best)) #Fraction of variance explained
 
     icol <- icol +1
@@ -69,7 +69,7 @@ for (iter in 1:5){ #Number of replications
     resdf[icol,] <- list(n,"elasticnet",
                       sum(abs(enet_results$loadings) > 0),
                       accuracy(xtrue, enet_results$loadings),
-                      orthogonality_violation(enet_results$loadings),
+                      feasibility_violation_off(S, enet_results$loadings, 0),
                       fraction_variance_explained(Strue,enet_results$loadings))
     icol <- icol +1
 

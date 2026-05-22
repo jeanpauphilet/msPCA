@@ -18,8 +18,8 @@ S <- cor(df)
 library(msPCA)
 
 ## First method: Truncated Power Method for a single sparse PC
-tpw_results <- msPCA::tpw(S, 4, maxIter=100)
-U <- as.matrix(tpw_results$x_best)
+tpm_results <- msPCA::tpm(S, 4, maxIter=100)
+U <- as.matrix(tpm_results$x_best)
 #Sparsity
 colSums(abs(U) > 0)
 #Fraction of variance explained
@@ -35,7 +35,7 @@ colSums(abs(mspca_results$x_best) > 0)
 #Check PC norms
 diag( t(mspca_results$x_best) %*% mspca_results$x_best )
 #Orthogonality
-msPCA::orthogonality_violation(mspca_results$x_best)
+msPCA::feasibility_violation_off(S, mspca_results$x_best, 0)
 #Fraction of variance explained
 msPCA::fraction_variance_explained(S,mspca_results$x_best)
 
@@ -50,7 +50,7 @@ colSums(abs(enet_results$loadings) > 0)
 #Check PC norms
 diag( t(enet_results$loadings) %*% enet_results$loadings )
 #Orthogonality
-msPCA::orthogonality_violation(enet_results$loadings)
+msPCA::feasibility_violation_off(S, enet_results$loadings, 0)
 #Fraction of variance explained
 msPCA::fraction_variance_explained(S,enet_results$loadings)
 
@@ -66,7 +66,7 @@ colSums(abs(pma_results$v) > 0)
 #Check PC norms
 diag( t(pma_results$v) %*% pma_results$v )
 #Orthogonality
-msPCA::orthogonality_violation(pma_results$v)
+msPCA::feasibility_violation_off(S, pma_results$v, 0)
 #Fraction of variance explained
 msPCA::fraction_variance_explained(S,pma_results$v)
 
@@ -76,7 +76,7 @@ colSums(abs(pma_results$v) > 0)
 #Check PC norms
 diag( t(pma_results$v) %*% pma_results$v )
 #Orthogonality
-msPCA::orthogonality_violation(pma_results$v)
+msPCA::feasibility_violation_off(S, pma_results$v, 0)
 #Fraction of variance explained
 msPCA::fraction_variance_explained(S,pma_results$v)
 
@@ -96,7 +96,7 @@ sparsepca$loadings[,1] <- sparsepca$loadings[,1] / sqrt(sum(sparsepca$loadings[,
 sparsepca$loadings[,2] <- sparsepca$loadings[,2] / sqrt(sum(sparsepca$loadings[,2]**2))
 diag( t(sparsepca$loadings) %*% sparsepca$loadings )
 #Orthogonality
-msPCA::orthogonality_violation(sparsepca$loadings)
+msPCA::feasibility_violation_off(S, sparsepca$loadings, 0)
 #Fraction of variance explained
 msPCA::fraction_variance_explained(S,sparsepca$loadings)
 
@@ -112,7 +112,7 @@ sparsepca$loadings[,1] <- sparsepca$loadings[,1] / sqrt(sum(sparsepca$loadings[,
 sparsepca$loadings[,2] <- sparsepca$loadings[,2] / sqrt(sum(sparsepca$loadings[,2]**2))
 diag( t(sparsepca$loadings) %*% sparsepca$loadings )
 #Orthogonality
-msPCA::orthogonality_violation(sparsepca$loadings)
+msPCA::feasibility_violation_off(S, sparsepca$loadings, 0)
 #Fraction of variance explained
 msPCA::fraction_variance_explained(S,sparsepca$loadings)
 
@@ -128,7 +128,7 @@ sparsepca$loadings[,1] <- sparsepca$loadings[,1] / sqrt(sum(sparsepca$loadings[,
 sparsepca$loadings[,2] <- sparsepca$loadings[,2] / sqrt(sum(sparsepca$loadings[,2]**2))
 diag( t(sparsepca$loadings) %*% sparsepca$loadings )
 #Orthogonality
-msPCA::orthogonality_violation(sparsepca$loadings)
+msPCA::feasibility_violation_off(S, sparsepca$loadings, 0)
 #Fraction of variance explained
 msPCA::fraction_variance_explained(S,sparsepca$loadings)
 
