@@ -24,7 +24,6 @@ An object with 3 fields: `x_best` (p x 1 array containing the sparse PC), `objec
 Returns the leading sparse principal component of a matrix using the truncated power method.
 }
 \examples{
-library(datasets)
 TestMat <- cor(datasets::mtcars)
 tpm(TestMat, 4)
 }

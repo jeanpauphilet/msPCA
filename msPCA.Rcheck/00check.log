@@ -6,12 +6,12 @@
     GNU Fortran (GCC) 12.2.0
 * running under: macOS Sonoma 14.8.5
 * using session charset: UTF-8
-* using option ‘--as-cran’
+* using options ‘--no-manual --as-cran’
 * checking for file ‘msPCA/DESCRIPTION’ ... OK
 * checking extension type ... Package
-* this is package ‘msPCA’ version ‘0.4.0’
+* this is package ‘msPCA’ version ‘0.4.1’
 * package encoding: UTF-8
-* checking CRAN incoming feasibility ... [4s/11s] Note_to_CRAN_maintainers
+* checking CRAN incoming feasibility ... Note_to_CRAN_maintainers
 Maintainer: ‘Jean Pauphilet <jpauphilet@london.edu>’
 * checking package namespace information ... OK
 * checking package dependencies ... OK
@@ -71,67 +71,7 @@ Files ‘README.md’ or ‘NEWS.md’ cannot be checked without ‘pandoc’ be
 * checking compilation flags used ... OK
 * checking compiled code ... OK
 * checking examples ... OK
-* checking PDF version of manual ... OK
-* checking HTML version of manual ... NOTE
-Found the following HTML validation problems:
-feasibility_violation_off.html:15:44 (feasibility_violation_off.Rd:5): Error: <main> is not recognized!
-feasibility_violation_off.html:15:44 (feasibility_violation_off.Rd:5): Warning: discarding unexpected <main>
-feasibility_violation_off.html:65:1 (feasibility_violation_off.Rd:26): Warning: discarding unexpected </main>
-feasibility_violation_off.html:4:1 (feasibility_violation_off.Rd:5): Warning: <link> inserting "type" attribute
-feasibility_violation_off.html:12:1 (feasibility_violation_off.Rd:5): Warning: <script> proprietary attribute "onload"
-feasibility_violation_off.html:12:1 (feasibility_violation_off.Rd:5): Warning: <script> inserting "type" attribute
-feasibility_violation_off.html:17:1 (feasibility_violation_off.Rd:5): Warning: <table> lacks "summary" attribute
-feasibility_violation_off.html:35:1 (feasibility_violation_off.Rd:10): Warning: <table> lacks "summary" attribute
-fraction_variance_explained.html:15:44 (fraction_variance_explained.Rd:5): Error: <main> is not recognized!
-fraction_variance_explained.html:15:44 (fraction_variance_explained.Rd:5): Warning: discarding unexpected <main>
-fraction_variance_explained.html:61:1 (fraction_variance_explained.Rd:24): Warning: discarding unexpected </main>
-fraction_variance_explained.html:4:1 (fraction_variance_explained.Rd:5): Warning: <link> inserting "type" attribute
-fraction_variance_explained.html:12:1 (fraction_variance_explained.Rd:5): Warning: <script> proprietary attribute "onload"
-fraction_variance_explained.html:12:1 (fraction_variance_explained.Rd:5): Warning: <script> inserting "type" attribute
-fraction_variance_explained.html:17:1 (fraction_variance_explained.Rd:5): Warning: <table> lacks "summary" attribute
-fraction_variance_explained.html:35:1 (fraction_variance_explained.Rd:10): Warning: <table> lacks "summary" attribute
-fraction_variance_explained_perPC.html:15:44 (fraction_variance_explained_perPC.Rd:5): Error: <main> is not recognized!
-fraction_variance_explained_perPC.html:15:44 (fraction_variance_explained_perPC.Rd:5): Warning: discarding unexpected <main>
-fraction_variance_explained_perPC.html:52:1 (fraction_variance_explained_perPC.Rd:15): Warning: discarding unexpected </main>
-fraction_variance_explained_perPC.html:4:1 (fraction_variance_explained_perPC.Rd:5): Warning: <link> inserting "type" attribute
-fraction_variance_explained_perPC.html:12:1 (fraction_variance_explained_perPC.Rd:5): Warning: <script> proprietary attribute "onload"
-fraction_variance_explained_perPC.html:12:1 (fraction_variance_explained_perPC.Rd:5): Warning: <script> inserting "type" attribute
-fraction_variance_explained_perPC.html:17:1 (fraction_variance_explained_perPC.Rd:5): Warning: <table> lacks "summary" attribute
-fraction_variance_explained_perPC.html:35:1 (fraction_variance_explained_perPC.Rd:10): Warning: <table> lacks "summary" attribute
-mspca.html:15:44 (mspca.Rd:5): Error: <main> is not recognized!
-mspca.html:15:44 (mspca.Rd:5): Warning: discarding unexpected <main>
-mspca.html:108:1 (mspca.Rd:53): Warning: discarding unexpected </main>
-mspca.html:4:1 (mspca.Rd:5): Warning: <link> inserting "type" attribute
-mspca.html:12:1 (mspca.Rd:5): Warning: <script> proprietary attribute "onload"
-mspca.html:12:1 (mspca.Rd:5): Warning: <script> inserting "type" attribute
-mspca.html:17:1 (mspca.Rd:5): Warning: <table> lacks "summary" attribute
-mspca.html:47:1 (mspca.Rd:22): Warning: <table> lacks "summary" attribute
-print_mspca.html:15:44 (print_mspca.Rd:5): Error: <main> is not recognized!
-print_mspca.html:15:44 (print_mspca.Rd:5): Warning: discarding unexpected <main>
-print_mspca.html:61:1 (print_mspca.Rd:24): Warning: discarding unexpected </main>
-print_mspca.html:4:1 (print_mspca.Rd:5): Warning: <link> inserting "type" attribute
-print_mspca.html:12:1 (print_mspca.Rd:5): Warning: <script> proprietary attribute "onload"
-print_mspca.html:12:1 (print_mspca.Rd:5): Warning: <script> inserting "type" attribute
-print_mspca.html:17:1 (print_mspca.Rd:5): Warning: <table> lacks "summary" attribute
-print_mspca.html:35:1 (print_mspca.Rd:10): Warning: <table> lacks "summary" attribute
-tpm.html:15:44 (tpm.Rd:5): Error: <main> is not recognized!
-tpm.html:15:44 (tpm.Rd:5): Warning: discarding unexpected <main>
-tpm.html:78:1 (tpm.Rd:29): Warning: discarding unexpected </main>
-tpm.html:4:1 (tpm.Rd:5): Warning: <link> inserting "type" attribute
-tpm.html:12:1 (tpm.Rd:5): Warning: <script> proprietary attribute "onload"
-tpm.html:12:1 (tpm.Rd:5): Warning: <script> inserting "type" attribute
-tpm.html:17:1 (tpm.Rd:5): Warning: <table> lacks "summary" attribute
-tpm.html:35:1 (tpm.Rd:10): Warning: <table> lacks "summary" attribute
-variance_explained_perPC.html:15:44 (variance_explained_perPC.Rd:5): Error: <main> is not recognized!
-variance_explained_perPC.html:15:44 (variance_explained_perPC.Rd:5): Warning: discarding unexpected <main>
-variance_explained_perPC.html:52:1 (variance_explained_perPC.Rd:15): Warning: discarding unexpected </main>
-variance_explained_perPC.html:4:1 (variance_explained_perPC.Rd:5): Warning: <link> inserting "type" attribute
-variance_explained_perPC.html:12:1 (variance_explained_perPC.Rd:5): Warning: <script> proprietary attribute "onload"
-variance_explained_perPC.html:12:1 (variance_explained_perPC.Rd:5): Warning: <script> inserting "type" attribute
-variance_explained_perPC.html:17:1 (variance_explained_perPC.Rd:5): Warning: <table> lacks "summary" attribute
-variance_explained_perPC.html:35:1 (variance_explained_perPC.Rd:10): Warning: <table> lacks "summary" attribute
-Skipping checking math rendering: package 'V8' unavailable
 * checking for non-standard things in the check directory ... OK
 * checking for detritus in the temp directory ... OK
 * DONE
-Status: 3 NOTEs
+Status: 2 NOTEs

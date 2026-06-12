@@ -2,14 +2,16 @@
 % Please edit documentation in R/main.R
 \name{print_mspca}
 \alias{print_mspca}
-\title{Print mspca output}
+\title{Print msPCA Output}
 \usage{
-print_mspca(sol_object, C)
+print_mspca(sol_object, C, digits = 3)
 }
 \arguments{
 \item{sol_object}{A list. The output of the mspca or tpm function.}
 
 \item{C}{A matrix. The correlation or covariance matrix (p x p).}
+
+\item{digits}{An integer. Number of digits used for rounded display. Default 3.}
 }
 \value{
 None. Prints output to console.
@@ -18,8 +20,7 @@ None. Prints output to console.
 Displays the output of the msPCA algorithm.
 }
 \examples{
-library(datasets)
 TestMat <- cor(datasets::mtcars)
 mspcares <- mspca(TestMat, 2, c(4,4))
-print_mspca(mspcares, TestMat)
+print_mspca(mspcares, TestMat, digits = 3)
 }

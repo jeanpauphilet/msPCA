@@ -2,8 +2,8 @@ Package: msPCA
 Type: Package
 Title: Sparse Principal Component Analysis with Multiple Principal
         Components
-Version: 0.4.0
-Date: 2026-05-21
+Version: 0.4.1
+Date: 2026-06-12
 Authors@R: c(
     person("Ryan", "Cory-Wright", , "r.cory-wright@imperial.ac.uk", role = c("aut", "cph"),
            comment = c(ORCID = "0000-0002-4485-0619")),
@@ -18,11 +18,12 @@ Description: Implements an algorithm for computing multiple sparse principal
     sparse principal components with controlled sparsity.
 License: MIT + file LICENSE
 Imports: Rcpp (>= 1.0.11)
+Suggests: datasets
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.3.3
 Encoding: UTF-8
 NeedsCompilation: yes
-Packaged: 2026-05-22 13:43:12 UTC; jeanpauphilet
+Packaged: 2026-06-12 13:36:31 UTC; jeanpauphilet
 Author: Ryan Cory-Wright [aut, cph] (<https://orcid.org/0000-0002-4485-0619>),
   Jean Pauphilet [aut, cre, cph]
     (<https://orcid.org/0000-0001-6352-0984>)

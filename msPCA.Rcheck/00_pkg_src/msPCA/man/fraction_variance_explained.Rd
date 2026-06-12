@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{fraction_variance_explained}
 \alias{fraction_variance_explained}
-\title{Fraction of variance explained}
+\title{Fraction of Variance Explained}
 \usage{
 fraction_variance_explained(C, U)
 }
@@ -18,7 +18,6 @@ A float.
 Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by a set of PCs.
 }
 \examples{
-library(datasets)
 TestMat <- cor(datasets::mtcars)
 mspcares <- mspca(TestMat, 2, c(4,4))
 fraction_variance_explained(TestMat, mspcares$x_best)

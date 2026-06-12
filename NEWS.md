@@ -1,3 +1,9 @@
+# msPCA 0.4.1
+
+* Standardized function man page titles to consistent title style.
+* Removed unnecessary `library(datasets)` calls from examples while keeping explicit `datasets::mtcars` usage, and added `datasets` to `Suggests` to align example dependencies with CRAN guidance.
+* Improved efficiency and clarity of R code 
+
 # msPCA 0.4.0
 
 * Renamed hyperparameters controlling truncated power method restart budgets for clearer and more consistent API naming.

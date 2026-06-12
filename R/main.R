@@ -20,7 +20,6 @@
 #' @param minRestartTPM (optional) An integer. Number of random restarts of the truncated power method (inner iteration) for outer iterations >= 2. Default 10.
 #' @return An object with 4 fields: `x_best` (p x r array containing the sparse PCs), `objective_value`, `feasibility_violation`, `runtime`.
 #' @examples
-#' library(datasets)
 #' TestMat <- cor(datasets::mtcars)
 #' mspca(TestMat, 2, c(4,4))
 mspca <- iterativeDeflationHeuristic
@@ -36,29 +35,23 @@ mspca <- iterativeDeflationHeuristic
 #' @return An object with 3 fields: `x_best` (p x 1 array containing the sparse PC), `objective_value`, `runtime`.
 #' @references Yuan, X. T., & Zhang, T. (2013). Truncated power method for sparse eigenvalue problems. The Journal of Machine Learning Research, 14(1), 899-925.
 #' @examples
-#' library(datasets)
 #' TestMat <- cor(datasets::mtcars)
 #' tpm(TestMat, 4)
 tpm <- truncatedPowerMethod
 
 
 ## 2 - Useful functions
-#' Variance explained per PC
+#' Variance Explained per PC
 #'
 #' Computes the variance explained by each PC.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. The matrix containing the r PCs (p x r).
 #' @return An array.
 variance_explained_perPC <- function(C, U){
-  r <- dim(U)[2]
-  ve <- numeric(r)
-  for (i in 1:r){
-    ve[i] <- t(U[, i]) %*% C %*% U[, i]
-  }
-  ve
+  colSums(U * (C %*% U))
 }
 
-#' Fraction of variance explained per PC
+#' Fraction of Variance Explained per PC
 #'
 #' Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by each PC.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
@@ -70,22 +63,21 @@ fraction_variance_explained_perPC <- function(C, U){
   fve
 }
 
-#' Fraction of variance explained
+#' Fraction of Variance Explained
 #'
 #' Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by a set of PCs.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. The matrix containing the r PCs (p x r).
 #' @return A float.
 #' @examples
-#' library(datasets)
 #' TestMat <- cor(datasets::mtcars)
 #' mspcares <- mspca(TestMat, 2, c(4,4))
 #' fraction_variance_explained(TestMat, mspcares$x_best)
 fraction_variance_explained <- function(C, U){
-  sum(fraction_variance_explained_perPC(C, U))
+  sum(U * (C %*% U)) / sum(diag(C))
 }
 
-#' Feasibility violation
+#' Feasibility Violation
 #'
 #' Computes the feasibility violation defined as \eqn{\sum_{t > s} u_{t}^\top u_{s}} if orthogonality constraints are enforced (feasibilityConstraintType = 0) and \eqn{\sum_{t > s} u_{t}^\top C u_{s}} if zero-correlation constraints are enforced (feasibilityConstraintType = 1).
 #' @param C A matrix. The correlation or covariance matrix (p x p).
@@ -93,49 +85,45 @@ fraction_variance_explained <- function(C, U){
 #' @param feasibilityConstraintType An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. 
 #' @return A float.
 #' @examples
-#' library(datasets)
 #' TestMat <- cor(datasets::mtcars)
 #' mspcares <- mspca(TestMat, 2, c(4,4))
 #' feasibility_violation_off(TestMat, mspcares$x_best, 0)
 feasibility_violation_off <- function(C, U, feasibilityConstraintType){
   M = if (feasibilityConstraintType == 0) {
-    t(U) %*% U
+    crossprod(U)
   } else {
-   t(U) %*% C %*% U
+   crossprod(U, C %*% U)
   }
   sum(abs(M[upper.tri(M, diag=FALSE)]))
 }
 
-#' Print mspca output
+#' Print msPCA Output
 #'
 #' Displays the output of the msPCA algorithm.
 #' @param sol_object A list. The output of the mspca or tpm function.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
+#' @param digits An integer. Number of digits used for rounded display. Default 3.
 #' @return None. Prints output to console.
 #' @examples
-#' library(datasets)
 #' TestMat <- cor(datasets::mtcars)
 #' mspcares <- mspca(TestMat, 2, c(4,4))
-#' print_mspca(mspcares, TestMat)
-print_mspca <- function(sol_object, C){
+#' print_mspca(mspcares, TestMat, digits = 3)
+print_mspca <- function(sol_object, C, digits = 3){
   cat("\nmsPCA solution:\n")
-  r <- dim(sol_object$x_best)[2] 
+  v <- sol_object$x_best
+  r <- ncol(v)
   cat(paste(r,"sparse PCs",sep=" "), "\n")
   
-  fve <- fraction_variance_explained_perPC(C, sol_object$x_best)
-  cat("Pct. of variance explained:", format(round(fve, 3)*100), "\n")
+  fve <- fraction_variance_explained_perPC(C, v)
+  cat("Pct. of variance explained:", format(round(fve, digits) * 100), "\n")
   
-  v <- sol_object$x_best
-  k <- 1:r
-  for (j in 1:r){
-    k[j] <- sum(v[,j] != 0)
-  }
+  k <- colSums(v != 0)
   row.names(v) <- row.names(C)
   
-  union_of_supports <- rowSums(abs(v) > 0) > 0
+  union_of_supports <- rowSums(v != 0) > 0
 
   cat("Num. of non-zero loadings : ", k, "\n")
   cat("Sparse PCs \n")
-  print(round(v[union_of_supports,],3))
+  print(round(v[union_of_supports, , drop = FALSE], digits))
   
 }

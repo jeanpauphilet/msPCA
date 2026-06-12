@@ -1,3 +1,12 @@
+# msPCA 0.4.1
+
+* Standardized function man page titles to consistent title style.
+* Removed unnecessary `library(datasets)` calls from examples while keeping explicit `datasets::mtcars` usage.
+* Added `datasets` to `Suggests` to align example dependencies with CRAN guidance.
+* Improved efficiency in `feasibility_violation_off()` by replacing `t(U) %*% U` and `t(U) %*% C %*% U` with `crossprod()` formulations.
+* Optimized `variance_explained_perPC()` and `fraction_variance_explained()` with vectorized matrix formulations.
+* Updated `print_mspca()` to use vectorized sparsity counting and added a `digits` argument to make display rounding user-configurable.
+
 # msPCA 0.4.0
 
 * Renamed hyperparameters controlling truncated power method restart budgets for clearer and more consistent API naming.

@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{feasibility_violation_off}
 \alias{feasibility_violation_off}
-\title{Feasibility violation}
+\title{Feasibility Violation}
 \usage{
 feasibility_violation_off(C, U, feasibilityConstraintType)
 }
@@ -20,7 +20,6 @@ A float.
 Computes the feasibility violation defined as \eqn{\sum_{t > s} u_{t}^\top u_{s}} if orthogonality constraints are enforced (feasibilityConstraintType = 0) and \eqn{\sum_{t > s} u_{t}^\top C u_{s}} if zero-correlation constraints are enforced (feasibilityConstraintType = 1).
 }
 \examples{
-library(datasets)
 TestMat <- cor(datasets::mtcars)
 mspcares <- mspca(TestMat, 2, c(4,4))
 feasibility_violation_off(TestMat, mspcares$x_best, 0)

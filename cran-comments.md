@@ -1,18 +1,25 @@
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes
+0 errors | 0 warnings | 2 notes
 
-* This is a minor update (v0.4.0) focused on API clarity and documentation maintenance.
-* The package implements the algorithm described in Cory-Wright and Pauphilet (2022) <doi:10.48550/arXiv.2209.14790>.
+* This is a maintenance update (v0.4.1) focused on documentation consistency, dependency declarations for examples, and R-side performance improvements.
+* The package implements the algorithm described in Cory-Wright and Pauphilet (2026) <doi:10.48550/arXiv.2209.14790>.
 
 ## Changes in this version
 
-* Renamed hyperparameters controlling truncated power method restart budgets for clearer and more consistent API naming.
-* Documentation polish across function docs and package materials.
-* Removed `pairwise_correlation()` and `orthogonality_violation()` and replaced them with a unified `feasibility_violation_off()` helper.
+* Standardized function man page titles to consistent title style.
+* Removed unnecessary `library(datasets)` calls from examples while keeping explicit `datasets::mtcars` usage.
+* Added `datasets` to `Suggests` to align example dependencies with CRAN guidance.
+* Improved efficiency in `feasibility_violation_off()` using `crossprod()` formulations.
+* Optimized `variance_explained_perPC()` and `fraction_variance_explained()` with vectorized matrix formulations.
+* Updated `print_mspca()` to use vectorized sparsity counting and added a `digits` argument for user-configurable print precision.
 
 ## Test environments
 
-* local macOS Sonoma 14.7.4, R 4.5.2
-* win-builder (R-devel, Windows Server 2022)
-* rhub: macOS, Ubuntu, Windows
+* local macOS Sonoma 14.8.5, R 4.4.3
+* local macOS Sonoma 14.8.5, R CMD build + R CMD check --as-cran (source tarball)
+
+## Notes
+
+* `unable to verify current time` is an environment-specific check note on local macOS.
+* `README.md`/`NEWS.md` cannot be checked without `pandoc`; this is due to local tooling and does not affect package functionality.

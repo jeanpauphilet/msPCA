@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{variance_explained_perPC}
 \alias{variance_explained_perPC}
-\title{Variance explained per PC}
+\title{Variance Explained per PC}
 \usage{
 variance_explained_perPC(C, U)
 }

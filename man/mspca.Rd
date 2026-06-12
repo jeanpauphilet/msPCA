@@ -48,7 +48,6 @@ An object with 4 fields: `x_best` (p x r array containing the sparse PCs), `obje
 Returns multiple sparse principal component of a matrix using an iterative deflation heuristic.
 }
 \examples{
-library(datasets)
 TestMat <- cor(datasets::mtcars)
 mspca(TestMat, 2, c(4,4))
 }
