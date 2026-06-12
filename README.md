@@ -68,6 +68,8 @@ Interpretation:
 - Dense PCA usually explains more variance.
 - Sparse PCA improves interpretability by restricting each component to a small set of features.
 
+See `vignette("msPCA")` for a worked example built from the same `mtcars` workflow.
+
 ## Synthetic benchmark
 
 The script `test/notebook_synthetic.R` compares `msPCA` with `elasticnet::spca()` on synthetic data across sample sizes and exports the figures below.

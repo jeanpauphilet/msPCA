@@ -7,3 +7,5 @@
 ^msPCA_.*\.tar\.gz$
 ^msPCA_.*\.pdf$
 ^msPCA_.*\.csv$
+^doc$
+^Meta$

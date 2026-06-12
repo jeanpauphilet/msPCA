@@ -1,0 +1,78 @@
+---
+title: "Worked Example: msPCA on mtcars"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Worked Example: msPCA on mtcars}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+## Overview
+
+This vignette shows the basic workflow of `msPCA` on the built-in `mtcars` dataset.
+We compute two sparse principal components, inspect the solution, and compare the sparse result with dense PCA.
+
+## Install and load
+
+Install the packagedirectly  from CRAN.
+```{r install, eval=FALSE}
+install.packages("msPCA")
+```
+You can then load the package as usual.
+```{r load}
+library(msPCA)
+```
+
+## Fit two sparse PCs
+
+We work with the correlation matrix of `mtcars` and ask for two 4-sparse principal components under the default orthogonality constraint.
+
+```{r}
+Sigma <- cor(datasets::mtcars)
+
+set.seed(42)
+res <- mspca(Sigma, r = 2, ks = c(4, 4), feasibilityConstraintType = 0, verbose = FALSE)
+print_mspca(res, Sigma)
+```
+
+## Orthogonality versus zero correlation
+
+Sparse PCA typically requires a constraint to avoid redundancy between the PCs. Traditionally, this is done by enforcing orthogonality of the loading vectors, which is the default in `mspca`. Another notion of non-redundancy is to enforce zero pairwise correlation between the PCs.
+The package allows for both options, and the choice can lead to different solutions when the variables are strongly correlated.
+`feasibilityConstraintType = 0` (default) enforces orthogonality of the loading vectors.
+`feasibilityConstraintType = 1` instead enforces zero pairwise correlation between the resulting components.
+
+```{r}
+res_corr <- mspca(Sigma, r = 2, ks = c(4, 4), feasibilityConstraintType = 1, verbose = FALSE)
+print_mspca(res_corr, Sigma)
+```
+
+## Diagnostics
+
+The package provides helper functions for checking feasibility and summarizing variance explained.
+
+```{r}
+feasibility_violation_off(Sigma, res$x_best, feasibilityConstraintType = 0)
+feasibility_violation_off(Sigma, res_corr$x_best, feasibilityConstraintType = 1)
+fraction_variance_explained(Sigma, res$x_best)
+fraction_variance_explained(Sigma, res_corr$x_best)
+fraction_variance_explained_perPC(Sigma, res$x_best)
+```
+
+## Comparison with dense PCA
+
+For reference, the first two dense principal components explain more variance, but they are not sparse.
+
+```{r}
+pca_res <- prcomp(datasets::mtcars, scale. = TRUE)
+fraction_variance_explained(Sigma, pca_res$rotation[, 1:2])
+```
+
+## Interpretation
+
+Sparse PCA typically trades some explained variance for a much more interpretable loading pattern.
+For a quick summary of the fitted components, `print_mspca()` is usually the most useful first diagnostic.
