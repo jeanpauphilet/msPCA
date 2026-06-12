@@ -18,7 +18,7 @@ We compute two sparse principal components, inspect the solution, and compare th
 
 ## Install and load
 
-Install the packagedirectly  from CRAN.
+Install the package directly from CRAN.
 ```{r install, eval=FALSE}
 install.packages("msPCA")
 ```
@@ -54,13 +54,20 @@ print_mspca(res_corr, Sigma)
 ## Diagnostics
 
 The package provides helper functions for checking feasibility and summarizing variance explained.
+Below, we report the same diagnostic checks for each fitted solution.
 
 ```{r}
+cat("Diagnostics for res (feasibilityConstraintType = 0)\n")
 feasibility_violation_off(Sigma, res$x_best, feasibilityConstraintType = 0)
-feasibility_violation_off(Sigma, res_corr$x_best, feasibilityConstraintType = 1)
+feasibility_violation_off(Sigma, res$x_best, feasibilityConstraintType = 1)
 fraction_variance_explained(Sigma, res$x_best)
-fraction_variance_explained(Sigma, res_corr$x_best)
 fraction_variance_explained_perPC(Sigma, res$x_best)
+
+cat("\nDiagnostics for res_corr (feasibilityConstraintType = 1)\n")
+feasibility_violation_off(Sigma, res_corr$x_best, feasibilityConstraintType = 0)
+feasibility_violation_off(Sigma, res_corr$x_best, feasibilityConstraintType = 1)
+fraction_variance_explained(Sigma, res_corr$x_best)
+fraction_variance_explained_perPC(Sigma, res_corr$x_best)
 ```
 
 ## Comparison with dense PCA

@@ -350,7 +350,7 @@ dense PCA.</p>
 </div>
 <div id="install-and-load" class="section level2">
 <h2>Install and load</h2>
-<p>Install the packagedirectly from CRAN.</p>
+<p>Install the package directly from CRAN.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&quot;msPCA&quot;</span>)</span></code></pre></div>
 <p>You can then load the package as usual.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(msPCA)</span></code></pre></div>
@@ -387,9 +387,9 @@ constraint.</p>
 between the PCs. Traditionally, this is done by enforcing orthogonality
 of the loading vectors, which is the default in <code>mspca</code>.
 Another notion of non-redundancy is to enforce zero pairwise correlation
-between the resulting PCs. The package allows for both options, and the
-choice can lead to different solutions when the variables are strongly
-correlated. <code>feasibilityConstraintType = 0</code> enforces
+between the PCs. The package allows for both options, and the choice can
+lead to different solutions when the variables are strongly correlated.
+<code>feasibilityConstraintType = 0</code> (default) enforces
 orthogonality of the loading vectors.
 <code>feasibilityConstraintType = 1</code> instead enforces zero
 pairwise correlation between the resulting components.</p>
@@ -414,17 +414,30 @@ pairwise correlation between the resulting components.</p>
 <div id="diagnostics" class="section level2">
 <h2>Diagnostics</h2>
 <p>The package provides helper functions for checking feasibility and
-summarizing variance explained.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">feasibility_violation_off</span>(Sigma, res<span class="sc">$</span>x_best, <span class="at">feasibilityConstraintType =</span> <span class="dv">0</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt; [1] 0</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="fu">feasibility_violation_off</span>(Sigma, res_corr<span class="sc">$</span>x_best, <span class="at">feasibilityConstraintType =</span> <span class="dv">1</span>)</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; [1] 9.62078e-05</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="fu">fraction_variance_explained</span>(Sigma, res<span class="sc">$</span>x_best)</span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; [1] 0.6043866</span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="fu">fraction_variance_explained</span>(Sigma, res_corr<span class="sc">$</span>x_best)</span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; [1] 0.4753908</span></span>
+summarizing variance explained. Below, we report the same diagnostic
+checks for each fitted solution.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Diagnostics for res (feasibilityConstraintType = 0)</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt; Diagnostics for res (feasibilityConstraintType = 0)</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="fu">feasibility_violation_off</span>(Sigma, res<span class="sc">$</span>x_best, <span class="at">feasibilityConstraintType =</span> <span class="dv">0</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; [1] 0</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="fu">feasibility_violation_off</span>(Sigma, res<span class="sc">$</span>x_best, <span class="at">feasibilityConstraintType =</span> <span class="dv">1</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; [1] 2.335602</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="fu">fraction_variance_explained</span>(Sigma, res<span class="sc">$</span>x_best)</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; [1] 0.6043866</span></span>
 <span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="fu">fraction_variance_explained_perPC</span>(Sigma, res<span class="sc">$</span>x_best)</span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; [1] 0.3245835 0.2798031</span></span></code></pre></div>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; [1] 0.3245835 0.2798031</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Diagnostics for res_corr (feasibilityConstraintType = 1)</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; Diagnostics for res_corr (feasibilityConstraintType = 1)</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="fu">feasibility_violation_off</span>(Sigma, res_corr<span class="sc">$</span>x_best, <span class="at">feasibilityConstraintType =</span> <span class="dv">0</span>)</span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; [1] 0</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="fu">feasibility_violation_off</span>(Sigma, res_corr<span class="sc">$</span>x_best, <span class="at">feasibilityConstraintType =</span> <span class="dv">1</span>)</span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; [1] 9.62078e-05</span></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="fu">fraction_variance_explained</span>(Sigma, res_corr<span class="sc">$</span>x_best)</span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; [1] 0.4753908</span></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="fu">fraction_variance_explained_perPC</span>(Sigma, res_corr<span class="sc">$</span>x_best)</span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt; [1] 0.2472306 0.2281602</span></span></code></pre></div>
 </div>
 <div id="comparison-with-dense-pca" class="section level2">
 <h2>Comparison with dense PCA</h2>

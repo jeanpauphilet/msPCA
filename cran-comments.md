@@ -2,7 +2,7 @@
 
 0 errors | 0 warnings | 2 notes
 
-* This is a maintenance update (v0.4.1) focused on documentation consistency, dependency declarations for examples, and R-side performance improvements.
+* This update includes documentation and package-structure improvements, notably a new worked-example vignette.
 * The package implements the algorithm described in Cory-Wright and Pauphilet (2026) <doi:10.48550/arXiv.2209.14790>.
 
 ## Changes in this version
@@ -13,6 +13,7 @@
 * Improved efficiency in `feasibility_violation_off()` using `crossprod()` formulations.
 * Optimized `variance_explained_perPC()` and `fraction_variance_explained()` with vectorized matrix formulations.
 * Updated `print_mspca()` to use vectorized sparsity counting and added a `digits` argument for user-configurable print precision.
+* Added a worked-example vignette (`vignettes/msPCA.Rmd`) and configured vignette build dependencies (`knitr`, `rmarkdown`).
 
 ## Test environments
 
@@ -22,4 +23,4 @@
 ## Notes
 
 * `unable to verify current time` is an environment-specific check note on local macOS.
-* `README.md`/`NEWS.md` cannot be checked without `pandoc`; this is due to local tooling and does not affect package functionality.
+* HTML manual validation reports `<main>` tag-related notes in generated help pages; these come from R's HTML validation tooling and are non-fatal (`R CMD check` status remains 0 errors | 0 warnings | 2 notes).
