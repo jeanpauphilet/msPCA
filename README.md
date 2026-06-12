@@ -120,6 +120,28 @@ Useful optional arguments in `mspca()`:
 - `feasibility_violation_off(Sigma, U, feasibilityConstraintType)`
 - `print_mspca(sol_object, Sigma, digits = 3)`
 
+## Citation
+
+If you use `msPCA` in academic work, please cite the package and the underlying paper.
+
+You can retrieve the package citation in R with:
+
+```r
+citation("msPCA")
+```
+
+Reference paper:
+
+```bibtex
+@article{corywright_pauphilet_2026_mspca,
+  title   = {Sparse PCA with Multiple Principal Components},
+  author  = {Cory-Wright, Ryan and Pauphilet, Jean},
+  year    = {2026},
+  journal = {arXiv preprint},
+  doi     = {10.48550/arXiv.2209.14790}
+}
+```
+
 ## Development
 
 Package structure overview:
