@@ -68,6 +68,16 @@ Interpretation:
 - Dense PCA usually explains more variance.
 - Sparse PCA improves interpretability by restricting each component to a small set of features.
 
+## Synthetic benchmark
+
+The script `test/notebook_synthetic.R` compares `msPCA` with `elasticnet::spca()` on synthetic data across sample sizes and exports the figures below.
+
+![Orthogonality violation on synthetic data](test/synthetic_orthogonality_violation.png)
+
+![Out-of-sample fraction of variance explained on synthetic data](test/synthetic_variance_explained.png)
+
+To regenerate these files, run `test/notebook_synthetic.R` from the repository root.
+
 ## Choosing parameters
 
 ### Sparsity budgets (`ks`)

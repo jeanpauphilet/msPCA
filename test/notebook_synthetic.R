@@ -14,6 +14,13 @@ library(mvtnorm)
 library(msPCA)
 library(elasticnet)
 
+set.seed(42)
+
+output_dir <- if (dir.exists("test")) "test" else "."
+results_csv <- file.path(output_dir, "msPCA_synthetic_results.csv")
+fig_ortho <- file.path(output_dir, "synthetic_orthogonality_violation.png")
+fig_fve <- file.path(output_dir, "synthetic_variance_explained.png")
+
 p = 50 #Dimension
 r = 2 #Number of sparse PCs
 k = 20 #Sparsity of each PC
@@ -77,9 +84,9 @@ for (iter in 1:5){ #Number of replications
  }
 
 library(readr)
-write_csv(resdf, "msPCA_synthetic_results.csv") #For saving results
+write_csv(resdf, results_csv) # For saving results in test/ when run from repo root
 
-resdf <- read_csv("msPCA_synthetic_results.csv")
+resdf <- read_csv(results_csv)
 
 library(dplyr)
 library(ggplot2)
@@ -102,7 +109,7 @@ sumdf <- resdf %>%
          varexplained_max=varexplained_mean+2*varexplained_se
          )
 
-sumdf %>%
+p_ortho <- sumdf %>%
   #filter(n <= 500) %>%
   ggplot() + aes(x=n, y=ortho_viol_mean, group=package, color=package,shape=package) +
   geom_line(size=0.7) +
@@ -116,7 +123,10 @@ sumdf %>%
         panel.grid.major = element_line(colour = "grey80"),
         panel.grid.minor = element_line(colour = "grey90"))
 
-sumdf %>%
+print(p_ortho)
+ggsave(filename = fig_ortho, plot = p_ortho, width = 8, height = 5, dpi = 300)
+
+p_fve <- sumdf %>%
   #filter(n <= 500) %>%
   ggplot() + aes(x=n, y=varexplained_mean, group=package, color=package, shape=package) +
   geom_line(size=0.7) + geom_point(size=3) +
@@ -130,4 +140,7 @@ sumdf %>%
         axis.line = element_line(colour = "black"),
         panel.grid.major = element_line(colour = "grey80"),
         panel.grid.minor = element_line(colour = "grey90"))
+
+print(p_fve)
+ggsave(filename = fig_fve, plot = p_fve, width = 8, height = 5, dpi = 300)
 
