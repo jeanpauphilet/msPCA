@@ -24,7 +24,7 @@ RoxygenNote: 7.3.3
 Encoding: UTF-8
 VignetteBuilder: knitr
 NeedsCompilation: yes
-Packaged: 2026-06-12 15:44:24 UTC; jeanpauphilet
+Packaged: 2026-06-12 15:57:22 UTC; jeanpauphilet
 Author: Ryan Cory-Wright [aut, cph] (<https://orcid.org/0000-0002-4485-0619>),
   Jean Pauphilet [aut, cre, cph]
     (<https://orcid.org/0000-0001-6352-0984>)

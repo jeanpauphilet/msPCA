@@ -3,6 +3,7 @@
 * Standardized function man page titles to consistent title style.
 * Removed unnecessary `library(datasets)` calls from examples while keeping explicit `datasets::mtcars` usage, and added `datasets` to `Suggests` to align example dependencies with CRAN guidance.
 * Improved efficiency and clarity of R code 
+* Added a vignette
 
 # msPCA 0.4.0
 
