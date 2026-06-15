@@ -1,8 +1,8 @@
 Package: msPCA
 Type: Package
 Title: Sparse Principal Component Analysis with Multiple Principal Components
-Version: 0.4.1
-Date: 2026-06-12
+Version: 0.5.0
+Date: 2026-06-15
 Authors@R: c(
     person("Ryan", "Cory-Wright", , "r.cory-wright@imperial.ac.uk", role = c("aut", "cph"),
            comment = c(ORCID = "0000-0002-4485-0619")),

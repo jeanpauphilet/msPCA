@@ -18,7 +18,7 @@ S <- cor(df)
 library(msPCA)
 
 ## First method: Truncated Power Method for a single sparse PC
-tpm_results <- msPCA::tpm(S, 4, maxIter=100)
+tpm_results <- msPCA::tpm(S, 4, type="Sigma", maxIter=100)
 U <- as.matrix(tpm_results$x_best)
 #Sparsity
 colSums(abs(U) > 0)
@@ -27,7 +27,7 @@ msPCA::fraction_variance_explained(S,U)
 
 
 ## Second method: Iterative Deflation Heuristic for multiple sparse PCs
-mspca_results <- msPCA::mspca(S, 2, c(4,4), verbose=TRUE, feasibilityConstraintType = 0)
+mspca_results <- msPCA::mspca(S, 2, c(4,4), type="Sigma", verbose=TRUE, feasibilityConstraintType = 0)
 msPCA::print_mspca(mspca_results, S)
 
 #Sparsity

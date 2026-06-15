@@ -5,7 +5,15 @@ iterativeDeflationHeuristic <- function(Sigma, r, ks, feasibilityConstraintType 
     .Call('_msPCA_iterativeDeflationHeuristic', PACKAGE = 'msPCA', Sigma, r, ks, feasibilityConstraintType, verbose, maxIter, feasibilityTolerance, stallingTolerance, timeLimitTPM, maxRestartTPM, minRestartTPM)
 }
 
+iterativeDeflationHeuristicX <- function(Xproc, invDivisor, r, ks, feasibilityConstraintType = 0L, verbose = TRUE, maxIter = 200L, feasibilityTolerance = 1e-4, stallingTolerance = 1e-8, timeLimitTPM = 20L, maxRestartTPM = 20L, minRestartTPM = 10L) {
+    .Call('_msPCA_iterativeDeflationHeuristicX', PACKAGE = 'msPCA', Xproc, invDivisor, r, ks, feasibilityConstraintType, verbose, maxIter, feasibilityTolerance, stallingTolerance, timeLimitTPM, maxRestartTPM, minRestartTPM)
+}
+
 truncatedPowerMethod <- function(Sigma, k, maxIter = 200L, verbose = TRUE, timeLimit = 10L) {
     .Call('_msPCA_truncatedPowerMethod', PACKAGE = 'msPCA', Sigma, k, maxIter, verbose, timeLimit)
+}
+
+truncatedPowerMethodX <- function(Xproc, invDivisor, k, maxIter = 200L, verbose = TRUE, timeLimit = 10L) {
+    .Call('_msPCA_truncatedPowerMethodX', PACKAGE = 'msPCA', Xproc, invDivisor, k, maxIter, verbose, timeLimit)
 }
 

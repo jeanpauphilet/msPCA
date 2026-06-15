@@ -381,6 +381,64 @@ constraint.</p>
 <span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; vs    0.000  0.494</span></span>
 <span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; carb  0.000 -0.482</span></span></code></pre></div>
 </div>
+<div id="working-from-the-raw-data-matrix" class="section level2">
+<h2>Working from the raw data matrix</h2>
+<p>Instead of a covariance/correlation matrix, you can pass the raw data
+matrix <code>X</code> (rows are observations, columns are variables)
+through the <code>X</code> argument. In that case <code>msPCA</code>
+applies the algorithm to the data directly: each product
+<code>Sigma %*% beta</code> is computed as
+<code>t(X) %*% (X %*% beta) / (n - 1)</code>, so the <code>p x p</code>
+matrix is never formed. This is mathematically equivalent to the
+matrix-input call but much more scalable when the number of variables
+<code>p</code> greatly exceeds the number of observations <code>n</code>
+(it avoids the <code>O(np^2)</code> cost of building <code>Sigma</code>
+and turns each iteration’s matrix–vector product from
+<code>O(p^2)</code> into <code>O(np)</code>).</p>
+<p>The preprocessing arguments control which matrix is implicitly
+used:</p>
+<ul>
+<li><code>center</code> (default <code>TRUE</code>) subtracts the column
+means,</li>
+<li><code>scale</code> (default <code>FALSE</code>) divides columns by
+their standard deviation; set it to <code>TRUE</code> to operate on the
+correlation matrix,</li>
+<li><code>divisor</code> chooses the covariance normalization,
+<code>&quot;n-1&quot;</code> (default, matching <code>cov</code>/<code>cor</code>)
+or <code>&quot;n&quot;</code>.</li>
+</ul>
+<p>With <code>scale = TRUE</code> and <code>divisor = &quot;n-1&quot;</code>, the
+raw-data call reproduces the correlation-matrix result above.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(datasets<span class="sc">::</span>mtcars)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>res_X <span class="ot">&lt;-</span> <span class="fu">mspca</span>(<span class="at">X =</span> X, <span class="at">r =</span> <span class="dv">2</span>, <span class="at">ks =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">4</span>), <span class="at">scale =</span> <span class="cn">TRUE</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co"># X-mode results carry their own variance summary, so print_mspca() needs no matrix.</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="fu">print_mspca</span>(res_X)</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt; msPCA solution:</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; 2 sparse PCs </span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; Pct. of variance explained: 32.5 28.0 </span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; Num. of non-zero loadings :  4 4 </span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; Sparse PCs </span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt;        [,1]   [,2]</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; mpg  -0.499  0.000</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; cyl   0.495  0.000</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; disp  0.510  0.000</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt; hp    0.000 -0.518</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt; wt    0.495  0.000</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt; qsec  0.000  0.506</span></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co">#&gt; vs    0.000  0.494</span></span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="co">#&gt; carb  0.000 -0.482</span></span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a></span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a><span class="co"># Same objective as the correlation-matrix call:</span></span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a><span class="fu">c</span>(<span class="at">matrix_input =</span> res<span class="sc">$</span>objective_value, <span class="at">data_input =</span> res_X<span class="sc">$</span>objective_value)</span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a><span class="co">#&gt; matrix_input   data_input </span></span>
+<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a><span class="co">#&gt;     6.648253     6.648253</span></span></code></pre></div>
+<p>The same dual input is available for the single-component
+<code>tpm()</code>.</p>
+</div>
 <div id="orthogonality-versus-zero-correlation" class="section level2">
 <h2>Orthogonality versus zero correlation</h2>
 <p>Sparse PCA typically requires a constraint to avoid redundancy
@@ -393,59 +451,59 @@ lead to different solutions when the variables are strongly correlated.
 orthogonality of the loading vectors.
 <code>feasibilityConstraintType = 1</code> instead enforces zero
 pairwise correlation between the resulting components.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>res_corr <span class="ot">&lt;-</span> <span class="fu">mspca</span>(Sigma, <span class="at">r =</span> <span class="dv">2</span>, <span class="at">ks =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">4</span>), <span class="at">feasibilityConstraintType =</span> <span class="dv">1</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">print_mspca</span>(res_corr, Sigma)</span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; msPCA solution:</span></span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; 2 sparse PCs </span></span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; Pct. of variance explained: 24.7 22.8 </span></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; Num. of non-zero loadings :  4 4 </span></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; Sparse PCs </span></span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt;        [,1]   [,2]</span></span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; hp    0.312  0.000</span></span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; drat  0.000 -0.337</span></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; wt    0.000  0.087</span></span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; qsec -0.674  0.000</span></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; vs   -0.279  0.000</span></span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; am    0.000 -0.624</span></span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; gear  0.000 -0.700</span></span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; carb  0.609  0.000</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>res_corr <span class="ot">&lt;-</span> <span class="fu">mspca</span>(Sigma, <span class="at">r =</span> <span class="dv">2</span>, <span class="at">ks =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">4</span>), <span class="at">feasibilityConstraintType =</span> <span class="dv">1</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">print_mspca</span>(res_corr, Sigma)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; msPCA solution:</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; 2 sparse PCs </span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; Pct. of variance explained: 24.7 22.8 </span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; Num. of non-zero loadings :  4 4 </span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; Sparse PCs </span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt;        [,1]   [,2]</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; hp    0.312  0.000</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; drat  0.000 -0.337</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt; wt    0.000  0.087</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt; qsec -0.674  0.000</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; vs   -0.279  0.000</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt; am    0.000 -0.624</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; gear  0.000 -0.700</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; carb  0.609  0.000</span></span></code></pre></div>
 </div>
 <div id="diagnostics" class="section level2">
 <h2>Diagnostics</h2>
 <p>The package provides helper functions for checking feasibility and
 summarizing variance explained. Below, we report the same diagnostic
 checks for each fitted solution.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Diagnostics for res (feasibilityConstraintType = 0)</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt; Diagnostics for res (feasibilityConstraintType = 0)</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="fu">feasibility_violation_off</span>(Sigma, res<span class="sc">$</span>x_best, <span class="at">feasibilityConstraintType =</span> <span class="dv">0</span>)</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; [1] 0</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="fu">feasibility_violation_off</span>(Sigma, res<span class="sc">$</span>x_best, <span class="at">feasibilityConstraintType =</span> <span class="dv">1</span>)</span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; [1] 2.335602</span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="fu">fraction_variance_explained</span>(Sigma, res<span class="sc">$</span>x_best)</span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; [1] 0.6043866</span></span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="fu">fraction_variance_explained_perPC</span>(Sigma, res<span class="sc">$</span>x_best)</span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; [1] 0.3245835 0.2798031</span></span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a></span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Diagnostics for res_corr (feasibilityConstraintType = 1)</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; Diagnostics for res_corr (feasibilityConstraintType = 1)</span></span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="fu">feasibility_violation_off</span>(Sigma, res_corr<span class="sc">$</span>x_best, <span class="at">feasibilityConstraintType =</span> <span class="dv">0</span>)</span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; [1] 0</span></span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="fu">feasibility_violation_off</span>(Sigma, res_corr<span class="sc">$</span>x_best, <span class="at">feasibilityConstraintType =</span> <span class="dv">1</span>)</span>
-<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; [1] 9.62078e-05</span></span>
-<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="fu">fraction_variance_explained</span>(Sigma, res_corr<span class="sc">$</span>x_best)</span>
-<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; [1] 0.4753908</span></span>
-<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="fu">fraction_variance_explained_perPC</span>(Sigma, res_corr<span class="sc">$</span>x_best)</span>
-<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt; [1] 0.2472306 0.2281602</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Diagnostics for res (feasibilityConstraintType = 0)</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt; Diagnostics for res (feasibilityConstraintType = 0)</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="fu">feasibility_violation_off</span>(Sigma, res<span class="sc">$</span>x_best, <span class="at">feasibilityConstraintType =</span> <span class="dv">0</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt; [1] 0</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="fu">feasibility_violation_off</span>(Sigma, res<span class="sc">$</span>x_best, <span class="at">feasibilityConstraintType =</span> <span class="dv">1</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; [1] 2.335602</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="fu">fraction_variance_explained</span>(Sigma, res<span class="sc">$</span>x_best)</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; [1] 0.6043866</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="fu">fraction_variance_explained_perPC</span>(Sigma, res<span class="sc">$</span>x_best)</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; [1] 0.3245835 0.2798031</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Diagnostics for res_corr (feasibilityConstraintType = 1)</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt; Diagnostics for res_corr (feasibilityConstraintType = 1)</span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="fu">feasibility_violation_off</span>(Sigma, res_corr<span class="sc">$</span>x_best, <span class="at">feasibilityConstraintType =</span> <span class="dv">0</span>)</span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt; [1] 0</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="fu">feasibility_violation_off</span>(Sigma, res_corr<span class="sc">$</span>x_best, <span class="at">feasibilityConstraintType =</span> <span class="dv">1</span>)</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt; [1] 9.62078e-05</span></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="fu">fraction_variance_explained</span>(Sigma, res_corr<span class="sc">$</span>x_best)</span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt; [1] 0.4753908</span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="fu">fraction_variance_explained_perPC</span>(Sigma, res_corr<span class="sc">$</span>x_best)</span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt; [1] 0.2472306 0.2281602</span></span></code></pre></div>
 </div>
 <div id="comparison-with-dense-pca" class="section level2">
 <h2>Comparison with dense PCA</h2>
 <p>For reference, the first two dense principal components explain more
 variance, but they are not sparse.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>pca_res <span class="ot">&lt;-</span> <span class="fu">prcomp</span>(datasets<span class="sc">::</span>mtcars, <span class="at">scale. =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">fraction_variance_explained</span>(Sigma, pca_res<span class="sc">$</span>rotation[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt; [1] 0.8417153</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>pca_res <span class="ot">&lt;-</span> <span class="fu">prcomp</span>(datasets<span class="sc">::</span>mtcars, <span class="at">scale. =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">fraction_variance_explained</span>(Sigma, pca_res<span class="sc">$</span>rotation[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; [1] 0.8417153</span></span></code></pre></div>
 </div>
 <div id="interpretation" class="section level2">
 <h2>Interpretation</h2>

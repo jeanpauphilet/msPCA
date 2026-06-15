@@ -9,3 +9,5 @@
 ^msPCA_.*\.csv$
 ^doc$
 ^Meta$
+^plan_dual_input_api\.md$
+^msPCA\.worktrees$

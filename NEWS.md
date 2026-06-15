@@ -1,3 +1,12 @@
+# msPCA 0.5.0
+
+* `mspca()` and `tpm()` now take a single first argument `M` together with a `type = c("Sigma", "X")` selector (mirroring the `elasticnet` interface). `type = "Sigma"` (the default) treats `M` as a covariance/correlation matrix (p x p); `type = "X"` treats `M` as a raw data matrix (n observations x p variables). The `"Sigma"` default preserves the behaviour of existing matrix-based calls.
+* The raw-data path applies the algorithm to the data directly: each product `Sigma %*% beta` is evaluated as `t(X) %*% (X %*% beta) / (n - 1)` at cost O(np), and the p x p matrix is never materialized. This substantially improves scalability when `n << p`. The covariance back-end was refactored behind a covariance-operator abstraction (`DenseOp` / `GramOp`) shared by both input modes.
+* Added preprocessing controls for `type = "X"`: `center`, `scale` (covariance vs correlation), and `divisor` ("n-1" or "n").
+* Added validation for both input modes: a `Sigma` input is checked for squareness, symmetry and positive semidefiniteness (`checkPSD`, `symTolerance`, `psdTolerance`); an `X` input is checked for finiteness, dimensions and (when scaling) zero-variance columns.
+* `mspca()` results now include `variance_explained` (per-PC) and `total_variance`; `X`-mode results also record `inputType`, `center`, `scale`, `divisor`, `nObs` and `p`.
+* `print_mspca()` can now be called on an `X`-mode result without supplying the covariance matrix.
+
 # msPCA 0.4.1
 
 * Standardized function man page titles to consistent title style.

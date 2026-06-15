@@ -28,11 +28,20 @@ library(msPCA)
 
 The main function is `mspca()`.
 
-Inputs:
+Inputs (following the `elasticnet` convention, the data is a single argument `M`
+plus a `type` selector):
 
-- `Sigma`: covariance or correlation matrix (`p x p`),
+- `M`: the data matrix,
+- `type`: `"Sigma"` (default) treats `M` as a covariance/correlation matrix
+  (`p x p`); `"X"` treats `M` as a raw data matrix (`n` observations x `p`
+  variables),
 - `r`: number of sparse principal components,
 - `ks`: integer vector of length `r` with sparsity budgets.
+
+With `type = "X"`, `mspca()` applies the algorithm to the data directly via
+the products `t(X) %*% (X %*% beta)` and never forms the `p x p` matrix. This is
+substantially faster and more memory-efficient when `n << p`. Pass `type = "X"`
+whenever the number of variables greatly exceeds the number of observations.
 
 Output fields:
 
@@ -49,12 +58,32 @@ library(msPCA)
 Sigma <- cor(datasets::mtcars)
 set.seed(42)
 
-res <- mspca(Sigma, r = 2, ks = c(4, 4), verbose = FALSE)
+res <- mspca(Sigma, r = 2, ks = c(4, 4), verbose = FALSE)   # type = "Sigma" is the default
 print_mspca(res, Sigma)
 
 feasibility_violation_off(Sigma, res$x_best, feasibilityConstraintType = 0)
 fraction_variance_explained(Sigma, res$x_best)
 ```
+
+Equivalent workflow from the raw data matrix (no covariance matrix needed):
+
+```r
+library(msPCA)
+
+X <- as.matrix(datasets::mtcars)
+set.seed(42)
+
+# type = "X" treats the first argument as raw data; scale = TRUE operates on the
+# correlation matrix, matching cor(mtcars) above.
+res <- mspca(X, r = 2, ks = c(4, 4), type = "X", scale = TRUE, verbose = FALSE)
+print_mspca(res)                      # type = "X" results carry their own variance summary
+
+fraction_variance_explained(cor(X), res$x_best)
+```
+
+For datasets with `n << p`, this raw-data path avoids the `O(np^2)` cost of
+forming `Sigma` and reduces each iteration's matrix–vector product from `O(p^2)`
+to `O(np)`.
 
 Optional dense PCA comparison:
 
@@ -101,8 +130,8 @@ Use `1` when statistical decorrelation of component scores is the priority.
 
 ## Main functions
 
-- `mspca(Sigma, r, ks, ...)`: multiple sparse PCs.
-- `tpm(Sigma, k, ...)`: single sparse PC via truncated power method.
+- `mspca(M, r, ks, type = c("Sigma", "X"), ...)`: multiple sparse PCs.
+- `tpm(M, k, type = c("Sigma", "X"), ...)`: single sparse PC via truncated power method.
 
 Useful optional arguments in `mspca()`:
 
@@ -113,6 +142,15 @@ Useful optional arguments in `mspca()`:
 - `timeLimitTPM`
 - `maxRestartTPM`
 - `minRestartTPM`
+
+Raw-data arguments (`type = "X"`):
+
+- `center` (default `TRUE`), `scale` (default `FALSE`, set `TRUE` for correlation),
+- `divisor` (`"n-1"` for the sample covariance, the default, or `"n"`).
+
+Covariance-matrix validation arguments (`type = "Sigma"`):
+
+- `checkPSD` (default `TRUE`), `symTolerance`, `psdTolerance`.
 
 ## Diagnostic functions
 
@@ -152,7 +190,8 @@ Package structure overview:
   - `main.R`: user-facing functions and helper diagnostics.
   - `RcppExports.R`: R interface for compiled code (typically generated with `Rcpp::compileAttributes()`).
 - `src/`
-  - `msPCA_R_CPP.cpp`: C++ implementation of the core algorithm.
+  - `msPCA_R_CPP.cpp`: C++ implementation of the core algorithm and the dense/raw-data entry points.
+  - `CovOperator.h`: covariance-operator abstraction (`DenseOp` for `Sigma`, `GramOp` for `X`).
   - `ConstantArguments.h`: internal algorithm constants.
   - `RcppExports.cpp`: generated C++ interface.
   - `Makevars`, `Makevars.win`: compilation settings.

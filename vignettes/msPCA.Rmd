@@ -35,9 +35,47 @@ We work with the correlation matrix of `mtcars` and ask for two 4-sparse princip
 Sigma <- cor(datasets::mtcars)
 
 set.seed(42)
-res <- mspca(Sigma, r = 2, ks = c(4, 4), feasibilityConstraintType = 0, verbose = FALSE)
+res <- mspca(Sigma, r = 2, ks = c(4, 4), type = "Sigma", feasibilityConstraintType = 0, verbose = FALSE)
 print_mspca(res, Sigma)
 ```
+
+## Working from the raw data matrix
+
+By default (`type = "Sigma"`) the first argument is a covariance/correlation
+matrix; set `type = "X"` to pass the raw data matrix instead (rows are
+observations, columns are variables). With `type = "X"`, `msPCA` applies the
+algorithm to the data directly: each product `Sigma %*% beta` is computed as
+`t(X) %*% (X %*% beta) / (n - 1)`, so the `p x p` matrix is never formed. This is
+mathematically equivalent to the matrix-input call but much more scalable when
+the number of variables `p` greatly exceeds the number of observations `n` (it
+avoids the `O(np^2)` cost of building `Sigma` and turns each iteration's
+matrix–vector product from `O(p^2)` into `O(np)`).
+
+The preprocessing arguments control which matrix is implicitly used:
+
+- `center` (default `TRUE`) subtracts the column means,
+- `scale` (default `FALSE`) divides columns by their standard deviation; set it to
+  `TRUE` to operate on the correlation matrix,
+- `divisor` chooses the covariance normalization, `"n-1"` (default, matching
+  `cov`/`cor`) or `"n"`.
+
+With `scale = TRUE` and `divisor = "n-1"`, the raw-data call reproduces the
+correlation-matrix result above.
+
+```{r}
+X <- as.matrix(datasets::mtcars)
+
+set.seed(42)
+res_X <- mspca(X, r = 2, ks = c(4, 4), type = "X", scale = TRUE, verbose = FALSE)
+
+# type = "X" results carry their own variance summary, so print_mspca() needs no matrix.
+print_mspca(res_X)
+
+# Same objective as the correlation-matrix call:
+c(matrix_input = res$objective_value, data_input = res_X$objective_value)
+```
+
+The same dual input is available for the single-component `tpm()`.
 
 ## Orthogonality versus zero correlation
 
@@ -47,7 +85,7 @@ The package allows for both options, and the choice can lead to different soluti
 `feasibilityConstraintType = 1` instead enforces zero pairwise correlation between the resulting components.
 
 ```{r}
-res_corr <- mspca(Sigma, r = 2, ks = c(4, 4), feasibilityConstraintType = 1, verbose = FALSE)
+res_corr <- mspca(Sigma, r = 2, ks = c(4, 4), type = "Sigma", feasibilityConstraintType = 1, verbose = FALSE)
 print_mspca(res_corr, Sigma)
 ```
 
