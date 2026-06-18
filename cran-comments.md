@@ -10,7 +10,7 @@ This update includes API and documentation improvements, including raw-data inpu
 	- `type = "Sigma"` for covariance/correlation matrices
 	- `type = "X"` for raw data matrices
 * Added raw-data preprocessing controls (`center`, `scale`, `divisor`) and validation checks.
-* Added S3 methods `print.mspca()` and `summary.mspca()`; kept `print_mspca()` as a deprecated wrapper for backward compatibility.
+* Added S3 methods `print.mspca()` and `summary.mspca()`; removed `print_mspca()`.
 * Added `variance_explained` and `total_variance` in `mspca()` outputs.
 * Added a worked vignette and refreshed package documentation.
 
