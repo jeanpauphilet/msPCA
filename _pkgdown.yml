@@ -1,4 +1,5 @@
 url: https://jeanpauphilet.github.io/msPCA/
+llm-docs: false
 
 template:
   bootstrap: 5
