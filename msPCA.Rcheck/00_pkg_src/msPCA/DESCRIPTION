@@ -2,8 +2,8 @@ Package: msPCA
 Type: Package
 Title: Sparse Principal Component Analysis with Multiple Principal
         Components
-Version: 0.4.1
-Date: 2026-06-12
+Version: 0.5.0
+Date: 2026-06-15
 Authors@R: c(
     person("Ryan", "Cory-Wright", , "r.cory-wright@imperial.ac.uk", role = c("aut", "cph"),
            comment = c(ORCID = "0000-0002-4485-0619")),
@@ -17,15 +17,18 @@ Description: Implements an algorithm for computing multiple sparse principal
     heuristic with a truncated power method applied at each iteration to compute 
     sparse principal components with controlled sparsity.
 License: MIT + file LICENSE
+URL: https://jeanpauphilet.github.io/msPCA/
 Imports: Rcpp (>= 1.0.11)
 Suggests: datasets, knitr, rmarkdown
 LinkingTo: Rcpp, RcppEigen
-RoxygenNote: 7.3.3
 Encoding: UTF-8
 VignetteBuilder: knitr
+Config/roxygen2/version: 8.0.0
+Roxygen: list(markdown = TRUE)
 NeedsCompilation: yes
-Packaged: 2026-06-12 15:57:22 UTC; jeanpauphilet
-Author: Ryan Cory-Wright [aut, cph] (<https://orcid.org/0000-0002-4485-0619>),
-  Jean Pauphilet [aut, cre, cph]
-    (<https://orcid.org/0000-0001-6352-0984>)
+Packaged: 2026-06-18 07:28:18 UTC; jeanpauphilet
+Author: Ryan Cory-Wright [aut, cph] (ORCID:
+    <https://orcid.org/0000-0002-4485-0619>),
+  Jean Pauphilet [aut, cre, cph] (ORCID:
+    <https://orcid.org/0000-0001-6352-0984>)
 Maintainer: Jean Pauphilet <jpauphilet@london.edu>

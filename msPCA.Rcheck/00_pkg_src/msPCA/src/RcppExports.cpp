@@ -32,6 +32,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// iterativeDeflationHeuristicX
+List iterativeDeflationHeuristicX(Eigen::MatrixXd Xproc, double invDivisor, int r, Rcpp::NumericVector ks, int feasibilityConstraintType, bool verbose, int maxIter, double feasibilityTolerance, double stallingTolerance, int timeLimitTPM, int maxRestartTPM, int minRestartTPM);
+RcppExport SEXP _msPCA_iterativeDeflationHeuristicX(SEXP XprocSEXP, SEXP invDivisorSEXP, SEXP rSEXP, SEXP ksSEXP, SEXP feasibilityConstraintTypeSEXP, SEXP verboseSEXP, SEXP maxIterSEXP, SEXP feasibilityToleranceSEXP, SEXP stallingToleranceSEXP, SEXP timeLimitTPMSEXP, SEXP maxRestartTPMSEXP, SEXP minRestartTPMSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type Xproc(XprocSEXP);
+    Rcpp::traits::input_parameter< double >::type invDivisor(invDivisorSEXP);
+    Rcpp::traits::input_parameter< int >::type r(rSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type ks(ksSEXP);
+    Rcpp::traits::input_parameter< int >::type feasibilityConstraintType(feasibilityConstraintTypeSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< int >::type maxIter(maxIterSEXP);
+    Rcpp::traits::input_parameter< double >::type feasibilityTolerance(feasibilityToleranceSEXP);
+    Rcpp::traits::input_parameter< double >::type stallingTolerance(stallingToleranceSEXP);
+    Rcpp::traits::input_parameter< int >::type timeLimitTPM(timeLimitTPMSEXP);
+    Rcpp::traits::input_parameter< int >::type maxRestartTPM(maxRestartTPMSEXP);
+    Rcpp::traits::input_parameter< int >::type minRestartTPM(minRestartTPMSEXP);
+    rcpp_result_gen = Rcpp::wrap(iterativeDeflationHeuristicX(Xproc, invDivisor, r, ks, feasibilityConstraintType, verbose, maxIter, feasibilityTolerance, stallingTolerance, timeLimitTPM, maxRestartTPM, minRestartTPM));
+    return rcpp_result_gen;
+END_RCPP
+}
 // truncatedPowerMethod
 List truncatedPowerMethod(Eigen::MatrixXd Sigma, int k, int maxIter, bool verbose, int timeLimit);
 RcppExport SEXP _msPCA_truncatedPowerMethod(SEXP SigmaSEXP, SEXP kSEXP, SEXP maxIterSEXP, SEXP verboseSEXP, SEXP timeLimitSEXP) {
@@ -47,10 +69,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// truncatedPowerMethodX
+List truncatedPowerMethodX(Eigen::MatrixXd Xproc, double invDivisor, int k, int maxIter, bool verbose, int timeLimit);
+RcppExport SEXP _msPCA_truncatedPowerMethodX(SEXP XprocSEXP, SEXP invDivisorSEXP, SEXP kSEXP, SEXP maxIterSEXP, SEXP verboseSEXP, SEXP timeLimitSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type Xproc(XprocSEXP);
+    Rcpp::traits::input_parameter< double >::type invDivisor(invDivisorSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< int >::type maxIter(maxIterSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< int >::type timeLimit(timeLimitSEXP);
+    rcpp_result_gen = Rcpp::wrap(truncatedPowerMethodX(Xproc, invDivisor, k, maxIter, verbose, timeLimit));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_msPCA_iterativeDeflationHeuristic", (DL_FUNC) &_msPCA_iterativeDeflationHeuristic, 11},
+    {"_msPCA_iterativeDeflationHeuristicX", (DL_FUNC) &_msPCA_iterativeDeflationHeuristicX, 12},
     {"_msPCA_truncatedPowerMethod", (DL_FUNC) &_msPCA_truncatedPowerMethod, 5},
+    {"_msPCA_truncatedPowerMethodX", (DL_FUNC) &_msPCA_truncatedPowerMethodX, 6},
     {NULL, NULL, 0}
 };
 

@@ -319,13 +319,6 @@ print.mspca <- function(x, C = NULL, digits = NULL, ...) {
   invisible(x)
 }
 
-#' @rdname print.mspca
-#' @export
-print_mspca <- function(sol_object, C = NULL, digits = NULL) {
-  .Deprecated("print")
-  print.mspca(sol_object, C = C, digits = digits)
-}
-
 #' Summarize an mspca Object
 #'
 #' S3 summary method for objects of class `"mspca"` returned by [mspca()].

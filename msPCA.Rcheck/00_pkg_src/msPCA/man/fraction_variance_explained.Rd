@@ -18,7 +18,7 @@ A float.
 Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by a set of PCs.
 }
 \examples{
-TestMat <- cor(datasets::mtcars)
-mspcares <- mspca(TestMat, 2, c(4,4))
+TestMat <- cor(mtcars)
+mspcares <- mspca(TestMat, r = 2, ks = c(4, 4), verbose = FALSE)
 fraction_variance_explained(TestMat, mspcares$x_best)
 }

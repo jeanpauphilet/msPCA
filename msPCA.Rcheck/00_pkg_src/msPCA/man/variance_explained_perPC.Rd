@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{variance_explained_perPC}
 \alias{variance_explained_perPC}
-\title{Variance Explained per PC}
+\title{Variance Explained Per PC}
 \usage{
 variance_explained_perPC(C, U)
 }
@@ -12,7 +12,7 @@ variance_explained_perPC(C, U)
 \item{U}{A matrix. The matrix containing the r PCs (p x r).}
 }
 \value{
-An array.
+A numeric vector of length \code{ncol(U)}.
 }
 \description{
 Computes the variance explained by each PC.

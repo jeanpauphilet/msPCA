@@ -42,9 +42,9 @@ correlation matrix (p x p) when \code{type = "Sigma"}, or a raw data matrix
 
 \item{maxIter}{(optional) An integer. Maximum number of iterations of the algorithm. Default 200.}
 
-\item{feasibilityTolerance}{(optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to \code{feasibilityConstraintType}). Default 1e-4}
+\item{feasibilityTolerance}{(optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to \code{feasibilityConstraintType}). Default 1e-4.}
 
-\item{stallingTolerance}{(optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8}
+\item{stallingTolerance}{(optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8.}
 
 \item{timeLimitTPM}{(optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.}
 

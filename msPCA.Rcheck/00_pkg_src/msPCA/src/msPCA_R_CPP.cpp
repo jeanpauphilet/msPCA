@@ -8,6 +8,7 @@
 #include <numeric>
 #include <vector>
 #include "ConstantArguments.h"
+#include "CovOperator.h"
 
 using namespace Rcpp;
 using namespace std;
@@ -32,17 +33,6 @@ inline Eigen::VectorXd truncateVector(const Eigen::VectorXd& v, int k)
   for (int i = 0; i < k; ++i) y[idx[i]] = v[idx[i]];
   y.normalize();
   return y;
-}
-
-// Compute the value x^T A x -- x is a vector
-inline double evaluate(const Eigen::VectorXd& x, const Eigen::MatrixXd& A)
-{
-  return x.dot(A * x);
-}
-// Compute the value tr(x^T A x) -- x is a matrix with r vectors (columns)
-double evaluate(const Eigen::MatrixXd& x, const Eigen::MatrixXd& A)
-{
-  return (x.transpose() * A * x).trace();
 }
 
 // Evaluate x^T M x using a matvec functor
@@ -71,9 +61,10 @@ Eigen::VectorXd iterativeTruncHeuristic(int k, const Eigen::VectorXd& beta0,
 // Inner routine: sPCA heuristic for a single PC — functor version.
 // outerIter gates the random restart budget: full budget on outer iteration 1,
 // minRestartTPM restarts on all subsequent iterations.
+// `dim` is the ambient dimension p (length of the loading vectors).
 void singlePCHeuristic(int k,
                        const std::function<Eigen::VectorXd(const Eigen::VectorXd&)>& applyM,
-                       int n,
+                       int dim,
                        const Eigen::VectorXd& beta0,
                        double& lambda_partial,
                        Eigen::VectorXd& x_output,
@@ -87,8 +78,8 @@ void singlePCHeuristic(int k,
   time_t start = time(0);
   while (countdown > 0 && difftime(time(0), start) < timeLimitTPM)
   {
-    Eigen::VectorXd beta(n);
-    for (int i = 0; i < n; ++i) beta(i) = R::rnorm(0, 1);
+    Eigen::VectorXd beta(dim);
+    for (int i = 0; i < dim; ++i) beta(i) = R::rnorm(0, 1);
     beta.normalize();
 
     beta = iterativeTruncHeuristic(k, beta, applyM);
@@ -107,22 +98,10 @@ void singlePCHeuristic(int k,
   x_output = bestBeta;
 }
 
-// Matrix-based convenience overload for truncatedPowerMethod (single-PC, no deflation).
-void singlePCHeuristic(int k, const Eigen::MatrixXd& prob_Sigma, const Eigen::VectorXd& beta0,
-                       double& lambda_partial, Eigen::VectorXd& x_output,
-                       int maxIter = 10, int timeLimit = 20)
-{
-  int n = prob_Sigma.rows();
-  auto applyM = [&](const Eigen::VectorXd& v) -> Eigen::VectorXd {
-    return prob_Sigma * v;
-  };
-  singlePCHeuristic(k, applyM, n, beta0, lambda_partial, x_output,
-                      maxIter, timeLimit);
-}
-
 // Computes the orthogonality/uncorrelatedness violation of a family of r vectors x.
+// Operator version: the covariance is accessed only through `op` (no explicit Sigma).
 double fnviolation(const Eigen::MatrixXd& x,
-                    const Eigen::MatrixXd& Sigma,
+                    const CovOp& op,
                     int feasibilityConstraintType)
 {
   const int r = x.cols();
@@ -138,7 +117,7 @@ double fnviolation(const Eigen::MatrixXd& x,
     }
   } else {
     // Uncorrelatedness: sum of |x_i^T Sigma x_j| for i != j, plus ||x_i||^2 - 1 on diagonal
-    Eigen::MatrixXd C = x.transpose() * Sigma * x;
+    Eigen::MatrixXd C = op.gram(x); // x^T Sigma x  (r x r), computed without materialising Sigma
     for (int i = 0; i < r; ++i) {
       for (int j = i; j < r; ++j) {
         v += std::fabs(i == j ? y(i, j) - 1.0 : C(i, j));
@@ -148,22 +127,23 @@ double fnviolation(const Eigen::MatrixXd& x,
   return v;
 }
 
-// Main function: Iterative deflation heuristic for sparse PCA with multiple PCs
-// [[Rcpp::export]]
-List iterativeDeflationHeuristic(
-    Eigen::MatrixXd Sigma,
+// Shared core: Iterative deflation heuristic for sparse PCA with multiple PCs.
+// The empirical covariance is accessed only through the operator `op`, so the same
+// code serves both the dense-Sigma path (DenseOp) and the raw-data path (GramOp).
+List iterativeDeflationHeuristic_impl(
+    const CovOp& op,
     int r,
     Rcpp::NumericVector ks, // size r
-    int feasibilityConstraintType = 0, // 0 = orthogonality constraints, 1 = uncorrelatedness constraints
-    bool verbose = true,
-    int maxIter = 200,
-    double feasibilityTolerance = 1e-4,
-    double stallingTolerance = 1e-8,
-    int timeLimitTPM = 20,
-    int maxRestartTPM = 20,
-    int minRestartTPM = 10) // random restart budget for outer iterations >= 2
+    int feasibilityConstraintType, // 0 = orthogonality constraints, 1 = uncorrelatedness constraints
+    bool verbose,
+    int maxIter,
+    double feasibilityTolerance,
+    double stallingTolerance,
+    int timeLimitTPM,
+    int maxRestartTPM,
+    int minRestartTPM) // random restart budget for outer iterations >= 2
 {
-  int n = Sigma.rows();
+  int p = op.dim(); // Ambient dimension (number of variables / length of each loading vector)
 
   if (ks.size() < r) //If sparsity pattern is not fully defined, we complete it with zeros//we reduce the number of PCs to the number of sparsity patterns
   {
@@ -171,22 +151,24 @@ List iterativeDeflationHeuristic(
     r = ks.size();
   }
 
+  const double traceSigma = op.trace(); // Total variance tr(Sigma); precomputed once for normalised display
+
   double ofv_best = -1e10; // Objective value of the best solution found (solution = set of r PCs)
-  double violation_best = n; // Orthogonality violation of the best solution found 
-  Eigen::MatrixXd x_best = Eigen::MatrixXd::Zero(n, r); // Best solution found
+  double violation_best = p; // Feasibility violation of the best solution found
+  Eigen::MatrixXd x_best = Eigen::MatrixXd::Zero(p, r); // Best solution found
 
   double ofv_secondbest = -1e10; // Objective value of the second best solution found (solution = set of r PCs)
-  Eigen::MatrixXd x_secondbest = Eigen::MatrixXd::Zero(n, r); // Second best solution found
+  Eigen::MatrixXd x_secondbest = Eigen::MatrixXd::Zero(p, r); // Second best solution found
 
-  Eigen::MatrixXd x_current = Eigen::MatrixXd::Zero(n, r); // Current solution (solution = set of r PCs)
+  Eigen::MatrixXd x_current = Eigen::MatrixXd::Zero(p, r); // Current solution (solution = set of r PCs)
   double ofv_prev = 0; // Objective value of the previous solution
-  double ofv_overall = 0; // Objective value of the current solution 
+  double ofv_overall = 0; // Objective value of the current solution
 
   double theLambda = 0; // Penalty parameter on the orthogonality constraint
   double scalingLambda = 1; // For memory: Scaling factor used to ensure the matrix passed to TPW is PSD
 
   Eigen::VectorXd weights = Eigen::VectorXd::Zero(r); // Weights assigned to each PC in the penalization heuristic (initialized through the first iteration of the algorithm)
-  
+
   double stepSize = 0;
   int slowPeriod = ceil(ConstantArguments::slowPeriodRate * maxIter); // Slow phase: smallest step size (for the penalty) in the beginning to encourage exploration
   int fastPeriod = ceil(ConstantArguments::fastPeriodRate * maxIter); // Faster phase: highest step size (for the penalty) in the end to encourage feasibility
@@ -194,7 +176,7 @@ List iterativeDeflationHeuristic(
   if (verbose)
   {
     Rcout << "---- Iterative deflation algorithm for sparse PCA with multiple PCs ---" << std::endl;
-    Rcout << "Dimension: " << n << std::endl;
+    Rcout << "Dimension: " << p << std::endl;
     Rcout << "Number of PCs: " << r << std::endl;
     Rcout << "Sparsity pattern: ";
     for (int t = 0; t < r; t++)
@@ -226,20 +208,20 @@ List iterativeDeflationHeuristic(
   for (int theIter = 1; theIter <= maxIter; theIter++)
   {
     theLambda += stepSize;
-    
+
     // Iteratively updating each PC
     for (int t = 0; t < r; t++)
     {
-      if (theIter == 1 && ks[t] > n) // Verifies that the sparsity level is not higher than the dimension
+      if (theIter == 1 && ks[t] > p) // Verifies that the sparsity level is not higher than the dimension
       {
-        warning("Warning: For PC #%i, you requested a sparsity level (%i) that exceeds the dimension (%i). Ran the algorithm with a sparsity level of %i instead.", t+1, ks[t], n, n);
-        ks[t] = n;
+        warning("Warning: For PC #%i, you requested a sparsity level (%i) that exceeds the dimension (%i). Ran the algorithm with a sparsity level of %i instead.", t+1, ks[t], p, p);
+        ks[t] = p;
       }
 
-      // Build deflation functor — avoids materialising sigma_current (saves O(n^2) allocation + symmetrisation).
+      // Build deflation functor — avoids materialising sigma_current (saves O(p^2) allocation + symmetrisation).
       // applyM(beta) = Sigma*beta - W * diag(d) * W^T * beta, where s-th column of W is w_s and d_s = lambda * weight_s.
       int nOther = r - 1;
-      Eigen::MatrixXd W(n, nOther);
+      Eigen::MatrixXd W(p, nOther);
       Eigen::VectorXd d(nOther);
       {
         int col = 0;
@@ -250,7 +232,7 @@ List iterativeDeflationHeuristic(
             if (feasibilityConstraintType == 0) {
               W.col(col) = x_current.col(s);
             } else {
-              W.col(col) = Sigma * x_current.col(s);
+              W.col(col) = op.apply(x_current.col(s)); // Sigma * u_s, via operator (no explicit Sigma)
             }
             d(col) = theLambda * weights[s];
             col++;
@@ -258,8 +240,8 @@ List iterativeDeflationHeuristic(
         }
       }
 
-      auto applyM = [&Sigma, &W, &d, &scalingLambda, nOther](const Eigen::VectorXd& beta) -> Eigen::VectorXd {
-        Eigen::VectorXd y = Sigma * beta;
+      auto applyM = [&op, &W, &d, &scalingLambda, nOther](const Eigen::VectorXd& beta) -> Eigen::VectorXd {
+        Eigen::VectorXd y = op.apply(beta);
         if (nOther > 0) {
           Eigen::VectorXd c = W.transpose() * beta;
           y.noalias() -= W * (d.asDiagonal() * c);
@@ -271,13 +253,13 @@ List iterativeDeflationHeuristic(
       // Warm start: power iterations on iteration 1 (no eigensolver), previous solution thereafter.
       Eigen::VectorXd beta0;
       if (theIter == 1) {
-        beta0 =  Eigen::VectorXd::Ones(n);
+        beta0 =  Eigen::VectorXd::Ones(p);
         beta0.normalize();
       } else {
         beta0 = x_current.col(t);
       }
 
-      singlePCHeuristic(ks[t], applyM, n, beta0, lambda_partial, x_output,
+      singlePCHeuristic(ks[t], applyM, p, beta0, lambda_partial, x_output,
             (theIter == 1 ? maxRestartTPM : minRestartTPM), timeLimitTPM);
 
       x_current.col(t) = x_output;
@@ -291,24 +273,24 @@ List iterativeDeflationHeuristic(
               weights[t] = lambda_partial;
         } else {
           weights[t] = 1.0;
-        }        
+        }
       }
     }
 
     ofv_prev = ofv_overall;
-    ofv_overall = evaluate(x_current, Sigma);
+    ofv_overall = op.quadForm(x_current);
 
-    double violation = fnviolation(x_current, Sigma, feasibilityConstraintType);
+    double violation = fnviolation(x_current, op, feasibilityConstraintType);
     double violation_forStep = violation; // For the step size: if truncate values that are too small for numerical stability
     if (1e-7 > violation) {
       violation_forStep = 1e-7;
     }
 
     stepSize = (theIter < fastPeriod ? ConstantArguments::changedRateLow : ConstantArguments::changedRateHigh) * (theIter < slowPeriod ? violation_forStep : ofv_overall / violation_forStep);
-    
+
     auto stopTime = chrono::high_resolution_clock::now();
     chrono::milliseconds executionTime = chrono::duration_cast<chrono::milliseconds>(stopTime - startTime);
-    
+
     bool stopCriterion = (theIter == maxIter) || (std::fabs(ofv_prev - ofv_overall) < stallingTolerance && violation < feasibilityTolerance);
     if (verbose)
     {
@@ -318,7 +300,7 @@ List iterativeDeflationHeuristic(
         Rcout << theIter << " |";
 
         Rcout.width(ConstantArguments::separatorLengthShort + ConstantArguments::wordLengthMiddle);
-        Rcout << setprecision(ConstantArguments::precisionForObjectiveValue) << ofv_overall / Sigma.trace() << " |";
+        Rcout << setprecision(ConstantArguments::precisionForObjectiveValue) << ofv_overall / traceSigma << " |";
 
         Rcout.width(ConstantArguments::separatorLengthShort + ConstantArguments::wordLengthLong);
         Rcout << scientific << setprecision(ConstantArguments::precisionForOrthogonalityViolation)
@@ -363,18 +345,18 @@ List iterativeDeflationHeuristic(
   auto stopTime = std::chrono::high_resolution_clock::now();
   std::chrono::milliseconds allExecutionTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
   double runtime = (double)allExecutionTime.count() / ConstantArguments::millisecondsToSeconds;
-  violation_best = fnviolation(x_best, Sigma, feasibilityConstraintType);
+  violation_best = fnviolation(x_best, op, feasibilityConstraintType);
   if (violation_best > feasibilityTolerance) // Warning if the best solution found is not feasible (within tolerance)
   {
     warning("Warning: Algorithm terminated without finding a feasible solution (within %i tolerance). Best solution found is %i feasible. You may want to rerun the algorithm with more iterations (maxIter)", feasibilityTolerance, violation_best);
   }
-  ofv_best = evaluate(x_best, Sigma);
+  ofv_best = op.quadForm(x_best);
 
   // Sort columns of x_best by descending explained variance
   //// Compute per-PC explained variance
   Eigen::VectorXd fve(r);
   for (int t = 0; t < r; ++t) {
-    fve(t) = x_best.col(t).dot(Sigma * x_best.col(t));
+    fve(t) = x_best.col(t).dot(op.apply(x_best.col(t)));
   }
 
   std::vector<int> order(r);
@@ -382,19 +364,116 @@ List iterativeDeflationHeuristic(
   std::sort(order.begin(), order.end(),
             [&](int a, int b) { return fve(a) > fve(b); });
 
-  Eigen::MatrixXd x_sorted(n, r);
+  Eigen::MatrixXd x_sorted(p, r);
+  Eigen::VectorXd fve_sorted(r);
   for (int j = 0; j < r; ++j) {
     x_sorted.col(j) = x_best.col(order[j]);
+    fve_sorted(j) = fve(order[j]);
   }
 
   List result = List::create(Named("objective_value") = ofv_best,
                              Named("feasibility_violation") = violation_best,
                              Named("runtime") = runtime,
-                             Named("x_best") = x_sorted);
+                             Named("x_best") = x_sorted,
+                             Named("variance_explained") = fve_sorted,
+                             Named("total_variance") = traceSigma);
   return result;
 }
 
-// Main function: Truncated Power Method for sparse PCA with 1 PC
+// Shared core: Truncated Power Method for sparse PCA with 1 PC (operator version).
+List truncatedPowerMethod_impl(
+    const CovOp& op,
+    int k, // Sparsity level
+    int maxIter,
+    bool verbose,
+    int timeLimit)
+{
+  int p = op.dim();
+
+  if (k > p) //If sparsity level is higher than dimension, we reduce the sparsity level to the dimension
+  {
+    warning("You requested a sparsity level (%i) that exceeds the dimension (%i). Ran the algorithm with a sparsity level of %i instead.", k, p, p);
+    k = p;
+  }
+  auto startTime = std::chrono::high_resolution_clock::now();
+
+  Eigen::VectorXd x_output; // For memory: Current PC
+  double lambda_partial = 0; // For memory: Fraction of the variance explained by the current PC
+
+  // Matvec functor against the (implicit) covariance operator.
+  auto applyM = [&op](const Eigen::VectorXd& v) -> Eigen::VectorXd { return op.apply(v); };
+
+  // Leading-eigenvector seed: dense path uses an exact eigensolver, raw-data path uses
+  // matvec power iteration (see CovOperator.h). Both avoid materialising a perturbed matrix.
+  Eigen::VectorXd beta0 = op.seed();
+
+  singlePCHeuristic(k, applyM, p, beta0, lambda_partial, x_output, maxIter, timeLimit);
+
+  auto stopTime = std::chrono::high_resolution_clock::now();
+  std::chrono::milliseconds allExecutionTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
+
+  double runtime = (double)allExecutionTime.count() / ConstantArguments::millisecondsToSeconds;
+
+  Eigen::MatrixXd x_best = Eigen::MatrixXd::Zero(p, 1); // Best solution found
+  x_best.col(0) = x_output;
+
+  List result = List::create(Named("objective_value") = lambda_partial,
+                             Named("runtime") = runtime,
+                             Named("x_best") = x_best);
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// Exported entry points
+// ---------------------------------------------------------------------------
+
+// Main function: Iterative deflation heuristic for sparse PCA — dense covariance input.
+// [[Rcpp::export]]
+List iterativeDeflationHeuristic(
+    Eigen::MatrixXd Sigma,
+    int r,
+    Rcpp::NumericVector ks, // size r
+    int feasibilityConstraintType = 0, // 0 = orthogonality constraints, 1 = uncorrelatedness constraints
+    bool verbose = true,
+    int maxIter = 200,
+    double feasibilityTolerance = 1e-4,
+    double stallingTolerance = 1e-8,
+    int timeLimitTPM = 20,
+    int maxRestartTPM = 20,
+    int minRestartTPM = 10)
+{
+  DenseOp op(Sigma);
+  return iterativeDeflationHeuristic_impl(op, r, ks, feasibilityConstraintType, verbose,
+                                          maxIter, feasibilityTolerance, stallingTolerance,
+                                          timeLimitTPM, maxRestartTPM, minRestartTPM);
+}
+
+// Main function: Iterative deflation heuristic for sparse PCA — raw-data input.
+// Xproc is the (already centered/scaled) n x p data matrix; invDivisor is 1/(n-1) or 1/n.
+// The covariance Sigma = invDivisor * Xproc^T Xproc is applied implicitly via Xproc^T(Xproc beta),
+// never materialised, giving O(np) matvecs instead of O(p^2). Suited to n << p.
+// [[Rcpp::export]]
+List iterativeDeflationHeuristicX(
+    Eigen::MatrixXd Xproc,
+    double invDivisor,
+    int r,
+    Rcpp::NumericVector ks, // size r
+    int feasibilityConstraintType = 0,
+    bool verbose = true,
+    int maxIter = 200,
+    double feasibilityTolerance = 1e-4,
+    double stallingTolerance = 1e-8,
+    int timeLimitTPM = 20,
+    int maxRestartTPM = 20,
+    int minRestartTPM = 10)
+{
+  GramOp op(Xproc, invDivisor);
+  return iterativeDeflationHeuristic_impl(op, r, ks, feasibilityConstraintType, verbose,
+                                          maxIter, feasibilityTolerance, stallingTolerance,
+                                          timeLimitTPM, maxRestartTPM, minRestartTPM);
+}
+
+// Main function: Truncated Power Method for sparse PCA with 1 PC — dense covariance input.
 // [[Rcpp::export]]
 List truncatedPowerMethod(
     Eigen::MatrixXd Sigma,
@@ -403,37 +482,21 @@ List truncatedPowerMethod(
     bool verbose = true,
     int timeLimit = 10)
 {
-  int n = Sigma.rows();
+  DenseOp op(Sigma);
+  return truncatedPowerMethod_impl(op, k, maxIter, verbose, timeLimit);
+}
 
-  if (k > n) //If sparsity level is higher than dimension, we reduce the sparsity level to the dimension
-  {
-    warning("You requested a sparsity level (%i) that exceeds the dimension (%i). Ran the algorithm with a sparsity level of %i instead.", k, n, n);
-    k = n;
-  }
-  auto startTime = std::chrono::high_resolution_clock::now();
-
-  Eigen::VectorXd x_output; // For memory: Current PC
-  double lambda_partial = 0; // For memory: Fraction of the variance explained by the current PC 
-
-  // Compute largest eigenvector of Sigma
-  Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(Sigma);
-  int index;
-  solver.eigenvalues().maxCoeff(&index);
-  Eigen::VectorXd beta0 = solver.eigenvectors().col(index); 
-
-  singlePCHeuristic(k, Sigma, beta0, lambda_partial, x_output, maxIter, timeLimit);
-
-  auto stopTime = std::chrono::high_resolution_clock::now();
-  std::chrono::milliseconds allExecutionTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
-  
-  double runtime = (double)allExecutionTime.count() / ConstantArguments::millisecondsToSeconds;
-
-  Eigen::MatrixXd x_best = Eigen::MatrixXd::Zero(n, 1); // Best solution found
-  x_best.col(0) = x_output;
-
-  List result = List::create(Named("objective_value") = lambda_partial,
-                             Named("runtime") = runtime,
-                             Named("x_best") = x_best);
-  return result;
-
+// Main function: Truncated Power Method for sparse PCA with 1 PC — raw-data input.
+// Xproc is the (already centered/scaled) n x p data matrix; invDivisor is 1/(n-1) or 1/n.
+// [[Rcpp::export]]
+List truncatedPowerMethodX(
+    Eigen::MatrixXd Xproc,
+    double invDivisor,
+    int k, // Sparsity level
+    int maxIter = 200,
+    bool verbose = true,
+    int timeLimit = 10)
+{
+  GramOp op(Xproc, invDivisor);
+  return truncatedPowerMethod_impl(op, k, maxIter, verbose, timeLimit);
 }

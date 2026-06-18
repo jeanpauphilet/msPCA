@@ -20,8 +20,8 @@ for orthogonality; \code{1} for zero pairwise correlation.}
 \item{digits}{An integer or \code{NULL}. Number of significant digits for
 display. When \code{NULL} (the default), \code{getOption("digits")} is used.}
 
-\item{...}{Further arguments passed to or from other methods (currently
-ignored).}
+\item{...}{Further arguments required by the \code{summary()} generic; not used
+by this method.}
 }
 \value{
 Invisibly returns a list of class \code{"summary.mspca"} with fields:

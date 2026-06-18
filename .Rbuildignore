@@ -8,6 +8,8 @@
 ^msPCA_.*\.pdf$
 ^msPCA_.*\.csv$
 ^doc$
+^docs$
 ^Meta$
+^_pkgdown\.yml$
 ^plan_dual_input_api\.md$
 ^msPCA\.worktrees$
