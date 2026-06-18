@@ -154,7 +154,7 @@ List iterativeDeflationHeuristic_impl(
   const double traceSigma = op.trace(); // Total variance tr(Sigma); precomputed once for normalised display
 
   double ofv_best = -1e10; // Objective value of the best solution found (solution = set of r PCs)
-  double violation_best = p; // Orthogonality violation of the best solution found
+  double violation_best = p; // Feasibility violation of the best solution found
   Eigen::MatrixXd x_best = Eigen::MatrixXd::Zero(p, r); // Best solution found
 
   double ofv_secondbest = -1e10; // Objective value of the second best solution found (solution = set of r PCs)

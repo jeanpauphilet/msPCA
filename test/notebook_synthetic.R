@@ -59,10 +59,11 @@ for (iter in 1:5){ #Number of replications
     print(n)
 
     X <- Xfull[1:n,]
-    S <- cov(X)
+    S <- cor(X)
 
     #msPCA algorithm
-    mspca_results <- msPCA::mspca(S, 2, c(k,k), verbose=FALSE, maxRestartTPM=30)
+    set.seed(42)
+    mspca_results <- msPCA::mspca(S, 2, c(k,k), verbose=FALSE)
     resdf[icol,] <- list(n,"msPCA",
                    sum(abs(mspca_results$x_best) > 0), #Sparsity level
                    accuracy(xtrue, mspca_results$x_best), #Support recovery accuracy
@@ -72,7 +73,8 @@ for (iter in 1:5){ #Number of replications
     icol <- icol +1
 
     #msPCA algorithm working on the X matrix directly
-    mspca_X_results <- msPCA::mspca(X, 2, c(k,k), verbose=FALSE, type="X", maxRestartTPM=30)
+    set.seed(42)
+    mspca_X_results <- msPCA::mspca(X, 2, c(k,k), verbose=FALSE, type="X")
 
     resdf[icol,] <- list(n,"msPCA - X",
                          sum(abs(mspca_X_results$x_best) > 0), #Sparsity level

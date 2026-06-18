@@ -83,15 +83,15 @@
 #'   correlation matrix (p x p) when `type = "Sigma"`, or a raw data matrix
 #'   (n x p) when `type = "X"`.
 #' @param r An integer. Number of principal components (PCs) to be computed.
-#' @param ks A list of integers. Target sparsity of each PC.
+#' @param ks An integer vector. Target sparsity of each PC.
 #' @param type (optional) Either "Sigma" (default; `M` is a covariance/correlation matrix) or "X" (`M` is a raw data matrix).
 #' @param feasibilityConstraintType (optional) An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. Default 0.
 #' @param verbose (optional) A Boolean. Controls console output. Default TRUE.
 #' @param maxIter (optional) An integer. Maximum number of iterations of the algorithm. Default 200.
-#' @param feasibilityTolerance (optional) A float. Tolerance for the violation of the orthogonality constraints. Default 1e-4
+#' @param feasibilityTolerance (optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to `feasibilityConstraintType`). Default 1e-4
 #' @param stallingTolerance (optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8
 #' @param timeLimitTPM (optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.
-#' @param maxRestartTPM (optional) An integer. Number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 20.
+#' @param maxRestartTPM (optional) An integer. Number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 30.
 #' @param minRestartTPM (optional) An integer. Number of random restarts of the truncated power method (inner iteration) for outer iterations >= 2. Default 20.
 #' @param center (optional, type = "X") A Boolean. Center the columns of `M` before computing the covariance. Default TRUE.
 #' @param scale (optional, type = "X") A Boolean. Scale the columns of `M` to unit variance, i.e. operate on the correlation matrix. Default TRUE.
@@ -109,11 +109,11 @@
 #' TestMat <- cor(datasets::mtcars)
 #' mspca(TestMat, 2, c(4,4))
 #' # Equivalent call from the raw data matrix:
-#' mspca(scale(datasets::mtcars), r = 2, ks = c(4,4), type = "X", verbose = FALSE)
+#' mspca(as.matrix(datasets::mtcars), r = 2, ks = c(4,4), type = "X", verbose = FALSE)
 mspca <- function(M, r, ks, type = c("Sigma", "X"),
                   feasibilityConstraintType = 0, verbose = TRUE, maxIter = 200,
                   feasibilityTolerance = 1e-4, stallingTolerance = 1e-8,
-                  timeLimitTPM = 20, maxRestartTPM = 20, minRestartTPM = 20,
+                  timeLimitTPM = 20, maxRestartTPM = 30, minRestartTPM = 20,
                   center = TRUE, scale = TRUE, divisor = c("n-1", "n"),
                   checkPSD = TRUE, symTolerance = 1e-8, psdTolerance = 1e-8) {
   type <- match.arg(type)
@@ -197,22 +197,22 @@ tpm <- function(M, k, type = c("Sigma", "X"),
 
 
 ## 2 - Useful functions
-#' Variance Explained per PC
+#' Variance Explained Per PC
 #'
 #' Computes the variance explained by each PC.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. The matrix containing the r PCs (p x r).
-#' @return An array.
+#' @return A numeric vector of length `ncol(U)`.
 variance_explained_perPC <- function(C, U){
   colSums(U * (C %*% U))
 }
 
-#' Fraction of Variance Explained per PC
+#' Fraction of Variance Explained Per PC
 #'
 #' Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by each PC.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. The matrix containing the r PCs (p x r).
-#' @return An array.
+#' @return A numeric vector of length `ncol(U)`.
 fraction_variance_explained_perPC <- function(C, U){
   fve <- variance_explained_perPC(C, U)
   fve <- fve / sum(diag(C))
@@ -235,9 +235,13 @@ fraction_variance_explained <- function(C, U){
 
 #' Feasibility Violation
 #'
-#' Computes the feasibility violation defined as \eqn{\sum_{t > s} u_{t}^\top u_{s}} if orthogonality constraints are enforced (feasibilityConstraintType = 0) and \eqn{\sum_{t > s} u_{t}^\top C u_{s}} if zero-correlation constraints are enforced (feasibilityConstraintType = 1).
+#' Computes the feasibility violation defined as
+#' \eqn{\sum_{t > s} |u_{t}^\top u_{s}|} if orthogonality constraints are
+#' enforced (`feasibilityConstraintType = 0`) and
+#' \eqn{\sum_{t > s} |u_{t}^\top C u_{s}|} if zero-correlation constraints are
+#' enforced (`feasibilityConstraintType = 1`).
 #' @param C A matrix. The correlation or covariance matrix (p x p).
-#' @param U A matrix. Each column correspond to an p-dimensional PC.
+#' @param U A matrix. Each column corresponds to a p-dimensional PC.
 #' @param feasibilityConstraintType An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints.
 #' @return A float.
 #' @examples
@@ -264,7 +268,8 @@ feasibility_violation_off <- function(C, U, feasibilityConstraintType){
 #'   be omitted when `sol_object` already carries `variance_explained` /
 #'   `total_variance` (i.e. a `type = "X"` result).
 #' @param digits An integer. Number of digits used for rounded display. Default 3.
-#' @return None. Prints output to console.
+#' @return Invisibly, the rounded sparse loading matrix restricted to the union
+#'   of non-zero loadings.
 #' @examples
 #' TestMat <- cor(datasets::mtcars)
 #' mspcares <- mspca(TestMat, 2, c(4,4), type = "Sigma")

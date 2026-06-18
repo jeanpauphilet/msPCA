@@ -9,7 +9,7 @@ feasibility_violation_off(C, U, feasibilityConstraintType)
 \arguments{
 \item{C}{A matrix. The correlation or covariance matrix (p x p).}
 
-\item{U}{A matrix. Each column correspond to an p-dimensional PC.}
+\item{U}{A matrix. Each column corresponds to a p-dimensional PC.}
 
 \item{feasibilityConstraintType}{An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints.}
 }
@@ -17,10 +17,14 @@ feasibility_violation_off(C, U, feasibilityConstraintType)
 A float.
 }
 \description{
-Computes the feasibility violation defined as \eqn{\sum_{t > s} u_{t}^\top u_{s}} if orthogonality constraints are enforced (feasibilityConstraintType = 0) and \eqn{\sum_{t > s} u_{t}^\top C u_{s}} if zero-correlation constraints are enforced (feasibilityConstraintType = 1).
+Computes the feasibility violation defined as
+\eqn{\sum_{t > s} |u_{t}^\top u_{s}|} if orthogonality constraints are
+enforced (`feasibilityConstraintType = 0`) and
+\eqn{\sum_{t > s} |u_{t}^\top C u_{s}|} if zero-correlation constraints are
+enforced (`feasibilityConstraintType = 1`).
 }
 \examples{
 TestMat <- cor(datasets::mtcars)
-mspcares <- mspca(TestMat, 2, c(4,4))
+mspcares <- mspca(TestMat, 2, c(4,4), type = "Sigma")
 feasibility_violation_off(TestMat, mspcares$x_best, 0)
 }

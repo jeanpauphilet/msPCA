@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">msPCA</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.4.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.5.0</span>
       </span>
     </div>
 
@@ -87,15 +87,18 @@
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
 <p>The main function is <code><a href="reference/mspca.html">mspca()</a></code>.</p>
-<p>Inputs:</p>
+<p>Inputs (following the <code>elasticnet</code> convention, the data is a single argument <code>M</code> plus a <code>type</code> selector):</p>
 <ul>
 <li>
-<code>Sigma</code>: covariance or correlation matrix (<code>p x p</code>),</li>
+<code>M</code>: the data matrix,</li>
+<li>
+<code>type</code>: <code>"Sigma"</code> (default) treats <code>M</code> as a covariance/correlation matrix (<code>p x p</code>); <code>"X"</code> treats <code>M</code> as a raw data matrix (<code>n</code> observations x <code>p</code> variables),</li>
 <li>
 <code>r</code>: number of sparse principal components,</li>
 <li>
 <code>ks</code>: integer vector of length <code>r</code> with sparsity budgets.</li>
 </ul>
+<p>With <code>type = "X"</code>, <code><a href="reference/mspca.html">mspca()</a></code> applies the algorithm to the data directly via the products <code>t(X) %*% (X %*% beta)</code> and never forms the <code>p x p</code> matrix. This is substantially faster and more memory-efficient when <code>n &lt;&lt; p</code>. Pass <code>type = "X"</code> whenever the number of variables greatly exceeds the number of observations.</p>
 <p>Output fields:</p>
 <ul>
 <li>
@@ -114,13 +117,27 @@
 <span><span class="va">Sigma</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="fu">datasets</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/datasets/mtcars.html" class="external-link">mtcars</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mspca.html">mspca</a></span><span class="op">(</span><span class="va">Sigma</span>, r <span class="op">=</span> <span class="fl">2</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mspca.html">mspca</a></span><span class="op">(</span><span class="va">Sigma</span>, r <span class="op">=</span> <span class="fl">2</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>   <span class="co"># type = "Sigma" is the default</span></span>
 <span><span class="fu"><a href="reference/print_mspca.html">print_mspca</a></span><span class="op">(</span><span class="va">res</span>, <span class="va">Sigma</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/feasibility_violation_off.html">feasibility_violation_off</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">res</span><span class="op">$</span><span class="va">x_best</span>, feasibilityConstraintType <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/fraction_variance_explained.html">fraction_variance_explained</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">res</span><span class="op">$</span><span class="va">x_best</span><span class="op">)</span></span></code></pre></div>
-<p>Optional dense PCA comparison:</p>
+<p>Equivalent workflow from the raw data matrix (no covariance matrix needed):</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">msPCA</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="fu">datasets</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/datasets/mtcars.html" class="external-link">mtcars</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># type = "X" treats the first argument as raw data; scale = TRUE operates on the</span></span>
+<span><span class="co"># correlation matrix, matching cor(mtcars) above.</span></span>
+<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mspca.html">mspca</a></span><span class="op">(</span><span class="va">X</span>, r <span class="op">=</span> <span class="fl">2</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"X"</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/print_mspca.html">print_mspca</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span>                      <span class="co"># type = "X" results carry their own variance summary</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/fraction_variance_explained.html">fraction_variance_explained</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>, <span class="va">res</span><span class="op">$</span><span class="va">x_best</span><span class="op">)</span></span></code></pre></div>
+<p>For datasets with <code>n &lt;&lt; p</code>, this raw-data path avoids the <code>O(np^2)</code> cost of forming <code>Sigma</code> and reduces each iteration’s matrix–vector product from <code>O(p^2)</code> to <code>O(np)</code>.</p>
+<p>Optional dense PCA comparison:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pca_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html" class="external-link">prcomp</a></span><span class="op">(</span><span class="fu">datasets</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/datasets/mtcars.html" class="external-link">mtcars</a></span>, scale. <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/fraction_variance_explained.html">fraction_variance_explained</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">pca_res</span><span class="op">$</span><span class="va">rotation</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p>Interpretation:</p>
@@ -172,9 +189,9 @@
 </h2>
 <ul>
 <li>
-<code>mspca(Sigma, r, ks, ...)</code>: multiple sparse PCs.</li>
+<code>mspca(M, r, ks, type = c("Sigma", "X"), ...)</code>: multiple sparse PCs.</li>
 <li>
-<code>tpm(Sigma, k, ...)</code>: single sparse PC via truncated power method.</li>
+<code>tpm(M, k, type = c("Sigma", "X"), ...)</code>: single sparse PC via truncated power method.</li>
 </ul>
 <p>Useful optional arguments in <code><a href="reference/mspca.html">mspca()</a></code>:</p>
 <ul>
@@ -185,6 +202,18 @@
 <li><code>timeLimitTPM</code></li>
 <li><code>maxRestartTPM</code></li>
 <li><code>minRestartTPM</code></li>
+</ul>
+<p>Raw-data arguments (<code>type = "X"</code>):</p>
+<ul>
+<li>
+<code>center</code> (default <code>TRUE</code>), <code>scale</code> (default <code>TRUE</code>, set <code>FALSE</code> for covariance),</li>
+<li>
+<code>divisor</code> (<code>"n-1"</code> for the sample covariance, the default, or <code>"n"</code>).</li>
+</ul>
+<p>Covariance-matrix validation arguments (<code>type = "Sigma"</code>):</p>
+<ul>
+<li>
+<code>checkPSD</code> (default <code>TRUE</code>), <code>symTolerance</code>, <code>psdTolerance</code>.</li>
 </ul>
 </div>
 <div class="section level2">
@@ -203,16 +232,16 @@
 </h2>
 <p>If you use <code>msPCA</code> in academic work, please cite the package and the underlying paper.</p>
 <p>You can retrieve the package citation in R with:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"msPCA"</span><span class="op">)</span></span></code></pre></div>
 <p>Reference paper:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="va">@article</span>{<span class="ot">corywright_pauphilet_2026_mspca</span>,</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="dt">title</span>   = {Sparse PCA with Multiple Principal Components},</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="dt">author</span>  = {Cory-Wright, Ryan and Pauphilet, Jean},</span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="dt">year</span>    = {2026},</span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="dt">journal</span> = {arXiv preprint},</span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="dt">doi</span>     = {10.48550/arXiv.2209.14790}</span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="va">@article</span>{<span class="ot">corywright_pauphilet_2026_mspca</span>,</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="dt">title</span>   = {Sparse PCA with Multiple Principal Components},</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="dt">author</span>  = {Cory-Wright, Ryan and Pauphilet, Jean},</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="dt">year</span>    = {2026},</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="dt">journal</span> = {arXiv preprint},</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="dt">doi</span>     = {10.48550/arXiv.2209.14790}</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="development">Development<a class="anchor" aria-label="anchor" href="#development"></a>
@@ -232,7 +261,9 @@
 <code>src/</code>
 <ul>
 <li>
-<code>msPCA_R_CPP.cpp</code>: C++ implementation of the core algorithm.</li>
+<code>msPCA_R_CPP.cpp</code>: C++ implementation of the core algorithm and the dense/raw-data entry points.</li>
+<li>
+<code>CovOperator.h</code>: covariance-operator abstraction (<code>DenseOp</code> for <code>Sigma</code>, <code>GramOp</code> for <code>X</code>).</li>
 <li>
 <code>ConstantArguments.h</code>: internal algorithm constants.</li>
 <li>

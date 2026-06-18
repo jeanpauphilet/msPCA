@@ -76,24 +76,37 @@ struct GramOp : public CovOp {
 
   int dim() const override { return static_cast<int>(X.cols()); }
 
-  // s * X^T (X v): two passes over X, cost O(np), no p x p matrix.
+  // Sigma * v = s * X^T (X v): two matrix-vector passes over X, cost O(np).
+  //
+  // CRITICAL: the parenthesisation X^T (X v) must be preserved. Writing it as
+  // `X.transpose() * X * v` would make Eigen evaluate left-to-right and first
+  // build the p x p Gram matrix X^T X -- O(np^2) time and O(p^2) memory -- which
+  // defeats the entire purpose of this operator. Keep the inner product explicit.
   Eigen::VectorXd apply(const Eigen::VectorXd& v) const override {
-    return (X.transpose() * (X * v)) * s;
+    const Eigen::VectorXd Xv = X * v;          // n-vector, O(np)
+    Eigen::VectorXd out(X.cols());             // p-vector
+    out.noalias() = X.transpose() * Xv;        // O(np), no aliasing temporary
+    out *= s;
+    return out;
   }
 
-  // s * ||X||_F^2 = s * sum_j ||X_j||^2 = tr(Sigma).
+  // tr(Sigma) = s * ||X||_F^2 = s * sum_j ||X_j||^2. Single O(np) pass.
   double trace() const override { return X.squaredNorm() * s; }
 
-  // tr(x^T Sigma x) = s * ||X x||_F^2.
+  // tr(x^T Sigma x) = s * ||X x||_F^2. Cost O(npr); never forms the p x p matrix.
   double quadForm(const Eigen::MatrixXd& x) const override {
-    Eigen::MatrixXd Xx = X * x; // nObs x r
+    const Eigen::MatrixXd Xx = X * x;          // n x r, O(npr)
     return Xx.squaredNorm() * s;
   }
 
-  // x^T Sigma x = s * (X x)^T (X x).
+  // x^T Sigma x = s * (X x)^T (X x), an r x r matrix.
+  // Cost O(npr) for X x plus O(nr^2) for the small Gram; never forms the p x p matrix.
   Eigen::MatrixXd gram(const Eigen::MatrixXd& x) const override {
-    Eigen::MatrixXd Xx = X * x; // nObs x r
-    return (Xx.transpose() * Xx) * s;
+    const Eigen::MatrixXd Xx = X * x;          // n x r, O(npr)
+    Eigen::MatrixXd G(x.cols(), x.cols());     // r x r
+    G.noalias() = Xx.transpose() * Xx;
+    G *= s;
+    return G;
   }
 
   // Leading-eigenvector seed via matvec power iteration (no p x p, no O(p^3) solver).

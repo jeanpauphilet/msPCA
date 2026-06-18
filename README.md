@@ -145,7 +145,7 @@ Useful optional arguments in `mspca()`:
 
 Raw-data arguments (`type = "X"`):
 
-- `center` (default `TRUE`), `scale` (default `FALSE`, set `TRUE` for correlation),
+- `center` (default `TRUE`), `scale` (default `TRUE`, set `FALSE` for covariance),
 - `divisor` (`"n-1"` for the sample covariance, the default, or `"n"`).
 
 Covariance-matrix validation arguments (`type = "Sigma"`):

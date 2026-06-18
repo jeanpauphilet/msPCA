@@ -4,24 +4,60 @@
 \alias{tpm}
 \title{Truncated Power Method}
 \usage{
-tpm(Sigma, k, maxIter = 200L, verbose = TRUE, timeLimit = 10L)
+tpm(
+  M,
+  k,
+  type = c("Sigma", "X"),
+  maxIter = 200,
+  verbose = TRUE,
+  timeLimit = 10,
+  center = TRUE,
+  scale = FALSE,
+  divisor = c("n-1", "n"),
+  checkPSD = TRUE,
+  symTolerance = 1e-08,
+  psdTolerance = 1e-08
+)
 }
 \arguments{
-\item{Sigma}{A matrix. The correlation or covariance matrix, whose sparse PCs will be computed.}
+\item{M}{A matrix. The data, interpreted according to `type`: a covariance/
+correlation matrix (p x p) when `type = "Sigma"`, or a raw data matrix
+(n x p) when `type = "X"`.}
 
 \item{k}{An integer. Target sparsity of the PC.}
+
+\item{type}{(optional) Either "Sigma" (default; `M` is a covariance/correlation
+matrix) or "X" (`M` is a raw data matrix).}
 
 \item{maxIter}{(optional) An integer. Maximum number of iterations of the algorithm. Default 200.}
 
 \item{verbose}{(optional) A Boolean. Controls console output. Default TRUE.}
 
 \item{timeLimit}{(optional) An integer. Maximum time in seconds. Default 10.}
+
+\item{center}{(optional, type = "X") A Boolean. Center the columns of `M`. Default TRUE.}
+
+\item{scale}{(optional, type = "X") A Boolean. Scale the columns of `M` to unit variance. Default FALSE.}
+
+\item{divisor}{(optional, type = "X") Either "n-1" (default) or "n".}
+
+\item{checkPSD}{(optional, type = "Sigma") A Boolean. Verify `M` is PSD. Default TRUE.}
+
+\item{symTolerance}{(optional, type = "Sigma") A float. Symmetry-check tolerance. Default 1e-8.}
+
+\item{psdTolerance}{(optional, type = "Sigma") A float. PSD-check tolerance. Default 1e-8.}
 }
 \value{
-An object with 3 fields: `x_best` (p x 1 array containing the sparse PC), `objective_value`, `runtime`.
+An object with fields: `x_best` (p x 1 array containing the sparse PC),
+  `objective_value`, `runtime`. With `type = "X"` it additionally records
+  `inputType`, `center`, `scale`, `divisor`, `nObs` and `p`.
 }
 \description{
-Returns the leading sparse principal component of a matrix using the truncated power method.
+Returns the leading sparse principal component of a dataset using the truncated
+power method. As in [mspca()], the data is passed as a single argument `M` whose
+interpretation is set by `type`: `"Sigma"` (default) for a covariance/correlation
+matrix (p x p) or `"X"` for a raw data matrix (n x p). See [mspca()] for the
+raw-data preprocessing controls.
 }
 \examples{
 TestMat <- cor(datasets::mtcars)

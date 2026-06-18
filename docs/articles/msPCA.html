@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">msPCA</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.4.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.5.0</span>
       </span>
     </div>
 
@@ -99,7 +99,7 @@ constraint.</p>
 <code class="sourceCode R"><span><span class="va">Sigma</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="fu">datasets</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/datasets/mtcars.html" class="external-link">mtcars</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mspca.html">mspca</a></span><span class="op">(</span><span class="va">Sigma</span>, r <span class="op">=</span> <span class="fl">2</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span>, feasibilityConstraintType <span class="op">=</span> <span class="fl">0</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mspca.html">mspca</a></span><span class="op">(</span><span class="va">Sigma</span>, r <span class="op">=</span> <span class="fl">2</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"Sigma"</span>, feasibilityConstraintType <span class="op">=</span> <span class="fl">0</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/print_mspca.html">print_mspca</a></span><span class="op">(</span><span class="va">res</span>, <span class="va">Sigma</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; msPCA solution:</span></span>
@@ -108,14 +108,77 @@ constraint.</p>
 <span><span class="co">#&gt; Num. of non-zero loadings :  4 4 </span></span>
 <span><span class="co">#&gt; Sparse PCs </span></span>
 <span><span class="co">#&gt;        [,1]   [,2]</span></span>
-<span><span class="co">#&gt; mpg  -0.499  0.000</span></span>
-<span><span class="co">#&gt; cyl   0.495  0.000</span></span>
-<span><span class="co">#&gt; disp  0.510  0.000</span></span>
+<span><span class="co">#&gt; mpg   0.499  0.000</span></span>
+<span><span class="co">#&gt; cyl  -0.495  0.000</span></span>
+<span><span class="co">#&gt; disp -0.510  0.000</span></span>
 <span><span class="co">#&gt; hp    0.000 -0.518</span></span>
-<span><span class="co">#&gt; wt    0.495  0.000</span></span>
+<span><span class="co">#&gt; wt   -0.495  0.000</span></span>
 <span><span class="co">#&gt; qsec  0.000  0.506</span></span>
 <span><span class="co">#&gt; vs    0.000  0.494</span></span>
 <span><span class="co">#&gt; carb  0.000 -0.482</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="working-from-the-raw-data-matrix">Working from the raw data matrix<a class="anchor" aria-label="anchor" href="#working-from-the-raw-data-matrix"></a>
+</h2>
+<p>By default (<code>type = "Sigma"</code>) the first argument is a
+covariance/correlation matrix; set <code>type = "X"</code> to pass the
+raw data matrix instead (rows are observations, columns are variables).
+With <code>type = "X"</code>, <code>msPCA</code> applies the algorithm
+to the data directly: each product <code>Sigma %*% beta</code> is
+computed as <code>t(X) %*% (X %*% beta) / (n - 1)</code>, so the
+<code>p x p</code> matrix is never formed. This is mathematically
+equivalent to the matrix-input call but much more scalable when the
+number of variables <code>p</code> greatly exceeds the number of
+observations <code>n</code> (it avoids the <code>O(np^2)</code> cost of
+building <code>Sigma</code> and turns each iteration’s matrix–vector
+product from <code>O(p^2)</code> into <code>O(np)</code>).</p>
+<p>The preprocessing arguments control which matrix is implicitly
+used:</p>
+<ul>
+<li>
+<code>center</code> (default <code>TRUE</code>) subtracts the column
+means,</li>
+<li>
+<code>scale</code> (default <code>FALSE</code>) divides columns by
+their standard deviation; set it to <code>TRUE</code> to operate on the
+correlation matrix,</li>
+<li>
+<code>divisor</code> chooses the covariance normalization,
+<code>"n-1"</code> (default, matching <code>cov</code>/<code>cor</code>)
+or <code>"n"</code>.</li>
+</ul>
+<p>With <code>scale = TRUE</code> and <code>divisor = "n-1"</code>, the
+raw-data call reproduces the correlation-matrix result above.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="fu">datasets</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/datasets/mtcars.html" class="external-link">mtcars</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">res_X</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mspca.html">mspca</a></span><span class="op">(</span><span class="va">X</span>, r <span class="op">=</span> <span class="fl">2</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"X"</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># type = "X" results carry their own variance summary, so print_mspca() needs no matrix.</span></span>
+<span><span class="fu"><a href="../reference/print_mspca.html">print_mspca</a></span><span class="op">(</span><span class="va">res_X</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; msPCA solution:</span></span>
+<span><span class="co">#&gt; 2 sparse PCs </span></span>
+<span><span class="co">#&gt; Pct. of variance explained: 32.5 28.0 </span></span>
+<span><span class="co">#&gt; Num. of non-zero loadings :  4 4 </span></span>
+<span><span class="co">#&gt; Sparse PCs </span></span>
+<span><span class="co">#&gt;        [,1]   [,2]</span></span>
+<span><span class="co">#&gt; mpg   0.499  0.000</span></span>
+<span><span class="co">#&gt; cyl  -0.495  0.000</span></span>
+<span><span class="co">#&gt; disp -0.510  0.000</span></span>
+<span><span class="co">#&gt; hp    0.000 -0.518</span></span>
+<span><span class="co">#&gt; wt   -0.495  0.000</span></span>
+<span><span class="co">#&gt; qsec  0.000  0.506</span></span>
+<span><span class="co">#&gt; vs    0.000  0.494</span></span>
+<span><span class="co">#&gt; carb  0.000 -0.482</span></span>
+<span></span>
+<span><span class="co"># Same objective as the correlation-matrix call:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>matrix_input <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">objective_value</span>, data_input <span class="op">=</span> <span class="va">res_X</span><span class="op">$</span><span class="va">objective_value</span><span class="op">)</span></span>
+<span><span class="co">#&gt; matrix_input   data_input </span></span>
+<span><span class="co">#&gt;     6.648253     6.648253</span></span></code></pre></div>
+<p>The same dual input is available for the single-component
+<code><a href="../reference/tpm.html">tpm()</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="orthogonality-versus-zero-correlation">Orthogonality versus zero correlation<a class="anchor" aria-label="anchor" href="#orthogonality-versus-zero-correlation"></a>
@@ -130,8 +193,8 @@ lead to different solutions when the variables are strongly correlated.
 orthogonality of the loading vectors.
 <code>feasibilityConstraintType = 1</code> instead enforces zero
 pairwise correlation between the resulting components.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res_corr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mspca.html">mspca</a></span><span class="op">(</span><span class="va">Sigma</span>, r <span class="op">=</span> <span class="fl">2</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span>, feasibilityConstraintType <span class="op">=</span> <span class="fl">1</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res_corr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mspca.html">mspca</a></span><span class="op">(</span><span class="va">Sigma</span>, r <span class="op">=</span> <span class="fl">2</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"Sigma"</span>, feasibilityConstraintType <span class="op">=</span> <span class="fl">1</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/print_mspca.html">print_mspca</a></span><span class="op">(</span><span class="va">res_corr</span>, <span class="va">Sigma</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; msPCA solution:</span></span>
@@ -141,12 +204,12 @@ pairwise correlation between the resulting components.</p>
 <span><span class="co">#&gt; Sparse PCs </span></span>
 <span><span class="co">#&gt;        [,1]   [,2]</span></span>
 <span><span class="co">#&gt; hp    0.312  0.000</span></span>
-<span><span class="co">#&gt; drat  0.000 -0.337</span></span>
-<span><span class="co">#&gt; wt    0.000  0.087</span></span>
+<span><span class="co">#&gt; drat  0.000  0.337</span></span>
+<span><span class="co">#&gt; wt    0.000 -0.087</span></span>
 <span><span class="co">#&gt; qsec -0.674  0.000</span></span>
 <span><span class="co">#&gt; vs   -0.279  0.000</span></span>
-<span><span class="co">#&gt; am    0.000 -0.624</span></span>
-<span><span class="co">#&gt; gear  0.000 -0.700</span></span>
+<span><span class="co">#&gt; am    0.000  0.624</span></span>
+<span><span class="co">#&gt; gear  0.000  0.700</span></span>
 <span><span class="co">#&gt; carb  0.609  0.000</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -155,7 +218,7 @@ pairwise correlation between the resulting components.</p>
 <p>The package provides helper functions for checking feasibility and
 summarizing variance explained. Below, we report the same diagnostic
 checks for each fitted solution.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Diagnostics for res (feasibilityConstraintType = 0)\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Diagnostics for res (feasibilityConstraintType = 0)</span></span>
 <span><span class="fu"><a href="../reference/feasibility_violation_off.html">feasibility_violation_off</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">res</span><span class="op">$</span><span class="va">x_best</span>, feasibilityConstraintType <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
@@ -173,7 +236,7 @@ checks for each fitted solution.</p>
 <span><span class="fu"><a href="../reference/feasibility_violation_off.html">feasibility_violation_off</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">res_corr</span><span class="op">$</span><span class="va">x_best</span>, feasibilityConstraintType <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0</span></span>
 <span><span class="fu"><a href="../reference/feasibility_violation_off.html">feasibility_violation_off</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">res_corr</span><span class="op">$</span><span class="va">x_best</span>, feasibilityConstraintType <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 9.62078e-05</span></span>
+<span><span class="co">#&gt; [1] 9.620777e-05</span></span>
 <span><span class="fu"><a href="../reference/fraction_variance_explained.html">fraction_variance_explained</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">res_corr</span><span class="op">$</span><span class="va">x_best</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.4753908</span></span>
 <span><span class="fu"><a href="../reference/fraction_variance_explained_perPC.html">fraction_variance_explained_perPC</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">res_corr</span><span class="op">$</span><span class="va">x_best</span><span class="op">)</span></span>
@@ -184,7 +247,7 @@ checks for each fitted solution.</p>
 </h2>
 <p>For reference, the first two dense principal components explain more
 variance, but they are not sparse.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pca_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html" class="external-link">prcomp</a></span><span class="op">(</span><span class="fu">datasets</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/datasets/mtcars.html" class="external-link">mtcars</a></span>, scale. <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/fraction_variance_explained.html">fraction_variance_explained</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">pca_res</span><span class="op">$</span><span class="va">rotation</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.8417153</span></span></code></pre></div>

@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">msPCA</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.4.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.5.0</span>
       </span>
     </div>
 
@@ -45,7 +45,19 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.4.1" id="mspca-041">msPCA 0.4.1<a class="anchor" aria-label="anchor" href="#mspca-041"></a></h2>
+<h2 class="page-header" data-toc-text="0.5.0" id="mspca-050">msPCA 0.5.0<a class="anchor" aria-label="anchor" href="#mspca-050"></a></h2>
+<ul><li>
+<code><a href="../reference/mspca.html">mspca()</a></code> and <code><a href="../reference/tpm.html">tpm()</a></code> now take a single first argument <code>M</code> together with a <code>type = c("Sigma", "X")</code> selector (mirroring the <code>elasticnet</code> interface). <code>type = "Sigma"</code> (the default) treats <code>M</code> as a covariance/correlation matrix (p x p); <code>type = "X"</code> treats <code>M</code> as a raw data matrix (n observations x p variables). The <code>"Sigma"</code> default preserves the behaviour of existing matrix-based calls.</li>
+<li>The raw-data path applies the algorithm to the data directly: each product <code>Sigma %*% beta</code> is evaluated as <code>t(X) %*% (X %*% beta) / (n - 1)</code> at cost O(np), and the p x p matrix is never materialized. This substantially improves scalability when <code>n &lt;&lt; p</code>. The covariance back-end was refactored behind a covariance-operator abstraction (<code>DenseOp</code> / <code>GramOp</code>) shared by both input modes.</li>
+<li>Added preprocessing controls for <code>type = "X"</code>: <code>center</code>, <code>scale</code> (covariance vs correlation), and <code>divisor</code> (“n-1” or “n”).</li>
+<li>Added validation for both input modes: a <code>Sigma</code> input is checked for squareness, symmetry and positive semidefiniteness (<code>checkPSD</code>, <code>symTolerance</code>, <code>psdTolerance</code>); an <code>X</code> input is checked for finiteness, dimensions and (when scaling) zero-variance columns.</li>
+<li>
+<code><a href="../reference/mspca.html">mspca()</a></code> results now include <code>variance_explained</code> (per-PC) and <code>total_variance</code>; <code>X</code>-mode results also record <code>inputType</code>, <code>center</code>, <code>scale</code>, <code>divisor</code>, <code>nObs</code> and <code>p</code>.</li>
+<li>
+<code><a href="../reference/print_mspca.html">print_mspca()</a></code> can now be called on an <code>X</code>-mode result without supplying the covariance matrix.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="0.4.1" id="mspca-041">msPCA 0.4.1<small>2026-06-12</small><a class="anchor" aria-label="anchor" href="#mspca-041"></a></h2>
 <ul><li>Standardized function man page titles to consistent title style.</li>
 <li>Removed unnecessary <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library(datasets)</a></code> calls from examples while keeping explicit <code><a href="https://rdrr.io/r/datasets/mtcars.html" class="external-link">datasets::mtcars</a></code> usage, and added <code>datasets</code> to <code>Suggests</code> to align example dependencies with CRAN guidance.</li>
 <li>Improved efficiency and clarity of R code</li>

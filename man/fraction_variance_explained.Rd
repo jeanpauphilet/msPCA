@@ -19,6 +19,6 @@ Computes the fraction of variance explained (variance explained normalized by th
 }
 \examples{
 TestMat <- cor(datasets::mtcars)
-mspcares <- mspca(TestMat, 2, c(4,4))
+mspcares <- mspca(TestMat, 2, c(4,4), type = "Sigma")
 fraction_variance_explained(TestMat, mspcares$x_best)
 }
