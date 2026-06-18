@@ -15,7 +15,7 @@ mspca(
   feasibilityTolerance = 1e-04,
   stallingTolerance = 1e-08,
   timeLimitTPM = 20,
-  maxRestartTPM = 20,
+  maxRestartTPM = 30,
   minRestartTPM = 20,
   center = TRUE,
   scale = TRUE,
@@ -26,15 +26,15 @@ mspca(
 )
 }
 \arguments{
-\item{M}{A matrix. The data, interpreted according to `type`: a covariance/
-correlation matrix (p x p) when `type = "Sigma"`, or a raw data matrix
-(n x p) when `type = "X"`.}
+\item{M}{A matrix. The data, interpreted according to \code{type}: a covariance/
+correlation matrix (p x p) when \code{type = "Sigma"}, or a raw data matrix
+(n x p) when \code{type = "X"}.}
 
 \item{r}{An integer. Number of principal components (PCs) to be computed.}
 
 \item{ks}{An integer vector. Target sparsity of each PC.}
 
-\item{type}{(optional) Either "Sigma" (default; `M` is a covariance/correlation matrix) or "X" (`M` is a raw data matrix).}
+\item{type}{(optional) Either "Sigma" (default; \code{M} is a covariance/correlation matrix) or "X" (\code{M} is a raw data matrix).}
 
 \item{feasibilityConstraintType}{(optional) An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. Default 0.}
 
@@ -42,49 +42,53 @@ correlation matrix (p x p) when `type = "Sigma"`, or a raw data matrix
 
 \item{maxIter}{(optional) An integer. Maximum number of iterations of the algorithm. Default 200.}
 
-\item{feasibilityTolerance}{(optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to `feasibilityConstraintType`). Default 1e-4}
+\item{feasibilityTolerance}{(optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to \code{feasibilityConstraintType}). Default 1e-4}
 
 \item{stallingTolerance}{(optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8}
 
 \item{timeLimitTPM}{(optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.}
 
-\item{maxRestartTPM}{(optional) An integer. Number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 20.}
+\item{maxRestartTPM}{(optional) An integer. Number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 30.}
 
 \item{minRestartTPM}{(optional) An integer. Number of random restarts of the truncated power method (inner iteration) for outer iterations >= 2. Default 20.}
 
-\item{center}{(optional, type = "X") A Boolean. Center the columns of `M` before computing the covariance. Default TRUE.}
+\item{center}{(optional, type = "X") A Boolean. Center the columns of \code{M} before computing the covariance. Default TRUE.}
 
-\item{scale}{(optional, type = "X") A Boolean. Scale the columns of `M` to unit variance, i.e. operate on the correlation matrix. Default TRUE.}
+\item{scale}{(optional, type = "X") A Boolean. Scale the columns of \code{M} to unit variance, i.e. operate on the correlation matrix. Default TRUE.}
 
-\item{divisor}{(optional, type = "X") Either "n-1" (default, sample covariance, matches `cov`/`cor`) or "n" (population covariance). Default "n-1".}
+\item{divisor}{(optional, type = "X") Either "n-1" (default, sample covariance, matches \code{cov}/\code{cor}) or "n" (population covariance). Default "n-1".}
 
-\item{checkPSD}{(optional, type = "Sigma") A Boolean. Verify that `M` is positive semidefinite. Default TRUE.}
+\item{checkPSD}{(optional, type = "Sigma") A Boolean. Verify that \code{M} is positive semidefinite. Default TRUE.}
 
-\item{symTolerance}{(optional, type = "Sigma") A float. Tolerance for the symmetry  check on `M`. Default 1e-8.}
+\item{symTolerance}{(optional, type = "Sigma") A float. Tolerance for the symmetry  check on \code{M}. Default 1e-8.}
 
-\item{psdTolerance}{(optional, type = "Sigma") A float. Tolerance (on the smallest eigenvalue) for the PSD check on `M`. Default 1e-8.}
+\item{psdTolerance}{(optional, type = "Sigma") A float. Tolerance (on the smallest eigenvalue) for the PSD check on \code{M}. Default 1e-8.}
 }
 \value{
-An object with fields: `x_best` (p x r array containing the sparse PCs),
-  `objective_value`, `feasibility_violation`, `runtime`, `variance_explained`
-  (per-PC explained variance) and `total_variance` (trace of the covariance).
-  With `type = "X"` it additionally records `inputType`, `center`, `scale`,
-  `divisor`, `nObs` and `p`.
+An object of class \code{"mspca"} (a list) with fields: \code{x_best} (p x r
+matrix of sparse PC loadings), \code{objective_value}, \code{feasibility_violation},
+\code{runtime}, \code{variance_explained} (per-PC explained variance), and
+\code{total_variance} (trace of the covariance matrix). With \code{type = "X"} it
+additionally records \code{inputType}, \code{center}, \code{scale}, \code{divisor}, \code{nObs},
+and \code{p}. Use \code{\link[=print]{print()}} to display the sparse loadings and \code{\link[=summary]{summary()}} for
+a full per-PC breakdown.
 }
 \description{
 Returns multiple sparse principal components of a dataset using an iterative
-deflation heuristic. As in the `elasticnet` package, the data is passed as a
-single argument `M` whose interpretation is set by `type`: `"Sigma"` (the
-default) treats `M` as a covariance/correlation matrix (p x p) and `"X"` treats
-`M` as a raw data matrix (n observations x p variables). With `type = "X"` the
+deflation heuristic. As in the \code{elasticnet} package, the data is passed as a
+single argument \code{M} whose interpretation is set by \code{type}: \code{"Sigma"} (the
+default) treats \code{M} as a covariance/correlation matrix (p x p) and \code{"X"} treats
+\code{M} as a raw data matrix (n observations x p variables). With \code{type = "X"} the
 algorithm operates on the data directly via the products \eqn{X^\top(X\beta)}
 and never forms the p x p matrix, which is substantially more scalable when
 \eqn{n \ll p}.
 }
 \examples{
 # From a covariance/correlation matrix (the default type):
-TestMat <- cor(datasets::mtcars)
-mspca(TestMat, 2, c(4,4))
-# Equivalent call from the raw data matrix:
-mspca(as.matrix(datasets::mtcars), r = 2, ks = c(4,4), type = "X", verbose = FALSE)
+TestMat <- cor(mtcars)
+res <- mspca(TestMat, r = 2, ks = c(4, 4), verbose = FALSE)
+print(res, TestMat)
+# Equivalent call from the raw data matrix (C need not be passed to print):
+res_X <- mspca(as.matrix(mtcars), r = 2, ks = c(4, 4), type = "X", verbose = FALSE)
+print(res_X)
 }

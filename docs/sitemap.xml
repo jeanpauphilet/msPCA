@@ -1,19 +1,19 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
-<url><loc>/404.html</loc></url>
-<url><loc>/LICENSE-text.html</loc></url>
-<url><loc>/articles/index.html</loc></url>
-<url><loc>/articles/msPCA.html</loc></url>
-<url><loc>/authors.html</loc></url>
-<url><loc>/index.html</loc></url>
-<url><loc>/news/index.html</loc></url>
-<url><loc>/plan_dual_input_api.html</loc></url>
-<url><loc>/reference/feasibility_violation_off.html</loc></url>
-<url><loc>/reference/fraction_variance_explained.html</loc></url>
-<url><loc>/reference/fraction_variance_explained_perPC.html</loc></url>
-<url><loc>/reference/index.html</loc></url>
-<url><loc>/reference/mspca.html</loc></url>
-<url><loc>/reference/print_mspca.html</loc></url>
-<url><loc>/reference/tpm.html</loc></url>
-<url><loc>/reference/variance_explained_perPC.html</loc></url>
+<url><loc>https://jeanpauphilet.github.io/msPCA/404.html</loc></url>
+<url><loc>https://jeanpauphilet.github.io/msPCA/LICENSE-text.html</loc></url>
+<url><loc>https://jeanpauphilet.github.io/msPCA/articles/index.html</loc></url>
+<url><loc>https://jeanpauphilet.github.io/msPCA/articles/msPCA.html</loc></url>
+<url><loc>https://jeanpauphilet.github.io/msPCA/authors.html</loc></url>
+<url><loc>https://jeanpauphilet.github.io/msPCA/index.html</loc></url>
+<url><loc>https://jeanpauphilet.github.io/msPCA/news/index.html</loc></url>
+<url><loc>https://jeanpauphilet.github.io/msPCA/reference/feasibility_violation_off.html</loc></url>
+<url><loc>https://jeanpauphilet.github.io/msPCA/reference/fraction_variance_explained.html</loc></url>
+<url><loc>https://jeanpauphilet.github.io/msPCA/reference/fraction_variance_explained_perPC.html</loc></url>
+<url><loc>https://jeanpauphilet.github.io/msPCA/reference/index.html</loc></url>
+<url><loc>https://jeanpauphilet.github.io/msPCA/reference/mspca.html</loc></url>
+<url><loc>https://jeanpauphilet.github.io/msPCA/reference/print.mspca.html</loc></url>
+<url><loc>https://jeanpauphilet.github.io/msPCA/reference/summary.mspca.html</loc></url>
+<url><loc>https://jeanpauphilet.github.io/msPCA/reference/tpm.html</loc></url>
+<url><loc>https://jeanpauphilet.github.io/msPCA/reference/variance_explained_perPC.html</loc></url>
 </urlset>
 

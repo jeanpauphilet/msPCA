@@ -88,8 +88,8 @@
 #' @param feasibilityConstraintType (optional) An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. Default 0.
 #' @param verbose (optional) A Boolean. Controls console output. Default TRUE.
 #' @param maxIter (optional) An integer. Maximum number of iterations of the algorithm. Default 200.
-#' @param feasibilityTolerance (optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to `feasibilityConstraintType`). Default 1e-4
-#' @param stallingTolerance (optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8
+#' @param feasibilityTolerance (optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to `feasibilityConstraintType`). Default 1e-4.
+#' @param stallingTolerance (optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8.
 #' @param timeLimitTPM (optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.
 #' @param maxRestartTPM (optional) An integer. Number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 30.
 #' @param minRestartTPM (optional) An integer. Number of random restarts of the truncated power method (inner iteration) for outer iterations >= 2. Default 20.
@@ -99,17 +99,21 @@
 #' @param checkPSD (optional, type = "Sigma") A Boolean. Verify that `M` is positive semidefinite. Default TRUE.
 #' @param symTolerance (optional, type = "Sigma") A float. Tolerance for the symmetry  check on `M`. Default 1e-8.
 #' @param psdTolerance (optional, type = "Sigma") A float. Tolerance (on the smallest eigenvalue) for the PSD check on `M`. Default 1e-8.
-#' @return An object with fields: `x_best` (p x r array containing the sparse PCs),
-#'   `objective_value`, `feasibility_violation`, `runtime`, `variance_explained`
-#'   (per-PC explained variance) and `total_variance` (trace of the covariance).
-#'   With `type = "X"` it additionally records `inputType`, `center`, `scale`,
-#'   `divisor`, `nObs` and `p`.
+#' @return An object of class `"mspca"` (a list) with fields: `x_best` (p x r
+#'   matrix of sparse PC loadings), `objective_value`, `feasibility_violation`,
+#'   `runtime`, `variance_explained` (per-PC explained variance), and
+#'   `total_variance` (trace of the covariance matrix). With `type = "X"` it
+#'   additionally records `inputType`, `center`, `scale`, `divisor`, `nObs`,
+#'   and `p`. Use [print()] to display the sparse loadings and [summary()] for
+#'   a full per-PC breakdown.
 #' @examples
 #' # From a covariance/correlation matrix (the default type):
-#' TestMat <- cor(datasets::mtcars)
-#' mspca(TestMat, 2, c(4,4))
-#' # Equivalent call from the raw data matrix:
-#' mspca(as.matrix(datasets::mtcars), r = 2, ks = c(4,4), type = "X", verbose = FALSE)
+#' TestMat <- cor(mtcars)
+#' res <- mspca(TestMat, r = 2, ks = c(4, 4), verbose = FALSE)
+#' print(res, TestMat)
+#' # Equivalent call from the raw data matrix (C need not be passed to print):
+#' res_X <- mspca(as.matrix(mtcars), r = 2, ks = c(4, 4), type = "X", verbose = FALSE)
+#' print(res_X)
 mspca <- function(M, r, ks, type = c("Sigma", "X"),
                   feasibilityConstraintType = 0, verbose = TRUE, maxIter = 200,
                   feasibilityTolerance = 1e-4, stallingTolerance = 1e-8,
@@ -139,6 +143,7 @@ mspca <- function(M, r, ks, type = c("Sigma", "X"),
     res$nObs <- nrow(M)
     res$p <- ncol(M)
   }
+  class(res) <- "mspca"
   res
 }
 
@@ -164,12 +169,15 @@ mspca <- function(M, r, ks, type = c("Sigma", "X"),
 #' @param checkPSD (optional, type = "Sigma") A Boolean. Verify `M` is PSD. Default TRUE.
 #' @param symTolerance (optional, type = "Sigma") A float. Symmetry-check tolerance. Default 1e-8.
 #' @param psdTolerance (optional, type = "Sigma") A float. PSD-check tolerance. Default 1e-8.
-#' @return An object with fields: `x_best` (p x 1 array containing the sparse PC),
-#'   `objective_value`, `runtime`. With `type = "X"` it additionally records
-#'   `inputType`, `center`, `scale`, `divisor`, `nObs` and `p`.
-#' @references Yuan, X. T., & Zhang, T. (2013). Truncated power method for sparse eigenvalue problems. The Journal of Machine Learning Research, 14(1), 899-925.
+#' @return An object of class `"tpm"` (a list) with fields: `x_best` (p x 1
+#'   matrix containing the sparse PC loading), `objective_value`, and `runtime`.
+#'   With `type = "X"` it additionally records `inputType`, `center`, `scale`,
+#'   `divisor`, `nObs`, and `p`.
+#' @references Yuan, X. T., & Zhang, T. (2013). Truncated power method for
+#'   sparse eigenvalue problems. \emph{The Journal of Machine Learning
+#'   Research}, \bold{14}(1), 899--925.
 #' @examples
-#' TestMat <- cor(datasets::mtcars)
+#' TestMat <- cor(mtcars)
 #' tpm(TestMat, 4)
 tpm <- function(M, k, type = c("Sigma", "X"),
                 maxIter = 200, verbose = TRUE, timeLimit = 10,
@@ -192,6 +200,7 @@ tpm <- function(M, k, type = c("Sigma", "X"),
     res$nObs <- nrow(M)
     res$p <- ncol(M)
   }
+  class(res) <- "tpm"
   res
 }
 
@@ -226,8 +235,8 @@ fraction_variance_explained_perPC <- function(C, U){
 #' @param U A matrix. The matrix containing the r PCs (p x r).
 #' @return A float.
 #' @examples
-#' TestMat <- cor(datasets::mtcars)
-#' mspcares <- mspca(TestMat, 2, c(4,4), type = "Sigma")
+#' TestMat <- cor(mtcars)
+#' mspcares <- mspca(TestMat, r = 2, ks = c(4, 4), verbose = FALSE)
 #' fraction_variance_explained(TestMat, mspcares$x_best)
 fraction_variance_explained <- function(C, U){
   sum(U * (C %*% U)) / sum(diag(C))
@@ -245,8 +254,8 @@ fraction_variance_explained <- function(C, U){
 #' @param feasibilityConstraintType An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints.
 #' @return A float.
 #' @examples
-#' TestMat <- cor(datasets::mtcars)
-#' mspcares <- mspca(TestMat, 2, c(4,4), type = "Sigma")
+#' TestMat <- cor(mtcars)
+#' mspcares <- mspca(TestMat, r = 2, ks = c(4, 4), verbose = FALSE)
 #' feasibility_violation_off(TestMat, mspcares$x_best, 0)
 feasibility_violation_off <- function(C, U, feasibilityConstraintType){
   M = if (feasibilityConstraintType == 0) {
@@ -257,48 +266,182 @@ feasibility_violation_off <- function(C, U, feasibilityConstraintType){
   sum(abs(M[upper.tri(M, diag=FALSE)]))
 }
 
-#' Print msPCA Output
+#' Print an mspca Object
 #'
-#' Displays the output of the msPCA algorithm. When the model was fit from a
-#' covariance/correlation matrix (`type = "Sigma"`), pass that matrix as `C`; when
-#' it was fit from a raw data matrix (`type = "X"`), `C` can be omitted, in which
-#' case the explained-variance figures stored in the result object are used.
-#' @param sol_object A list. The output of the mspca or tpm function.
-#' @param C (optional) A matrix. The correlation or covariance matrix (p x p). May
-#'   be omitted when `sol_object` already carries `variance_explained` /
-#'   `total_variance` (i.e. a `type = "X"` result).
-#' @param digits An integer. Number of digits used for rounded display. Default 3.
-#' @return Invisibly, the rounded sparse loading matrix restricted to the union
-#'   of non-zero loadings.
+#' S3 print method for objects of class `"mspca"` returned by [mspca()].
+#' Displays the sparse loading matrix (restricted to the union of non-zero
+#' rows) together with the percentage of variance explained and the number of
+#' non-zero loadings per component.
+#'
+#' When the model was fit from a covariance/correlation matrix
+#' (`type = "Sigma"`), pass that matrix as `C` so that per-PC variance figures
+#' can be computed; when it was fit from a raw data matrix (`type = "X"`), `C`
+#' may be omitted because the figures are stored inside the object.
+#'
+#' @param x An object of class `"mspca"`, as returned by [mspca()].
+#' @param C (optional) A numeric matrix (p x p). The covariance or correlation
+#'   matrix used when fitting. May be omitted for `type = "X"` results.
+#' @param digits An integer or `NULL`. Number of significant digits for
+#'   display. When `NULL` (the default), \code{getOption("digits")} is used,
+#'   so the output respects \code{options(digits = ...)}.
+#' @param ... Further arguments required by the `print()` generic; not used by
+#'   this method.
+#' @return Invisibly returns `x`.
+#' @method print mspca
+#' @export
 #' @examples
-#' TestMat <- cor(datasets::mtcars)
-#' mspcares <- mspca(TestMat, 2, c(4,4), type = "Sigma")
-#' print_mspca(mspcares, TestMat, digits = 3)
-print_mspca <- function(sol_object, C = NULL, digits = 3){
-  cat("\nmsPCA solution:\n")
-  v <- sol_object$x_best
-  r <- ncol(v)
-  cat(paste(r,"sparse PCs",sep=" "), "\n")
+#' TestMat <- cor(mtcars)
+#' res <- mspca(TestMat, r = 2, ks = c(4, 4), verbose = FALSE)
+#' print(res, TestMat)
+print.mspca <- function(x, C = NULL, digits = NULL, ...) {
+  dg <- if (is.null(digits)) getOption("digits") else digits
+  v  <- x$x_best
+  r  <- ncol(v)
 
   if (!is.null(C)) {
     fve <- fraction_variance_explained_perPC(C, v)
-    rn <- row.names(C)
-  } else if (!is.null(sol_object$variance_explained) && !is.null(sol_object$total_variance)) {
-    fve <- sol_object$variance_explained / sol_object$total_variance
-    rn <- row.names(v)
+    rn  <- rownames(C)
+  } else if (!is.null(x$variance_explained) && !is.null(x$total_variance)) {
+    fve <- x$variance_explained / x$total_variance
+    rn  <- rownames(v)
   } else {
-    stop("Provide the covariance/correlation matrix `C`, or a result object that contains `variance_explained` and `total_variance`.", call. = FALSE)
+    stop(paste("Provide the covariance/correlation matrix `C`,",
+               "or a result object that contains `variance_explained`",
+               "and `total_variance`."), call. = FALSE)
   }
+  rownames(v) <- if (!is.null(rn)) rn else seq_len(nrow(v))
 
-  cat("Pct. of variance explained:", format(round(fve, digits) * 100), "\n")
+  cat("\nmsPCA solution:", r, "sparse PCs\n")
+  cat("Pct. variance explained:", format(fve * 100, digits = dg), "\n")
+  cat("Non-zero loadings per PC:", colSums(v != 0), "\n")
+  cat("\nSparse PCs\n")
+  print(v[rowSums(v != 0) > 0, , drop = FALSE], digits = dg)
+  invisible(x)
+}
 
-  k <- colSums(v != 0)
-  if (!is.null(rn)) row.names(v) <- rn
+#' @rdname print.mspca
+#' @export
+print_mspca <- function(sol_object, C = NULL, digits = NULL) {
+  .Deprecated("print")
+  print.mspca(sol_object, C = C, digits = digits)
+}
 
-  union_of_supports <- rowSums(v != 0) > 0
+#' Summarize an mspca Object
+#'
+#' S3 summary method for objects of class `"mspca"` returned by [mspca()].
+#' Returns (and prints) a per-PC summary table (number of non-zero loadings,
+#' variance explained, FVE, and cumulative FVE) together with the pairwise
+#' feasibility violation matrix and the total solver runtime.
+#'
+#' @param object An object of class `"mspca"`, as returned by [mspca()].
+#' @param C (optional) A numeric matrix (p x p). The covariance or correlation
+#'   matrix used when fitting. May be omitted for `type = "X"` results, where
+#'   the figures are stored inside the object.
+#' @param feasibilityConstraintType An integer. Type of constraint used to
+#'   compute the feasibility violation reported in the summary. `0` (default)
+#'   for orthogonality; `1` for zero pairwise correlation.
+#' @param digits An integer or `NULL`. Number of significant digits for
+#'   display. When `NULL` (the default), \code{getOption("digits")} is used.
+#' @param ... Further arguments required by the `summary()` generic; not used
+#'   by this method.
+#' @return Invisibly returns a list of class `"summary.mspca"` with fields:
+#'   \describe{
+#'     \item{`table`}{Data frame with columns `PC`, `nonzero`, `variance`,
+#'       `fve`, and `cumulative_fve`.}
+#'     \item{`feasibility_mat`}{r x r matrix of pairwise feasibility violations
+#'       (\eqn{|u_i^\top u_j|} or \eqn{|u_i^\top C u_j|}). Diagonal and lower
+#'       triangle are `NA`.}
+#'     \item{`feasibility`}{Scalar total feasibility violation (sum of the
+#'       upper triangle of `feasibility_mat`).}
+#'     \item{`runtime`}{Solver runtime in seconds (if stored in the object).}
+#'     \item{`r`}{Number of sparse PCs.}
+#'     \item{`inputType`}{`"Sigma"` or `"X"`.}
+#'   }
+#' @method summary mspca
+#' @export
+#' @examples
+#' TestMat <- cor(mtcars)
+#' res <- mspca(TestMat, r = 2, ks = c(4, 4), verbose = FALSE)
+#' summary(res, TestMat)
+summary.mspca <- function(object, C = NULL,
+                          feasibilityConstraintType = 0L,
+                          digits = NULL, ...) {
+  dg <- if (is.null(digits)) getOption("digits") else digits
+  v  <- object$x_best
+  r  <- ncol(v)
 
-  cat("Num. of non-zero loadings : ", k, "\n")
-  cat("Sparse PCs \n")
-  print(round(v[union_of_supports, , drop = FALSE], digits))
+  ## -- Variance figures --
+  if (!is.null(C)) {
+    var_pc    <- variance_explained_perPC(C, v)
+    total_var <- sum(diag(C))
+  } else if (!is.null(object$variance_explained) && !is.null(object$total_variance)) {
+    var_pc    <- object$variance_explained
+    total_var <- object$total_variance
+  } else {
+    stop(paste("Provide the covariance/correlation matrix `C`,",
+               "or a result object that contains `variance_explained`",
+               "and `total_variance`."), call. = FALSE)
+  }
+  fve     <- var_pc / total_var
+  cum_fve <- cumsum(fve)
 
+  ## -- Pairwise feasibility matrix (r x r, upper triangle meaningful) --
+  pc_labels <- paste0("PC", seq_len(r))
+  if (r >= 2L) {
+    if (feasibilityConstraintType == 0L) {
+      G <- crossprod(v)
+    } else {
+      G <- crossprod(v, C %*% v)
+    }
+    feas_mat <- abs(G)
+    diag(feas_mat) <- NA_real_         # diagonal is trivially 1; suppress it
+    feas_mat[lower.tri(feas_mat)] <- NA_real_
+  } else {
+    feas_mat <- matrix(NA_real_, 1L, 1L)
+  }
+  dimnames(feas_mat) <- list(pc_labels, pc_labels)
+
+  tbl <- data.frame(
+    PC             = pc_labels,
+    nonzero        = colSums(v != 0),
+    variance       = var_pc,
+    fve            = fve,
+    cumulative_fve = cum_fve,
+    row.names      = NULL
+  )
+
+  total_feas <- feasibility_violation_off(
+    if (!is.null(C)) C else diag(nrow(v)),
+    v, feasibilityConstraintType)
+
+  out <- structure(
+    list(
+      table            = tbl,
+      feasibility_mat  = feas_mat,
+      feasibility      = total_feas,
+      runtime          = object$runtime,
+      r                = r,
+      inputType        = object$inputType
+    ),
+    class = "summary.mspca"
+  )
+
+  ## -- Print --
+  cat("\nmsPCA summary:", r, "sparse PC(s)\n")
+  if (!is.null(object$inputType))
+    cat("Input type   :", object$inputType, "\n")
+  if (!is.null(object$runtime))
+    cat("Runtime (s)  :", format(object$runtime, digits = dg), "\n")
+  cat("\nPer-component statistics:\n")
+  fmt_tbl                <- tbl
+  fmt_tbl$variance       <- format(tbl$variance,       digits = dg)
+  fmt_tbl$fve            <- format(tbl$fve,            digits = dg)
+  fmt_tbl$cumulative_fve <- format(tbl$cumulative_fve, digits = dg)
+  print(fmt_tbl, row.names = FALSE)
+  if (r >= 2L) {
+    cat("\nPairwise feasibility violations (upper triangle):\n")
+    print(feas_mat, digits = dg, na.print = ".")
+    cat("Total:", format(total_feas, digits = dg, scientific = TRUE), "\n")
+  }
+  invisible(out)
 }

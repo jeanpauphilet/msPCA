@@ -19,12 +19,12 @@ A float.
 \description{
 Computes the feasibility violation defined as
 \eqn{\sum_{t > s} |u_{t}^\top u_{s}|} if orthogonality constraints are
-enforced (`feasibilityConstraintType = 0`) and
+enforced (\code{feasibilityConstraintType = 0}) and
 \eqn{\sum_{t > s} |u_{t}^\top C u_{s}|} if zero-correlation constraints are
-enforced (`feasibilityConstraintType = 1`).
+enforced (\code{feasibilityConstraintType = 1}).
 }
 \examples{
-TestMat <- cor(datasets::mtcars)
-mspcares <- mspca(TestMat, 2, c(4,4), type = "Sigma")
+TestMat <- cor(mtcars)
+mspcares <- mspca(TestMat, r = 2, ks = c(4, 4), verbose = FALSE)
 feasibility_violation_off(TestMat, mspcares$x_best, 0)
 }

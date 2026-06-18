@@ -103,9 +103,9 @@ See `vignette("msPCA")` for a worked example built from the same `mtcars` workfl
 
 The script `test/notebook_synthetic.R` compares `msPCA` with `elasticnet::spca()` on synthetic data across sample sizes and exports the figures below.
 
-![Orthogonality violation on synthetic data](test/synthetic_orthogonality_violation.png)
+![Orthogonality violation on synthetic data](man/figures/synthetic_orthogonality_violation.png)
 
-![Out-of-sample fraction of variance explained on synthetic data](test/synthetic_variance_explained.png)
+![Out-of-sample fraction of variance explained on synthetic data](man/figures/synthetic_variance_explained.png)
 
 To regenerate these files, run `test/notebook_synthetic.R` from the repository root.
 

@@ -13,111 +13,126 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## Overview
 
-This vignette shows the basic workflow of `msPCA` on the built-in `mtcars` dataset.
-We compute two sparse principal components, inspect the solution, and compare the sparse result with dense PCA.
+This vignette shows the basic workflow of `msPCA` on the built-in `mtcars`
+dataset. We compute sparse principal components, inspect the solution with the
+`print()` and `summary()` S3 methods, and compare the sparse result with dense
+PCA.
 
 ## Install and load
 
 Install the package directly from CRAN.
+
 ```{r install, eval=FALSE}
 install.packages("msPCA")
 ```
-You can then load the package as usual.
+
 ```{r load}
 library(msPCA)
 ```
 
 ## Fit two sparse PCs
 
-We work with the correlation matrix of `mtcars` and ask for two 4-sparse principal components under the default orthogonality constraint.
+We work with the correlation matrix of `mtcars` and ask for two 4-sparse
+principal components under the default orthogonality constraint.
 
-```{r}
-Sigma <- cor(datasets::mtcars)
+```{r fit}
+Sigma <- cor(mtcars)
 
 set.seed(42)
-res <- mspca(Sigma, r = 2, ks = c(4, 4), type = "Sigma", feasibilityConstraintType = 0, verbose = FALSE)
-print_mspca(res, Sigma)
+res <- mspca(Sigma, r = 2, ks = c(4, 4), verbose = FALSE)
+```
+
+`print()` shows the sparse loading matrix restricted to the union of all
+active variables, together with the percentage of variance explained and
+the number of non-zero loadings per component.
+
+```{r print}
+print(res, Sigma)
+```
+
+`summary()` gives a fuller breakdown: a per-PC table of variance explained
+and sparsity, followed by the pairwise feasibility violation matrix so you
+can see at a glance how well the orthogonality constraint is satisfied
+between each pair of components.
+
+```{r summary}
+summary(res, Sigma)
 ```
 
 ## Working from the raw data matrix
 
 By default (`type = "Sigma"`) the first argument is a covariance/correlation
-matrix; set `type = "X"` to pass the raw data matrix instead (rows are
-observations, columns are variables). With `type = "X"`, `msPCA` applies the
-algorithm to the data directly: each product `Sigma %*% beta` is computed as
-`t(X) %*% (X %*% beta) / (n - 1)`, so the `p x p` matrix is never formed. This is
-mathematically equivalent to the matrix-input call but much more scalable when
-the number of variables `p` greatly exceeds the number of observations `n` (it
-avoids the `O(np^2)` cost of building `Sigma` and turns each iteration's
-matrix–vector product from `O(p^2)` into `O(np)`).
+matrix. Set `type = "X"` to pass the raw data matrix instead (rows are
+observations, columns are variables). With `type = "X"`, msPCA applies the
+algorithm to the data directly: each matrix–vector product
+$\Sigma \beta = X^\top (X \beta) / (n - 1)$ is computed without ever forming
+the $p \times p$ matrix. This is mathematically equivalent but more scalable
+when $p \gg n$.
 
 The preprocessing arguments control which matrix is implicitly used:
 
-- `center` (default `TRUE`) subtracts the column means,
-- `scale` (default `FALSE`) divides columns by their standard deviation; set it to
-  `TRUE` to operate on the correlation matrix,
-- `divisor` chooses the covariance normalization, `"n-1"` (default, matching
-  `cov`/`cor`) or `"n"`.
+- `center` (default `TRUE`) subtracts column means.
+- `scale` (default `FALSE`) divides by column standard deviations; set to
+  `TRUE` to operate on the correlation matrix.
+- `divisor` selects the normalization: `"n-1"` (default, matching `cov`/`cor`)
+  or `"n"`.
 
 With `scale = TRUE` and `divisor = "n-1"`, the raw-data call reproduces the
-correlation-matrix result above.
+correlation-matrix result above. When `type = "X"`, the variance figures are
+stored inside the object, so `C` need not be passed to `print()` or
+`summary()`.
 
-```{r}
-X <- as.matrix(datasets::mtcars)
+```{r fit_X}
+X <- as.matrix(mtcars)
 
 set.seed(42)
 res_X <- mspca(X, r = 2, ks = c(4, 4), type = "X", scale = TRUE, verbose = FALSE)
-
-# type = "X" results carry their own variance summary, so print_mspca() needs no matrix.
-print_mspca(res_X)
-
-# Same objective as the correlation-matrix call:
-c(matrix_input = res$objective_value, data_input = res_X$objective_value)
+print(res_X)
 ```
 
-The same dual input is available for the single-component `tpm()`.
+The same dual interface is available for the single-component `tpm()`.
 
 ## Orthogonality versus zero correlation
 
-Sparse PCA typically requires a constraint to avoid redundancy between the PCs. Traditionally, this is done by enforcing orthogonality of the loading vectors, which is the default in `mspca`. Another notion of non-redundancy is to enforce zero pairwise correlation between the PCs.
-The package allows for both options, and the choice can lead to different solutions when the variables are strongly correlated.
-`feasibilityConstraintType = 0` (default) enforces orthogonality of the loading vectors.
-`feasibilityConstraintType = 1` instead enforces zero pairwise correlation between the resulting components.
+Sparse PCA requires a constraint to prevent redundancy between components. The
+default (`feasibilityConstraintType = 0`) enforces orthogonality of the loading
+vectors. Setting `feasibilityConstraintType = 1` instead enforces zero pairwise
+correlation between the resulting scores. The choice can lead to different
+solutions when the variables are strongly correlated.
 
-```{r}
-res_corr <- mspca(Sigma, r = 2, ks = c(4, 4), type = "Sigma", feasibilityConstraintType = 1, verbose = FALSE)
-print_mspca(res_corr, Sigma)
+```{r fit_corr}
+set.seed(42)
+res_corr <- mspca(Sigma, r = 2, ks = c(4, 4),
+                  feasibilityConstraintType = 1, verbose = FALSE)
+print(res_corr, Sigma)
+summary(res_corr, Sigma, feasibilityConstraintType = 1)
 ```
 
 ## Diagnostics
 
-The package provides helper functions for checking feasibility and summarizing variance explained.
-Below, we report the same diagnostic checks for each fitted solution.
+The utility functions `feasibility_violation_off()` and
+`fraction_variance_explained()` can be called directly for custom reporting or
+for comparing solutions across methods.
 
-```{r}
-cat("Diagnostics for res (feasibilityConstraintType = 0)\n")
+```{r diagnostics}
+# Orthogonality and zero-correlation violations for the default solution
 feasibility_violation_off(Sigma, res$x_best, feasibilityConstraintType = 0)
 feasibility_violation_off(Sigma, res$x_best, feasibilityConstraintType = 1)
+
+# Total and per-PC fraction of variance explained
 fraction_variance_explained(Sigma, res$x_best)
 fraction_variance_explained_perPC(Sigma, res$x_best)
-
-cat("\nDiagnostics for res_corr (feasibilityConstraintType = 1)\n")
-feasibility_violation_off(Sigma, res_corr$x_best, feasibilityConstraintType = 0)
-feasibility_violation_off(Sigma, res_corr$x_best, feasibilityConstraintType = 1)
-fraction_variance_explained(Sigma, res_corr$x_best)
-fraction_variance_explained_perPC(Sigma, res_corr$x_best)
 ```
 
 ## Comparison with dense PCA
 
-For reference, the first two dense principal components explain more variance, but they are not sparse.
+The first two dense principal components explain more variance, but all
+variables receive non-zero loadings.
 
-```{r}
-pca_res <- prcomp(datasets::mtcars, scale. = TRUE)
+```{r dense_pca}
+pca_res <- prcomp(mtcars, scale. = TRUE)
 fraction_variance_explained(Sigma, pca_res$rotation[, 1:2])
 ```
 
-## Interpretation
-
-Sparse PCA typically trades some explained variance for a much more interpretable loading pattern.
-For a quick summary of the fitted components, `print_mspca()` is usually the most useful first diagnostic.
+Sparse PCA trades a small reduction in explained variance for a much more
+interpretable loading pattern.

@@ -20,14 +20,14 @@ tpm(
 )
 }
 \arguments{
-\item{M}{A matrix. The data, interpreted according to `type`: a covariance/
-correlation matrix (p x p) when `type = "Sigma"`, or a raw data matrix
-(n x p) when `type = "X"`.}
+\item{M}{A matrix. The data, interpreted according to \code{type}: a covariance/
+correlation matrix (p x p) when \code{type = "Sigma"}, or a raw data matrix
+(n x p) when \code{type = "X"}.}
 
 \item{k}{An integer. Target sparsity of the PC.}
 
-\item{type}{(optional) Either "Sigma" (default; `M` is a covariance/correlation
-matrix) or "X" (`M` is a raw data matrix).}
+\item{type}{(optional) Either "Sigma" (default; \code{M} is a covariance/correlation
+matrix) or "X" (\code{M} is a raw data matrix).}
 
 \item{maxIter}{(optional) An integer. Maximum number of iterations of the algorithm. Default 200.}
 
@@ -35,34 +35,37 @@ matrix) or "X" (`M` is a raw data matrix).}
 
 \item{timeLimit}{(optional) An integer. Maximum time in seconds. Default 10.}
 
-\item{center}{(optional, type = "X") A Boolean. Center the columns of `M`. Default TRUE.}
+\item{center}{(optional, type = "X") A Boolean. Center the columns of \code{M}. Default TRUE.}
 
-\item{scale}{(optional, type = "X") A Boolean. Scale the columns of `M` to unit variance. Default FALSE.}
+\item{scale}{(optional, type = "X") A Boolean. Scale the columns of \code{M} to unit variance. Default FALSE.}
 
 \item{divisor}{(optional, type = "X") Either "n-1" (default) or "n".}
 
-\item{checkPSD}{(optional, type = "Sigma") A Boolean. Verify `M` is PSD. Default TRUE.}
+\item{checkPSD}{(optional, type = "Sigma") A Boolean. Verify \code{M} is PSD. Default TRUE.}
 
 \item{symTolerance}{(optional, type = "Sigma") A float. Symmetry-check tolerance. Default 1e-8.}
 
 \item{psdTolerance}{(optional, type = "Sigma") A float. PSD-check tolerance. Default 1e-8.}
 }
 \value{
-An object with fields: `x_best` (p x 1 array containing the sparse PC),
-  `objective_value`, `runtime`. With `type = "X"` it additionally records
-  `inputType`, `center`, `scale`, `divisor`, `nObs` and `p`.
+An object of class \code{"tpm"} (a list) with fields: \code{x_best} (p x 1
+matrix containing the sparse PC loading), \code{objective_value}, and \code{runtime}.
+With \code{type = "X"} it additionally records \code{inputType}, \code{center}, \code{scale},
+\code{divisor}, \code{nObs}, and \code{p}.
 }
 \description{
 Returns the leading sparse principal component of a dataset using the truncated
-power method. As in [mspca()], the data is passed as a single argument `M` whose
-interpretation is set by `type`: `"Sigma"` (default) for a covariance/correlation
-matrix (p x p) or `"X"` for a raw data matrix (n x p). See [mspca()] for the
+power method. As in \code{\link[=mspca]{mspca()}}, the data is passed as a single argument \code{M} whose
+interpretation is set by \code{type}: \code{"Sigma"} (default) for a covariance/correlation
+matrix (p x p) or \code{"X"} for a raw data matrix (n x p). See \code{\link[=mspca]{mspca()}} for the
 raw-data preprocessing controls.
 }
 \examples{
-TestMat <- cor(datasets::mtcars)
+TestMat <- cor(mtcars)
 tpm(TestMat, 4)
 }
 \references{
-Yuan, X. T., & Zhang, T. (2013). Truncated power method for sparse eigenvalue problems. The Journal of Machine Learning Research, 14(1), 899-925.
+Yuan, X. T., & Zhang, T. (2013). Truncated power method for
+sparse eigenvalue problems. \emph{The Journal of Machine Learning
+Research}, \bold{14}(1), 899--925.
 }

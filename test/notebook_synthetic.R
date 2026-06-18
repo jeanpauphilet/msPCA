@@ -63,7 +63,7 @@ for (iter in 1:5){ #Number of replications
 
     #msPCA algorithm
     set.seed(42)
-    mspca_results <- msPCA::mspca(S, 2, c(k,k), verbose=FALSE)
+    mspca_results <- msPCA::mspca(S, r, rep(k,r), verbose=FALSE)
     resdf[icol,] <- list(n,"msPCA",
                    sum(abs(mspca_results$x_best) > 0), #Sparsity level
                    accuracy(xtrue, mspca_results$x_best), #Support recovery accuracy

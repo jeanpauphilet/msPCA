@@ -12,7 +12,7 @@ fraction_variance_explained_perPC(C, U)
 \item{U}{A matrix. The matrix containing the r PCs (p x r).}
 }
 \value{
-A numeric vector of length `ncol(U)`.
+A numeric vector of length \code{ncol(U)}.
 }
 \description{
 Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by each PC.

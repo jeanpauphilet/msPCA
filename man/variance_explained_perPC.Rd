@@ -12,7 +12,7 @@ variance_explained_perPC(C, U)
 \item{U}{A matrix. The matrix containing the r PCs (p x r).}
 }
 \value{
-A numeric vector of length `ncol(U)`.
+A numeric vector of length \code{ncol(U)}.
 }
 \description{
 Computes the variance explained by each PC.
