@@ -173,12 +173,12 @@ citation("msPCA")
 Reference paper:
 
 ```bibtex
-@article{corywright_pauphilet_2026_mspca,
+@article{cory2026sparse,
   title   = {Sparse PCA with Multiple Principal Components},
   author  = {Cory-Wright, Ryan and Pauphilet, Jean},
   year    = {2026},
-  journal = {arXiv preprint},
-  doi     = {10.48550/arXiv.2209.14790}
+  journal = {Operations Research},
+  doi     = {10.1287/opre.2023.0598}
 }
 ```
 

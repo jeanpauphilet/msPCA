@@ -13,3 +13,5 @@
 ^_pkgdown\.yml$
 ^plan_dual_input_api\.md$
 ^msPCA\.worktrees$
+^check_output\.log$
+^SUBMISSION_CHECKLIST\.md$

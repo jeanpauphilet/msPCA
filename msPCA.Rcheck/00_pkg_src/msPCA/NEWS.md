@@ -5,7 +5,10 @@
 * Added preprocessing controls for `type = "X"`: `center`, `scale` (covariance vs correlation), and `divisor` ("n-1" or "n").
 * Added validation for both input modes: a `Sigma` input is checked for squareness, symmetry and positive semidefiniteness (`checkPSD`, `symTolerance`, `psdTolerance`); an `X` input is checked for finiteness, dimensions and (when scaling) zero-variance columns.
 * `mspca()` results now include `variance_explained` (per-PC) and `total_variance`; `X`-mode results also record `inputType`, `center`, `scale`, `divisor`, `nObs` and `p`.
-* `mspca()` and `tpm()` now return S3 objects of class `"mspca"` and `"tpm"` respectively, enabling use of standard R generics. Created methods `print.mspca()` (replacing `print_mspca()`, which is now deprecated), and `summary.mspca()`.
+* `mspca()` and `tpm()` now return S3 objects of class `"mspca"` and `"tpm"` respectively, enabling use of standard R generics.
+* Added `print.mspca()`: S3 print method displaying the sparse loading matrix restricted to the union of active variables, the percentage of variance explained per PC, and the number of non-zero loadings. Replaces the removed `print_mspca()`.
+* Added `summary.mspca()`: produces a per-PC table of sparsity, variance explained, FVE, and cumulative FVE, followed by the full pairwise feasibility violation matrix.
+* Updated citation
 
 # msPCA 0.4.1
 

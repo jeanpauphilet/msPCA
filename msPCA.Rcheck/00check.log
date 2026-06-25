@@ -6,7 +6,7 @@
     GNU Fortran (GCC) 14.2.0
 * running under: macOS Sonoma 14.8.5
 * using session charset: UTF-8
-* current time: 2026-06-25 14:53:04 UTC
+* current time: 2026-06-25 16:05:55 UTC
 * using option ‘--as-cran’
 * checking for file ‘msPCA/DESCRIPTION’ ... OK
 * checking extension type ... Package
@@ -22,7 +22,7 @@
 * checking for portable file names ... OK
 * checking for sufficient/correct file permissions ... OK
 * checking serialization versions ... OK
-* checking whether package ‘msPCA’ can be installed ... [13s/14s] OK
+* checking whether package ‘msPCA’ can be installed ... [14s/17s] OK
 * used C++ compiler: ‘Apple clang version 16.0.0 (clang-1600.0.26.6)’
 * used SDK: ‘MacOSX15.2.sdk’
 * checking C++ specification ... INFO
