@@ -13,6 +13,7 @@ This update includes API and documentation improvements, including raw-data inpu
 * Added S3 methods `print.mspca()` and `summary.mspca()`; removed `print_mspca()`.
 * Added `variance_explained` and `total_variance` in `mspca()` outputs.
 * Added a worked vignette and refreshed package documentation.
+* Updated citation with journal publication DOI.
 
 ## Test environments
 
