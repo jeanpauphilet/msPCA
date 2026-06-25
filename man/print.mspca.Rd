@@ -5,8 +5,6 @@
 \title{Print an mspca Object}
 \usage{
 \method{print}{mspca}(x, C = NULL, digits = NULL, ...)
-
-print_mspca(x, C = NULL, digits = NULL)
 }
 \arguments{
 \item{x}{An object of class \code{"mspca"}, as returned by \code{\link[=mspca]{mspca()}}.}

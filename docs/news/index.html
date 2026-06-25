@@ -42,7 +42,9 @@
 <li>
 <code><a href="../reference/mspca.html">mspca()</a></code> results now include <code>variance_explained</code> (per-PC) and <code>total_variance</code>; <code>X</code>-mode results also record <code>inputType</code>, <code>center</code>, <code>scale</code>, <code>divisor</code>, <code>nObs</code> and <code>p</code>.</li>
 <li>
-<code><a href="../reference/mspca.html">mspca()</a></code> and <code><a href="../reference/tpm.html">tpm()</a></code> now return S3 objects of class <code>"mspca"</code> and <code>"tpm"</code> respectively, enabling use of standard R generics. Created methods <code><a href="../reference/print.mspca.html">print.mspca()</a></code> (replacing <code><a href="../reference/print.mspca.html">print_mspca()</a></code>, which is now deprecated), and <code><a href="../reference/summary.mspca.html">summary.mspca()</a></code>.</li>
+<code><a href="../reference/mspca.html">mspca()</a></code> and <code><a href="../reference/tpm.html">tpm()</a></code> now return S3 objects of class <code>"mspca"</code> and <code>"tpm"</code> respectively, enabling use of standard R generics.</li>
+<li>Added <code><a href="../reference/print.mspca.html">print.mspca()</a></code>: S3 print method displaying the sparse loading matrix restricted to the union of active variables, the percentage of variance explained per PC, and the number of non-zero loadings. Replaces the removed <code>print_mspca()</code>.</li>
+<li>Added <code><a href="../reference/summary.mspca.html">summary.mspca()</a></code>: produces a per-PC table of sparsity, variance explained, FVE, and cumulative FVE, followed by the full pairwise feasibility violation matrix.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.1" id="mspca-041">msPCA 0.4.1<a class="anchor" aria-label="anchor" href="#mspca-041"></a></h2><p class="text-muted">CRAN release: 2026-06-12</p>
