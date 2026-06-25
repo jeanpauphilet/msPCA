@@ -1,30 +1,40 @@
 ## R CMD check results
 
-0 errors | 0 warnings | 2 notes
+0 errors | 0 warnings | 1 note
 
-This update includes API and documentation improvements, including raw-data input support and S3 print/summary methods for msPCA objects.
+## Summary of changes
 
-## Changes in this version
+Version 0.5.0 includes significant API improvements and additional S3 methods:
 
 * Added dual input mode for `mspca()` and `tpm()`:
-	- `type = "Sigma"` for covariance/correlation matrices
-	- `type = "X"` for raw data matrices
-* Added raw-data preprocessing controls (`center`, `scale`, `divisor`) and validation checks.
-* Added S3 methods `print.mspca()` and `summary.mspca()`; removed `print_mspca()`.
-* Added `variance_explained` and `total_variance` in `mspca()` outputs.
-* Added a worked vignette and refreshed package documentation.
-* Updated citation with journal publication DOI.
+    - `type = "Sigma"` for covariance/correlation matrices (default, preserves backward compatibility)
+    - `type = "X"` for raw data matrices with O(np) complexity
+* Added raw-data preprocessing controls: `center`, `scale`, `divisor`, and comprehensive validation
+* Added S3 classes and methods: `print.mspca()` and `summary.mspca()`
+* Added `variance_explained` and `total_variance` to output
+* Implemented covariance operator abstraction for scalability
+* Updated citation with journal publication DOI: https://doi.org/10.1287/opre.2023.0598
+* Added comprehensive vignette with worked example
 
 ## Test environments
 
-* local macOS Sonoma 14.8.5, R 4.6.0
-* local macOS Sonoma 14.8.5, R CMD build + R CMD check --as-cran (source tarball)
+* macOS Sonoma 14.8.5, R 4.6.0 (local)
+* R CMD check --as-cran passed locally
 
 ## Notes
 
-* CRAN incoming feasibility note:
-	- Days since last update: 6
-	- This is an expected resubmission timing note.
-* HTML/manual notes are environment/tooling-related on the local machine:
-	- HTML validation skipped because system `tidy` is not recent enough.
-	- Math rendering check skipped because package `V8` is unavailable locally.
+The single NOTE concerns HTML validation and math rendering tools:
+- `Skipping checking HTML validation: 'tidy' doesn't look like recent enough HTML Tidy.`
+- `Skipping checking math rendering: package 'V8' unavailable`
+
+These are environment-specific limitations on the local machine and do not indicate issues with the package itself. The package builds successfully with `devtools::build()` and passes all R CMD check tests.
+
+## Technical terms in spell check
+
+The spell check output includes technical domain-specific terms and abbreviations that are correct:
+- Acronyms: TPM (Truncated Power Method), TPW (old acronym), PSD (Positive Semidefinite), FVE (Fraction of Variance Explained)
+- Mathematical terms: decorrelation, semidefiniteness, uncorrelatedness, interpretability, scalability
+- Publication references: doi, opre (Operations Research journal)
+- Package/function names: mspca, roxygen, mtcars, Zhang (author)
+
+All are appropriate in context.
