@@ -33,7 +33,7 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.5.0" id="mspca-050">msPCA 0.5.0<a class="anchor" aria-label="anchor" href="#mspca-050"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.5.0" id="mspca-050">msPCA 0.5.0<a class="anchor" aria-label="anchor" href="#mspca-050"></a></h2><p class="text-muted">CRAN release: 2026-06-25</p>
 <ul><li>
 <code><a href="../reference/mspca.html">mspca()</a></code> and <code><a href="../reference/tpm.html">tpm()</a></code> now take two possible inputs: the covariance/correlation matrix or the data matrix directly. In practice, the functions take single generic argument <code>M</code> together with a <code>type = c("Sigma", "X")</code> selector. <code>type = "Sigma"</code> (the default) treats <code>M</code> as a covariance/correlation matrix (p x p); <code>type = "X"</code> treats <code>M</code> as a raw data matrix (n observations x p variables). The <code>"Sigma"</code> default preserves the behaviour of existing matrix-based calls.</li>
 <li>The raw-data path applies the algorithm to the data directly: each product <code>Sigma %*% beta</code> is evaluated as <code>t(X) %*% (X %*% beta) / (n - 1)</code> at cost O(np), and the p x p matrix is never materialized. This substantially improves scalability when <code>n &lt;&lt; p</code>. The covariance back-end was refactored behind a covariance-operator abstraction (<code>DenseOp</code> / <code>GramOp</code>) shared by both input modes.</li>
@@ -45,6 +45,7 @@
 <code><a href="../reference/mspca.html">mspca()</a></code> and <code><a href="../reference/tpm.html">tpm()</a></code> now return S3 objects of class <code>"mspca"</code> and <code>"tpm"</code> respectively, enabling use of standard R generics.</li>
 <li>Added <code><a href="../reference/print.mspca.html">print.mspca()</a></code>: S3 print method displaying the sparse loading matrix restricted to the union of active variables, the percentage of variance explained per PC, and the number of non-zero loadings. Replaces the removed <code>print_mspca()</code>.</li>
 <li>Added <code><a href="../reference/summary.mspca.html">summary.mspca()</a></code>: produces a per-PC table of sparsity, variance explained, FVE, and cumulative FVE, followed by the full pairwise feasibility violation matrix.</li>
+<li>Updated citation</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.1" id="mspca-041">msPCA 0.4.1<a class="anchor" aria-label="anchor" href="#mspca-041"></a></h2><p class="text-muted">CRAN release: 2026-06-12</p>
