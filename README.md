@@ -174,7 +174,7 @@ Reference paper:
 
 ```bibtex
 @article{cory2026sparse,
-  title   = {Sparse PCA with Multiple Principal Components},
+  title   = {Sparse PCA with Multiple Components},
   author  = {Cory-Wright, Ryan and Pauphilet, Jean},
   year    = {2026},
   journal = {Operations Research},

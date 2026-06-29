@@ -2,7 +2,7 @@ citHeader("To cite msPCA in publications, please use:")
 
 bibentry(
   bibtype = "Article",
-  title = "Sparse PCA with Multiple Principal Components",
+  title = "Sparse PCA with Multiple Components",
   author = c(
     person("Ryan", "Cory-Wright"),
     person("Jean", "Pauphilet")
@@ -13,7 +13,7 @@ bibentry(
   url = "https://doi.org/10.1287/opre.2023.0598",
   textVersion = paste(
     "Ryan Cory-Wright and Jean Pauphilet (2026).",
-    "Sparse PCA with Multiple Principal Components.",
+    "Sparse PCA with Multiple Components.",
     "Operations Research. doi:10.1287/opre.2023.0598."
   )
 )
