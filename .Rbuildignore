@@ -2,6 +2,8 @@
 ^\.Rproj\.user$
 ^cran-comments\.md$
 ^\.vscode$
+^\.github$
+^CONTRIBUTING\.md$
 ^test$
 ^XXX --- data$
 ^msPCA_.*\.tar\.gz$
