@@ -1,4 +1,7 @@
 #pragma once
+// SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Ryan Cory-Wright, Jean Pauphilet
+
 class ConstantArguments
 {
 public:

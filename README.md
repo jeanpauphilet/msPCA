@@ -1,5 +1,8 @@
 # msPCA
 
+[![R-CMD-check](https://github.com/jeanpauphilet/msPCA/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/jeanpauphilet/msPCA/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/jeanpauphilet/msPCA/branch/main/graph/badge.svg)](https://app.codecov.io/gh/jeanpauphilet/msPCA?branch=main)
+
 Sparse PCA with multiple principal components in R.
 
 The `msPCA` package computes sparse loading vectors that explain a high fraction of variance while controlling non-redundancy across components. It supports two non-redundancy definitions:

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (C) 2025 Ryan Cory-Wright, Jean Pauphilet
+
 ## This files contains all the functions of the msPCA package.
 ## First, it interfaces all the functions defined through RcppExports.R. In particular, it provides user-friendly names and documentation.
 ## Second, it defines a series of useful function for model evaluation/inspection.

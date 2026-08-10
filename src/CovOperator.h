@@ -1,4 +1,7 @@
 #pragma once
+// SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Ryan Cory-Wright, Jean Pauphilet
+
 // Covariance-operator abstraction for msPCA.
 //
 // The sparse-PCA core (see msPCA_R_CPP.cpp) accesses the empirical covariance

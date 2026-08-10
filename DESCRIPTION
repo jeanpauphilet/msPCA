@@ -18,9 +18,12 @@ Description: Implements an algorithm for computing multiple sparse principal
 License: MIT + file LICENSE
 URL: https://jeanpauphilet.github.io/msPCA/
 Imports: Rcpp (>= 1.0.11)
-Suggests: datasets,
+Suggests: covr,
+    datasets,
     knitr,
-    rmarkdown
+    rmarkdown,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
 LinkingTo: Rcpp, RcppEigen
 Encoding: UTF-8
 VignetteBuilder: knitr
