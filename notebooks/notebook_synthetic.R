@@ -16,7 +16,7 @@ library(elasticnet)
 
 set.seed(42)
 
-output_dir <- if (dir.exists("test")) "test" else "."
+output_dir <- if (dir.exists("notebooks")) "notebooks" else "."
 results_csv <- file.path(output_dir, "msPCA_synthetic_results.csv")
 fig_ortho <- file.path(output_dir, "synthetic_orthogonality_violation.png")
 fig_fve <- file.path(output_dir, "synthetic_variance_explained.png")
