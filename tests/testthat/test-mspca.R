@@ -76,6 +76,48 @@ test_that("mspca (Sigma) supports uncorrelatedness constraints", {
                tolerance = 1e-6)
 })
 
+test_that("mspca truncates r when fewer sparsity levels are supplied", {
+  expect_warning(
+    res <- mspca(Sigma, r = 3L, ks = c(2L, 2L), verbose = FALSE),
+    regexp = "only provided"
+  )
+
+  expect_equal(dim(res$x_best), c(p, 2L))
+})
+
+test_that("mspca returns a finite result at the iteration limit", {
+  res <- mspca(Sigma, r = 2L, ks = c(2L, 2L), maxIter = 1L,
+               feasibilityTolerance = Inf, verbose = FALSE)
+
+  expect_equal(dim(res$x_best), c(p, 2L))
+  expect_true(all(is.finite(res$x_best)))
+  expect_true(all(is.finite(c(res$objective_value,
+                              res$feasibility_violation))))
+})
+
+test_that("mspca verbose output reports algorithm progress", {
+  output <- capture.output(
+    mspca(Sigma, r = 1L, ks = 2L, maxIter = 1L,
+          feasibilityTolerance = Inf, verbose = TRUE)
+  )
+
+  expect_true(any(grepl("Iterative deflation algorithm", output)))
+  expect_true(any(grepl("Iteration", output)))
+  expect_true(any(grepl("Feasibility Violation", output)))
+})
+
+test_that("mspca warns when no feasible solution is found", {
+  expect_warning(
+    res <- mspca(Sigma, r = 2L, ks = c(1L, 1L), maxIter = 1L,
+                 feasibilityConstraintType = 1L, feasibilityTolerance = 0,
+                 verbose = FALSE),
+    regexp = "terminated without finding a feasible solution"
+  )
+
+  expect_true(all(is.finite(res$x_best)))
+  expect_true(is.finite(res$objective_value))
+})
+
 # ---------- X path -----------------------------------------------------------
 
 test_that("mspca (X) returns an object of class 'mspca'", {

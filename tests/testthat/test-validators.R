@@ -105,3 +105,17 @@ test_that("tpm() (X) rejects non-finite input", {
   expect_error(tpm(bad, k = 2L, type = "X", verbose = FALSE),
                regexp = "non-finite")
 })
+
+test_that("mspca() and tpm() clamp k above the dimension", {
+  expect_warning(
+    mspca_res <- mspca(Sigma_ok, r = 1L, ks = p + 1L, verbose = FALSE),
+    regexp = "exceeds the dimension"
+  )
+  expect_warning(
+    tpm_res <- tpm(Sigma_ok, k = p + 1L, verbose = FALSE),
+    regexp = "exceeds the dimension"
+  )
+
+  expect_lte(sum(mspca_res$x_best != 0), p)
+  expect_lte(sum(tpm_res$x_best != 0), p)
+})
