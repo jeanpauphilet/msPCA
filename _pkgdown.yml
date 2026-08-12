@@ -3,3 +3,35 @@ llm-docs: false
 
 template:
   bootstrap: 5
+
+articles:
+- title: Getting started
+  navbar: ~
+  contents:
+  - msPCA
+
+- title: Going further
+  navbar: Going further
+  contents:
+  - case-study-snp500
+  - algorithm-and-implementation
+  - articles/benchmarking
+
+reference:
+- title: Fitting
+  contents:
+  - mspca
+  - tpm
+- title: Diagnostics
+  contents:
+  - fraction_variance_explained
+  - fraction_variance_explained_perPC
+  - variance_explained_perPC
+  - feasibility_violation_off
+- title: Methods
+  contents:
+  - print.mspca
+  - summary.mspca
+- title: Data
+  contents:
+  - snp500

@@ -1,3 +1,14 @@
+# msPCA 0.5.1 (development)
+
+* Added the `snp500` dataset: the market-deflated correlation matrix of daily log-returns for 423 S&P 500 constituents, January 2010 - December 2019 (423 x 423, xz-compressed). Derived from a CC0-licensed Kaggle dataset by `data-raw/snp500.R`.
+* Added the vignette "Case study: sparse factors in S&P 500 returns", a full application of `mspca()` to `snp500` comparing the two non-redundancy constraints.
+* Added the vignette "Algorithm and implementation notes", documenting the optimization problem, both algorithms, the implicit matrix-vector implementation, computational complexity, and guidance on parameter choices.
+* Added the website-only article "Benchmarking against other sparse PCA packages", comparing `mspca()` against seven competing implementations on four real datasets. It lives in `vignettes/articles/` and is not part of the CRAN build.
+* Added `replication/`, the scripts reproducing the benchmarking and case-study results. Build-ignored.
+* `_pkgdown.yml` now specifies the article ordering and a grouped reference index.
+* `DESCRIPTION` gains `Depends: R (>= 3.5)`, `LazyData: true`, `LazyDataCompression: xz` and `BugReports`.
+* Documentation fixes: `README.md` referred to the removed `print_mspca()` and to a `test/` directory that is now `notebooks/`; the `mtcars` vignette stated the wrong default for `scale` in `mspca()`.
+
 # msPCA 0.5.0
 
 * `mspca()` and `tpm()` now take two possible inputs: the covariance/correlation matrix or the data matrix directly. In practice, the functions take single generic argument `M` together with a `type = c("Sigma", "X")` selector. `type = "Sigma"` (the default) treats `M` as a covariance/correlation matrix (p x p); `type = "X"` treats `M` as a raw data matrix (n observations x p variables). The `"Sigma"` default preserves the behaviour of existing matrix-based calls.

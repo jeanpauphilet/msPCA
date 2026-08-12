@@ -1,0 +1,7 @@
+"package","installed","version"
+"msPCA",TRUE,"0.4.0"
+"elasticnet",TRUE,"1.3"
+"PMA",TRUE,"1.2.4"
+"sparsepca",TRUE,"0.1.2"
+"mixOmics",TRUE,"6.30.0"
+"nsprcomp",TRUE,"0.5.1.2"

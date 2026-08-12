@@ -17,3 +17,9 @@
 ^msPCA\.worktrees$
 ^check_output\.log$
 ^SUBMISSION_CHECKLIST\.md$
+^data-raw$
+^replication$
+^vignettes/articles$
+^new-vignette$
+^BUILD-STEPS\.md$
+^.*\.Rcheck$

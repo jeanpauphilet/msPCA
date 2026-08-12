@@ -72,8 +72,9 @@ when $p \gg n$.
 The preprocessing arguments control which matrix is implicitly used:
 
 - `center` (default `TRUE`) subtracts column means.
-- `scale` (default `FALSE`) divides by column standard deviations; set to
-  `TRUE` to operate on the correlation matrix.
+- `scale` (default `TRUE` in `mspca()`, `FALSE` in `tpm()`) divides by column
+  standard deviations; with `scale = TRUE` the algorithm operates on the
+  correlation matrix, with `scale = FALSE` on the covariance matrix.
 - `divisor` selects the normalization: `"n-1"` (default, matching `cov`/`cor`)
   or `"n"`.
 
@@ -136,3 +137,15 @@ fraction_variance_explained(Sigma, pca_res$rotation[, 1:2])
 
 Sparse PCA trades a small reduction in explained variance for a much more
 interpretable loading pattern.
+
+## Where to go next
+
+- `vignette("case-study-snp500", package = "msPCA")` applies the same workflow
+  to a 423-stock correlation matrix shipped with the package, and shows how the
+  two constraint types recover materially different factor structures.
+- `vignette("algorithm-and-implementation", package = "msPCA")` documents the
+  optimization problem, both algorithms, the implementation, and how to set
+  `ks`, `feasibilityConstraintType` and the iteration budgets.
+- A comparison against seven other sparse PCA packages on four real datasets is
+  available on the package website, under
+  [Benchmarking against other sparse PCA packages](https://jeanpauphilet.github.io/msPCA/articles/benchmarking.html).

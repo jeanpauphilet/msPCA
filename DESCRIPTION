@@ -17,6 +17,8 @@ Description: Implements an algorithm for computing multiple sparse principal
     sparse principal components with controlled sparsity.
 License: MIT + file LICENSE
 URL: https://jeanpauphilet.github.io/msPCA/
+BugReports: https://github.com/jeanpauphilet/msPCA/issues
+Depends: R (>= 3.5)
 Imports: Rcpp (>= 1.0.11)
 Suggests: covr,
     datasets,
@@ -26,6 +28,8 @@ Suggests: covr,
 Config/testthat/edition: 3
 LinkingTo: Rcpp, RcppEigen
 Encoding: UTF-8
+LazyData: true
+LazyDataCompression: xz
 VignetteBuilder: knitr
 Config/roxygen2/version: 8.0.0
 Roxygen: list(markdown = TRUE)
