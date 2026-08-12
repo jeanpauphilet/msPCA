@@ -1,0 +1,282 @@
+---
+title: "Algorithm and implementation notes"
+output: rmarkdown::html_vignette
+bibliography: thebib.bib
+vignette: >
+  %\VignetteIndexEntry{Algorithm and implementation notes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+This vignette documents the algorithm behind `mspca()` in full, together with the
+implementation choices that make it fast, and practical guidance on setting its parameters.
+It is the reference companion to the short package description; readers who want the
+theoretical analysis should consult @cory2022sparse.
+
+## The problem
+
+The goal of sparse PCA is to identify $r$ loading vectors
+$\boldsymbol{u}_1, \ldots, \boldsymbol{u}_r \in \mathbb{R}^p$ that collectively explain a large share of the
+variance in the data, while each vector involves only a small number of the $p$ original
+features. In the single-component case ($r = 1$) this is
+
+$$\max_{\boldsymbol{u} \in \mathbb{R}^p} \ \boldsymbol{u}^\top \boldsymbol{\Sigma} \boldsymbol{u}
+\quad \text{s.t.} \quad \|\boldsymbol{u}\|_2 = 1, \ \|\boldsymbol{u}\|_0 \leq k,$$
+
+for which many efficient algorithms exist [@d2007direct; @yuan2013truncated;
+@bertsimas2022solving]. The challenge in the $r$-component case is coordinating the components
+so that they are non-redundant.
+
+In standard dense PCA, non-redundancy is ensured by requiring the $r$ leading eigenvectors of
+$\boldsymbol{\Sigma}$ to be mutually orthogonal and their projections to be uncorrelated. These two
+properties hold simultaneously for eigenvectors but generally cannot both be enforced in the
+sparse setting. `msPCA` therefore supports either type of coupling constraint, selected with
+`feasibilityConstraintType`:
+
+- **Orthogonality** (`feasibilityConstraintType = 0`, the default): the loading vectors are
+  required to be mutually orthogonal, $\boldsymbol{u}_t^\top \boldsymbol{u}_{t'} = 0$ for all $t \neq t'$.
+  This is the direct geometric analogue of standard PCA.
+- **Zero pairwise correlation** (`feasibilityConstraintType = 1`): the projected components
+  are required to be uncorrelated in the data,
+  $\boldsymbol{u}_t^\top \boldsymbol{\Sigma} \boldsymbol{u}_{t'} = 0$ for all $t \neq t'$. This ensures each component
+  captures statistically distinct information.
+
+Writing $\boldsymbol{C} \in \{\mathbb{I}, \boldsymbol{\Sigma}\}$ to encode the constraint type, the
+$r$-component problem solved by `msPCA` is
+
+$$\max_{\boldsymbol{U} \in \mathbb{R}^{p \times r}} \ \sum_{t=1}^r \boldsymbol{u}_t^\top \boldsymbol{\Sigma} \boldsymbol{u}_t
+\quad \text{s.t.} \quad \boldsymbol{u}_t^\top \boldsymbol{C} \boldsymbol{u}_{t'} = 0 \ \ \forall t \neq t', \quad
+\|\boldsymbol{u}_t\|_2 = 1, \ \|\boldsymbol{u}_t\|_0 \leq k_t \ \ \forall t \in [r]. \tag{1}$$
+
+Orthogonality corresponds to $\boldsymbol{C} = \mathbb{I}$ and zero correlation to
+$\boldsymbol{C} = \boldsymbol{\Sigma}$; both reduce to standard PCA when the sparsity constraint is relaxed
+($k_t = p$).
+
+The objective is the sum of per-component variances. Most approaches for sparse PCA with
+multiple PCs use this objective [@zou2006sparse; @journee2010generalized; @lu2012augmented;
+@vu2013fantope; @benidis2016orthogonal; @cory2022sparse]. It corresponds to the variance of
+the orthogonal projection onto the span of $\boldsymbol{U}$ only when the loading vectors are
+orthogonal; in general it is the sum of the marginal variances of the sparse components.
+
+## Evaluation metrics
+
+**Variance explained.** The cumulative fraction of total variance explained by
+$\boldsymbol{U} = [\boldsymbol{u}_1, \ldots, \boldsymbol{u}_r]$ is
+
+$$\mathrm{FVE}(\boldsymbol{U}) = \frac{1}{\mathrm{tr}(\boldsymbol{\Sigma})}
+  \sum_{t=1}^r \boldsymbol{u}_t^\top \boldsymbol{\Sigma} \boldsymbol{u}_t,$$
+
+computed by `fraction_variance_explained()`. Because loading vectors may not be orthogonal,
+interpret this as a cumulative component-variance score rather than the variance of the
+orthogonal projection onto the span of $\boldsymbol{U}$. Per-component contributions are returned by
+`fraction_variance_explained_perPC()` and, unnormalised, by `variance_explained_perPC()`.
+
+**Feasibility.** The constraint violation measures how far the returned solution is from
+satisfying the coupling constraints,
+
+$$\mathrm{viol}_{\mathrm{off}}(\boldsymbol{C}, \boldsymbol{U}) =
+  \sum_{t > t'} \left| \boldsymbol{u}_t^\top \boldsymbol{C} \boldsymbol{u}_{t'} \right|,$$
+
+computed by `feasibility_violation_off()`.
+
+## Lagrangian alternating maximization
+
+The key algorithmic idea is to handle the coupling constraints in (1) via a quadratic penalty
+in the objective, which causes the problem to decompose into $r$ independent single-component
+sparse PCA subproblems. Introducing non-negative penalty parameters $\lambda_{t,t'}$ for each
+pair $t \neq t'$ (with $\lambda_{t,t'} = \lambda_{t',t}$) gives the penalized objective
+
+$$\max_{\boldsymbol{U}} \ \sum_{t=1}^r \boldsymbol{u}_t^\top \boldsymbol{\Sigma} \boldsymbol{u}_t
+  - \sum_{t \neq t'} \lambda_{t,t'} \left( \boldsymbol{u}_t^\top \boldsymbol{C} \boldsymbol{u}_{t'} \right)^2
+  \quad \text{s.t.} \quad \|\boldsymbol{u}_t\|_2 = 1, \ \|\boldsymbol{u}_t\|_0 \leq k_t \ \ \forall t. \tag{2}$$
+
+For fixed components $\boldsymbol{u}_{t'}$, $t' \neq t$, and fixed penalties, the subproblem for
+$\boldsymbol{u}_t$ reduces to a non-convex single-component sparse PCA problem against the
+*perturbed* covariance matrix
+
+$$\tilde{\boldsymbol{\Sigma}}_t = \boldsymbol{\Sigma}
+  - \sum_{t' \neq t} \lambda_{t,t'} \boldsymbol{C} \boldsymbol{u}_{t'} \boldsymbol{u}_{t'}^\top \boldsymbol{C}. \tag{3}$$
+
+This decomposition holds for both constraint types: with $\boldsymbol{C} = \mathbb{I}$ the
+perturbation is $\lambda_{t,t'} \boldsymbol{u}_{t'} \boldsymbol{u}_{t'}^\top$, and with
+$\boldsymbol{C} = \boldsymbol{\Sigma}$ it is
+$\lambda_{t,t'} \boldsymbol{\Sigma} \boldsymbol{u}_{t'} \boldsymbol{u}_{t'}^\top \boldsymbol{\Sigma}$.
+
+Most methods for computing the leading sparse eigenvector require the matrix to be positive
+semidefinite. If $\tilde{\boldsymbol{\Sigma}}_t$ is not, we add a diagonal shift
+$\lambda_0 \mathbb{I}$, which does not change the optimal solution because all feasible
+vectors have unit norm. We choose $\lambda_0$ large enough that
+$\tilde{\boldsymbol{\Sigma}}_t \succeq \boldsymbol{0}$, e.g.
+$\lambda_0 \geq \lambda_{\max}(\boldsymbol{C})^2 \sum_{t' \neq t} \lambda_{t,t'}$.
+
+Iterating over $t = 1, \ldots, r$ and progressively increasing the penalties to drive
+constraint violations toward zero yields the following scheme.
+
+> **Algorithm 1: Lagrangian alternating maximization for problem (1)**
+>
+> **Require:** covariance matrix $\boldsymbol{\Sigma}$, number of components $r$, sparsity budgets
+> $k_1, \ldots, k_r$, constraint matrix $\boldsymbol{C} \in \{\mathbb{I}, \boldsymbol{\Sigma}\}$, iterations
+> $L$, feasibility tolerance $\eta$
+>
+> 1. Initialize $\boldsymbol{u}_t^{(0)} \leftarrow \boldsymbol{0}$ for all $t \in [r]$; set
+>    $\lambda_{t,t'} \leftarrow 0$ for all $t \neq t'$
+> 2. **for** $\ell = 1, \ldots, L$ **do**
+> 3. &nbsp;&nbsp; **for** $t = 1, \ldots, r$ **do**
+> 4. &nbsp;&nbsp;&nbsp;&nbsp; Compute $\tilde{\boldsymbol{\Sigma}}_t \leftarrow \boldsymbol{\Sigma} -
+>    \sum_{t' \neq t} \lambda_{t,t'} \boldsymbol{C} \boldsymbol{u}_{t'}^{(\ell-1)}
+>    \boldsymbol{u}_{t'}^{(\ell-1)\top} \boldsymbol{C} + \lambda_0 \mathbb{I}$
+> 5. &nbsp;&nbsp;&nbsp;&nbsp; Compute $\boldsymbol{u}_t^{(\ell)}$ via Algorithm 2 applied to
+>    $(\tilde{\boldsymbol{\Sigma}}_t, k_t)$
+> 6. &nbsp;&nbsp; **end for**
+> 7. &nbsp;&nbsp; **if** $\sum_t \left| \|\boldsymbol{u}_t^{(\ell)}\|^2 - 1 \right| +
+>    \sum_{t > t'} \left| \boldsymbol{u}_t^{(\ell)\top} \boldsymbol{C} \boldsymbol{u}_{t'}^{(\ell)} \right| \leq \eta$
+>    **then**
+> 8. &nbsp;&nbsp;&nbsp;&nbsp; Record $\{\boldsymbol{u}_t^{(\ell)}\}$ as feasible; update best solution
+>    if the objective improves
+> 9. &nbsp;&nbsp; **end if**
+> 10. &nbsp;&nbsp; Increase the $\lambda_{t,t'}$ values (see below)
+> 11. **end for**
+> 12. **return** best feasible solution found, or the least-infeasible solution if none was found
+
+Each single-component subproblem is solved via the truncated power method
+[TPM, @yuan2013truncated], which alternates between a power step (multiplying by
+$\tilde{\boldsymbol{\Sigma}}_t$) and a truncation step (retaining only the $k_t$ largest-magnitude
+entries). In practice TPM often finds high-quality solutions around two orders of magnitude
+faster than certifiably optimal methods [@berk2017; @behdin2021sparse]. Our implementation
+uses the past iterate as the first starting point followed by multiple random restarts, which
+guard against poor local optima --- an improvement on the original single-initialization
+proposal.
+
+> **Algorithm 2: truncated power method with random restarts** [@yuan2013truncated]
+>
+> **Require:** matrix $\tilde{\boldsymbol{\Sigma}}$, sparsity budget $k$, iteration limit
+> $L_{\mathrm{TPM}}$, time limit $T$
+>
+> 1. $\boldsymbol{u}_{\mathrm{best}} \leftarrow \boldsymbol{0}$
+> 2. **repeat**
+> 3. &nbsp;&nbsp; Draw $\boldsymbol{u} \sim \mathcal{N}(\boldsymbol{0}, \mathbb{I})$
+> 4. &nbsp;&nbsp; **repeat**
+> 5. &nbsp;&nbsp;&nbsp;&nbsp; $\boldsymbol{u} \leftarrow \tilde{\boldsymbol{\Sigma}} \boldsymbol{u} /
+>    \|\tilde{\boldsymbol{\Sigma}} \boldsymbol{u}\|_2$ &nbsp; *(power step)*
+> 6. &nbsp;&nbsp;&nbsp;&nbsp; Zero out all but the $k$ entries of $\boldsymbol{u}$ largest in absolute
+>    value &nbsp; *(truncation step)*
+> 7. &nbsp;&nbsp;&nbsp;&nbsp; $\boldsymbol{u} \leftarrow \boldsymbol{u} / \|\boldsymbol{u}\|_2$
+> 8. &nbsp;&nbsp; **until** $\boldsymbol{u}$ converges
+> 9. &nbsp;&nbsp; **if** $\boldsymbol{u}^\top \tilde{\boldsymbol{\Sigma}} \boldsymbol{u} >
+>    \boldsymbol{u}_{\mathrm{best}}^\top \tilde{\boldsymbol{\Sigma}} \boldsymbol{u}_{\mathrm{best}}$ **then**
+>    $\boldsymbol{u}_{\mathrm{best}} \leftarrow \boldsymbol{u}$; reset iteration count
+> 10. **until** time limit $T$ exceeded or no improvement after $L_{\mathrm{TPM}}$ iterations
+> 11. **return** $\boldsymbol{u}_{\mathrm{best}}$
+
+The scheme resembles an iterative deflation procedure [@mackey2008deflation] in which a
+single-component sparse PCA problem is solved against a surrogate matrix at each iteration.
+The key difference is that the deflated matrix is induced by an explicit penalty on the
+non-redundancy constraints, which is progressively increased throughout the algorithm.
+
+## Implementation details
+
+**Penalty update.** The penalty parameters $\lambda_{t,t'}$ are initialized to zero and
+increased progressively across outer iterations, letting the algorithm explore freely at first
+and gradually tightening the feasibility requirement. During the first 15% of iterations the
+increment is proportional to the total constraint violation
+$\sum_{t > t'} |\boldsymbol{u}_t^\top \boldsymbol{C} \boldsymbol{u}_{t'}|$; for the remaining iterations we switch to
+a ratio-based update proportional to the ratio of the current objective to the current
+constraint violation, which produces larger and more decisive increases; during the last 25%
+of iterations the step-size coefficient is further increased by a factor of 5 to accelerate
+final convergence to feasibility. The initial scale of $\lambda_{t,t'}$ is set proportionally
+to the variance explained by component $t$ at the first iteration, so that all penalty terms
+are on a comparable scale regardless of the magnitude of $\boldsymbol{\Sigma}$. See @cory2022sparse
+for a full description and theoretical justification of the update rule.
+
+**Termination.** Algorithm 1 stops when the number of outer iterations reaches `maxIter`
+(default 200), or when the improvement in objective value between consecutive feasible
+solutions falls below `stallingTolerance` (default 1e-8).
+
+**Feasibility tracking.** At each iteration Algorithm 1 checks whether the current solution
+satisfies the coupling constraint up to `feasibilityTolerance` (default 1e-4). The best
+feasible solution encountered across all iterations is returned. If no feasible solution is
+found within the iteration budget, the algorithm returns the solution with the smallest
+observed constraint violation.
+
+**Software implementation.** All computations are carried out in C++ via the `Rcpp`
+[@eddelbuettel2011rcpp] and `RcppEigen` [@bates2013fast] interfaces, with a lightweight R
+wrapper providing the user-facing API. To avoid materializing the $p \times p$ perturbed
+matrix $\tilde{\boldsymbol{\Sigma}}_t$ at each inner-loop step, the C++ back-end represents it
+implicitly: each product $\tilde{\boldsymbol{\Sigma}}_t \boldsymbol{\beta}$ is evaluated as
+
+$$\boldsymbol{\Sigma}\boldsymbol{\beta} - \boldsymbol{W}(\boldsymbol{d} \odot \boldsymbol{W}^\top \boldsymbol{\beta}) + \lambda_0 \boldsymbol{\beta},$$
+
+where $\boldsymbol{W}$ collects the previously computed components ($\boldsymbol{u}_{t'}$, $t' \neq t$ for
+orthogonal loadings; $\boldsymbol{\Sigma} \boldsymbol{u}_{t'}$, $t' \neq t$ for uncorrelated PCs) and
+$\boldsymbol{d}$ contains the corresponding scaled penalty coefficients. This eliminates the
+$O(r p^2)$ matrix-build cost per component update while keeping the per-step cost at $O(p^2)$.
+
+When the raw data matrix $\boldsymbol{X}$ is provided (`type = "X"`), the product
+$\boldsymbol{\Sigma}\boldsymbol{\beta}$ is replaced by the two-pass evaluation
+$\boldsymbol{X}^\top(\boldsymbol{X}\boldsymbol{\beta})/(n-1)$ at cost $O(np)$ instead of $O(p^2)$, which is
+substantially more scalable when $n \ll p$ and avoids forming the $p \times p$ covariance
+matrix entirely. After the first outer iteration the previous iterate serves as a warm start
+for Algorithm 2, substantially reducing the number of random restarts required.
+
+The package is available for Linux, macOS and Windows.
+
+## Computational complexity
+
+The dominant cost of Algorithm 1 per outer iteration is $r$ calls to Algorithm 2. With the
+implicit matrix-vector representation above, applying $\tilde{\boldsymbol{\Sigma}}_t$ to a vector
+costs $O(p^2 + rp)$ with `type = "Sigma"` and $O(np + rp)$ with `type = "X"`. In both cases
+the $O(rp)$ deflation term is negligible for moderate $r$. Each call performs at most
+$L_{\mathrm{TPM}}$ such products, giving a worst-case per-outer-iteration cost of
+$O(r \min(n,p) p \cdot L_{\mathrm{TPM}})$. In practice, warm-start initialization and early
+convergence detection reduce the effective number of TPM iterations substantially, so the
+empirical cost is much closer to $O(r \min(n,p) p)$ per outer iteration.
+
+## Guidance on parameter choices
+
+### Choosing the sparsity budgets `ks`
+
+The budgets $k_1, \ldots, k_r$ are the primary tuning parameters. A practical approach is to
+run `mspca()` over a range of values and plot the trade-off between FVE and sparsity:
+
+```{r}
+library("msPCA")
+Sigma <- cor(datasets::mtcars)
+
+ks_grid <- seq(2, 10, by = 1)
+trade_off <- sapply(ks_grid, function(k) {
+  set.seed(42)
+  res <- mspca(Sigma, r = 3, ks = rep(k, 3), verbose = FALSE)
+  fraction_variance_explained(Sigma, res$x_best)
+})
+plot(ks_grid, trade_off, type = "b",
+     xlab = "sparsity budget k", ylab = "fraction of variance explained")
+```
+
+Domain knowledge often provides a natural guide: if each PC is expected to represent a
+distinct thematic cluster of features, setting $k_t$ to the anticipated cluster size is a good
+starting point.
+
+### Choosing the constraint type
+
+Orthogonality (`feasibilityConstraintType = 0`) is appropriate when the loading vectors are to
+be used as a projection basis, or when the geometric structure of the components matters. Zero
+pairwise correlation (`feasibilityConstraintType = 1`) is preferable when the primary goal is
+statistical decorrelation of the projected data. In our experience the two options yield
+similar results when $\boldsymbol{\Sigma}$ is close to the identity, but can differ noticeably for
+strongly correlated datasets. See `vignette("case-study-snp500", package = "msPCA")` for a
+worked comparison.
+
+### Iteration and restart budgets
+
+`maxIter` (default 200) caps the number of outer iterations. Lowering it speeds up large
+problems at some risk of returning a less-refined solution; the case study uses
+`maxIter = 100` on a 423-variable problem without noticeable loss. `maxRestartTPM` and
+`minRestartTPM` control the number of random restarts in the inner TPM call at the first and
+subsequent outer iterations respectively; the defaults (30 and 20) are conservative and can be
+reduced when runtime matters more than guarding against poor local optima.
+
+## References

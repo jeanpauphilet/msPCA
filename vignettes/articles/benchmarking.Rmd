@@ -1,0 +1,274 @@
+---
+title: "Benchmarking against other sparse PCA packages"
+output: rmarkdown::html_vignette
+bibliography: thebib.bib
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+This vignette gives the full benchmarking protocol and results summarised in the package
+description. It compares `msPCA` against seven competing implementations on four real
+datasets, and documents exactly how each competitor was configured --- which matters, because
+the packages parameterise sparsity in incompatible ways.
+
+Chunks are not evaluated at build time: reproducing the full comparison requires eight
+additional packages plus a Python installation. The complete scripts live in the package
+repository under
+[`replication/benchmarking/`](https://github.com/jeanpauphilet/msPCA/tree/main/replication/benchmarking).
+
+## Getting the data
+
+All four datasets are obtainable from R without manual downloads or accounts, so the
+comparison is reproducible end to end:
+
+```{r}
+## mtcars -- base R
+X_mtcars     <- as.matrix(datasets::mtcars)
+Sigma_mtcars <- cor(X_mtcars)
+
+## Pitprops -- the 13 x 13 correlation matrix of Jeffers (1967), Table 1.
+## It is transcribed literally at the top of
+## replication/benchmarking/notebook_pitprops.R; source that file to obtain `pitprops`.
+Sigma_pitprops <- pitprops
+## Methods that require a data matrix instead use pseudo-data drawn from this
+## correlation structure (see "How each method was configured" below).
+set.seed(42)
+X_pitprops <- MASS::mvrnorm(n = 500, mu = rep(0, ncol(pitprops)),
+                            Sigma = pitprops)
+
+## Breast cancer -- one-off download via PMA, then keep the 500 highest-
+## variance genes, following the preprocessing of Witten et al. (2009).
+X            <- t(PMA::download_breast_data(
+  url = "https://tibshirani.su.domains/PMA/breastdata.rda")$rna)
+X_breast     <- X[, order(apply(X, 2, var), decreasing = TRUE)[1:500]]
+Sigma_breast <- cor(X_breast)          # n = 89, p = 500
+
+## Riboflavin -- ships with the hdi package
+data("riboflavin", package = "hdi")
+X_ribo <- as.matrix(riboflavin$x)      # n = 71, p = 4088
+```
+
+Only the breast cancer data touches the network, and `PMA::download_breast_data()` handles it
+in a single call. Riboflavin ships inside `hdi`, `mtcars` is in base R, and the Pitprops
+correlation matrix is transcribed in the benchmarking script, so no manual downloads or
+accounts are needed anywhere.
+
+## Methods compared
+
+We compare `msPCA` against seven competing methods:
+
+| Package | Reference | Language | Approach |
+|---|---|---|---|
+| `elasticnet` | @zou2006sparse | R | elastic-net regularization, LARS-like |
+| `PMA` | @witten2009penalized | R | penalized matrix decomposition |
+| `sparsepca` | @erichson2020sparse | R | variable projection with $\ell_1$ penalty |
+| `mixOmics` | @rohart2017mixomics | R | regularized SVD [@shen2008sparse] |
+| `nsprcomp` | @sigg2019nsprcomp | R | expectation-maximization [@sigg2008expectation] + deflation |
+| `amanpg` | @chen2020proximal | R | alternating manifold proximal gradient |
+| `sklearn.decomposition.SparsePCA` | @pedregosa2011scikit | Python | dictionary learning |
+
+`scikit-learn` is called from R via the `reticulate` package [@ushey2023reticulate]. Together
+these cover the main methodological approaches to sparse PCA: elastic-net regularization,
+penalized matrix decomposition, variable-projection optimization, regularized SVD, deflation,
+Riemannian proximal gradient, and dictionary learning.
+
+## Environment
+
+Experiments were conducted on a MacBook Air with an Apple M2 chip and 24 GB of RAM, with
+R version 4.6.0 (2026-04-24), `msPCA` v0.5.0, `elasticnet` v1.3, `PMA` v1.2.4, `sparsepca`
+v0.1.2, `mixOmics` v6.36.0, `nsprcomp` v0.5.1.2, `amanpg` v0.1.0, `reticulate` v1.40.0, and
+`scikit-learn` v1.6.1 (Python 3.11). Full session information is recorded in
+[`replication/sessionInfo.txt`](https://github.com/jeanpauphilet/msPCA/blob/main/replication/sessionInfo.txt).
+
+## How each method was configured
+
+Comparing sparse PCA methods is complicated because different packages parameterize sparsity
+differently. Some accept a covariance or correlation matrix, others apply only to the data
+matrix, and some support both.
+
+- **`msPCA`** --- `mspca()` with both `type = "Sigma"` and `type = "X"` on all four datasets.
+  On riboflavin ($n \ll p$) the $p \times p$ covariance matrix is rank-deficient, making
+  `type = "X"` the natural choice; we report both modes to quantify the runtime gain.
+- **`elasticnet`** --- `spca()`, which takes a list of cardinality budgets (one per PC) and
+  applies interchangeably to $\boldsymbol{\Sigma}$ or $\boldsymbol{X}$. We report both input modes on mtcars,
+  Pitprops and breast cancer.
+- **`PMA`** --- `SPC()` with `orth = TRUE`. It takes the covariance matrix and a bound
+  `sumabsv` on $\sum_t \|\boldsymbol{u}_t\|_1$, which we tune manually per dataset to get
+  per-component sparsity as close as possible to the target.
+- **`sparsepca`** --- `spca()` applied to $\boldsymbol{\Sigma}$, which only exposes the magnitude of
+  the $\ell_1$ penalty `alpha`. We tune it per dataset to achieve a total sparsity
+  $\sum_t k_t$ close to the target. This method tends to return PCs with very unequal sparsity
+  levels, the first typically denser than the rest.
+- **`mixOmics`** --- `spca()`, which takes the data matrix and the list of sparsity budgets.
+- **`nsprcomp`** --- two functions, both based on the EM algorithm of @sigg2008expectation.
+  `nsprcomp()` computes the leading sparse PC then applies the deflation procedure of
+  @mackey2008deflation for subsequent PCs; it takes the data matrix and a list of sparsity
+  levels. `nscumcomp()` solves for all $r$ PCs simultaneously, taking a total sparsity budget
+  $\sum_t k_t$ and a penalty parameter `gamma` on orthogonality violation (default 0).
+- **`amanpg`** --- `spca.amanpg()` applied to the correlation matrix (`type = 1`). It solves a
+  single-component problem with an $\ell_1$ penalty `lambda1` and applies sequential deflation;
+  we tune `lambda1` per dataset.
+- **`scikit-learn`** --- `sklearn.decomposition.SparsePCA()` via `reticulate`. The class
+  computes $r$ components simultaneously using dictionary learning with an $\ell_1$ penalty
+  `alpha` on the loadings, applied to the data matrix. We tune `alpha` per dataset.
+
+For Pitprops only the correlation matrix is available, so we generate pseudo-data via
+`MASS::mvrnorm()` with the Pitprops matrix as the population covariance ($n = 500$) for the
+methods that require $\boldsymbol{X}$.
+
+For each method we report the actual number of nonzero loadings per PC, the FVE computed on
+the original correlation matrix, and the orthogonality violation. Runtimes exclude
+hyperparameter tuning and are measured with `system.time()`. Metrics come from a single run
+per method and dataset, with all seeds fixed in the replication scripts.
+
+```{r}
+# Representative call pattern; see replication/benchmarking/ for the full scripts.
+set.seed(42)
+res <- mspca(Sigma, r = 3, ks = rep(4, 3), verbose = FALSE)
+
+fraction_variance_explained(Sigma, res$x_best)
+feasibility_violation_off(Sigma, res$x_best, 0)
+res$runtime
+```
+
+## Results
+
+### mtcars
+
+`datasets::mtcars` from base R ($p = 11$ variables, $n = 32$ observations) serves as a simple
+reproducible baseline. We extract $r = 3$ sparse PCs targeting $k = 4$ per component.
+
+| Method | $(k_1,k_2,k_3)$ | FVE | Orth. violation | Runtime (s) |
+|---|---|---|---|---|
+| `msPCA::mspca` $(\boldsymbol{\Sigma})$ | (4,4,4) | 0.829 | 9.4e-05 | 0.323 |
+| `msPCA::mspca` $(\boldsymbol{X})$ | (4,4,4) | 0.829 | 9.4e-05 | 0.424 |
+| `elasticnet::spca` $(\boldsymbol{\Sigma})$ | (4,4,4) | 0.753 | 0.117 | 0.165 |
+| `elasticnet::spca` $(\boldsymbol{X})$ | (4,4,4) | 0.754 | 0.117 | 0.189 |
+| `PMA::SPC` | (4,4,5) | 0.552 | 0.283 | 0.008 |
+| `sparsepca::spca` | (7,4,1) | 0.585 | 0.045 | 0.053 |
+| `mixOmics::spca` | (4,4,4) | 0.633 | 0.133 | 0.003 |
+| `nsprcomp::nsprcomp` | (4,4,4) | 0.832 | 0.078 | 0.006 |
+| `nsprcomp::nscumcomp` | (6,3,3) | 0.772 | 0.245 | 0.033 |
+| `amanpg::spca.amanpg` | (7,4,2) | 0.649 | 0.041 | 0.004 |
+| `sklearn...SparsePCA` | (4,4,3) | 0.827 | < 1e-15 | 0.028 |
+| PCA (dense) | (11,11,11) | 0.899 | < 1e-15 | --- |
+
+Tuning: `PMA` uses `sumabsv = 1.69`; `sparsepca` uses `alpha = 0.004`; `amanpg` uses
+`lambda1 = c(10, 3, 0.01)`; `scikit-learn` uses `alpha = 3.2`.
+
+### Pitprops
+
+The Pitprops dataset [@jeffers1967two] ($p = 13$ physical measurements on $n = 180$ timber
+specimens) is a classic sparse PCA benchmark [e.g. @zou2006sparse]. We extract $r = 6$ sparse
+PCs targeting $k = 4$ nonzero loadings per component, as in @zou2006sparse.
+
+| Method | $(k_1, \ldots, k_6)$ | FVE | Orth. violation | Runtime (s) |
+|---|---|---|---|---|
+| `msPCA::mspca` $(\boldsymbol{\Sigma})$ | (4,4,4,4,4,4) | 0.786 | 9.7e-05 | 1.109 |
+| `msPCA::mspca` $(\boldsymbol{X})$ | (4,4,4,4,4,4) | 0.801 | 9.5e-05 | 5.388 |
+| `elasticnet::spca` $(\boldsymbol{\Sigma})$ | (4,4,4,4,4,4) | 0.792 | 0.241 | 0.070 |
+| `elasticnet::spca` $(\boldsymbol{X})$ | (4,4,4,4,4,4) | 0.790 | 0.322 | 0.167 |
+| `PMA::SPC` | (4,4,4,7,6,4) | 0.660 | 0.857 | 0.011 |
+| `sparsepca::spca` | (8,4,3,1,3,5) | 0.762 | 0.376 | 0.024 |
+| `mixOmics::spca` | (4,4,4,4,4,4) | 0.788 | 0.215 | 0.008 |
+| `nsprcomp::nsprcomp` | (4,4,4,4,4,4) | 0.800 | 0.626 | 0.023 |
+| `nsprcomp::nscumcomp` | (5,2,4,5,3,5) | 0.737 | 1.691 | 1.072 |
+| `amanpg::spca.amanpg` | (8,6,9,2,3,5) | 0.760 | 1.763 | 0.008 |
+| `sklearn...SparsePCA` | (7,3,4,2,4,4) | 0.895 | 0.733 | 0.043 |
+| PCA (dense) | (13,...,13) | 0.877 | < 1e-15 | --- |
+
+Tuning: `PMA` uses `sumabsv = 1.727`; `sparsepca` uses `alpha = 0.004`; `nscumcomp` uses the
+default `gamma = 0`; `amanpg` uses `lambda1 = c(1, 1, 5, 0.4, 0.4, 0)`; `scikit-learn` uses
+`alpha = 3.1`.
+
+This is the dataset where the feasibility differences are starkest: competitors return
+orthogonality violations in the 0.2--1.8 range, against 9.7e-05 for `msPCA`. With $p = 13$ and
+a total budget of 24 nonzeros, trivially orthogonal disjoint-support solutions do not exist,
+so methods that rely on deflation have nothing to fall back on.
+
+### Breast cancer gene expression
+
+Gene expression data from @chin2006genomic ($n = 89$ tumor samples, 19,672 genes). Following
+the preprocessing of @witten2009penalized we retain the $p = 500$ genes with the highest
+marginal variance, yielding a high-dimensional ($p > n$) benchmark. We set $r = 3$ and target
+$k = 20$ nonzero loadings per component.
+
+| Method | $(k_1, k_2, k_3)$ | FVE | Orth. violation | Runtime (s) |
+|---|---|---|---|---|
+| `msPCA::mspca` $(\boldsymbol{\Sigma})$ | (20,20,20) | 0.093 | 7.5e-05 | 27.472 |
+| `msPCA::mspca` $(\boldsymbol{X})$ | (20,20,20) | 0.093 | 7.5e-05 | 13.382 |
+| `elasticnet::spca` $(\boldsymbol{\Sigma})$ | (20,20,20) | 0.043 | 0.040 | 18.130 |
+| `elasticnet::spca` $(\boldsymbol{X})$ | (20,20,20) | 0.043 | 0.021 | 0.904 |
+| `PMA::SPC` | (14,17,27) | 0.028 | 0.001 | 0.042 |
+| `sparsepca::spca` | (46,13,8) | 0.061 | < 1e-15 | 4.752 |
+| `mixOmics::spca` | (20,20,20) | 0.077 | < 1e-15 | 0.031 |
+| `nsprcomp::nsprcomp` | (20,20,20) | 0.084 | < 1e-15 | 0.027 |
+| `nsprcomp::nscumcomp` | (33,22,5) | 0.082 | < 1e-15 | 0.152 |
+| `amanpg::spca.amanpg` | (96,4,2) | 0.067 | 0.063 | 0.252 |
+| `sklearn...SparsePCA` | (56,3,6) | 0.057 | < 1e-15 | 0.180 |
+| PCA (dense) | (500,500,500) | 0.352 | < 1e-15 | --- |
+
+Tuning: `PMA` uses `sumabsv = 2.92`; `sparsepca` uses `alpha = 0.004` but returns unequal
+sparsity levels; `nscumcomp` receives a total budget of $k = 60$ and distributes it unevenly;
+`amanpg` uses `lambda1 = c(8.5, 2.5, 1.5)`; `scikit-learn` uses `alpha = 11.25`.
+
+With $p = 500$ and only 60 nonzeros in total, disjoint supports are easy to find, so most
+methods are trivially orthogonal here.
+
+### Riboflavin
+
+The riboflavin (vitamin B2) production dataset [@buhlmann2014high] comprises log-transformed
+expression levels of $p = 4{,}088$ genes in $n = 71$ samples of *Bacillus subtilis*. This is a
+challenging $p \gg n$ benchmark: the empirical correlation matrix is rank-deficient
+(rank $\leq 70$). We set $r = 2$ and target $k = 20$ nonzero loadings per component. To avoid
+time-consuming parameter tuning, we consider only methods that accept exact cardinality
+budgets.
+
+| Method | $(k_1, k_2)$ | FVE | Orth. violation | Runtime (s) |
+|---|---|---|---|---|
+| `msPCA::mspca` $(\boldsymbol{\Sigma})$ | (20,20) | 0.008 | < 1e-15 | 71.986 |
+| `msPCA::mspca` $(\boldsymbol{X})$ | (20,20) | 0.008 | < 1e-15 | 1.603 |
+| `elasticnet::spca` $(\boldsymbol{X})$ | (20,20) | 0.004 | < 1e-15 | 5.952 |
+| `mixOmics::spca` | (20,20) | 0.006 | < 1e-15 | 0.241 |
+| `nsprcomp::nsprcomp` | (20,20) | 0.009 | < 1e-15 | 0.351 |
+| PCA (dense) | (4088,4088) | 0.478 | < 1e-15 | 0.045 |
+
+`msPCA` is run with `maxIter = 100` here; all methods other than `msPCA` use the data matrix
+directly.
+
+This dataset isolates the benefit of the `type = "X"` interface. Passing the raw data matrix
+replaces the $O(p^2)$ product $\boldsymbol{\Sigma}\boldsymbol{\beta}$ with the $O(np)$ two-pass product
+$\boldsymbol{X}^\top(\boldsymbol{X}\boldsymbol{\beta})/(n-1)$ and avoids forming the covariance matrix at all --- for
+$p = 4{,}088$ that is roughly 134 MB of double-precision storage never allocated. Runtime falls
+from about 72 seconds to under 2, making `msPCA` faster than `elasticnet::spca()` on this
+problem.
+
+## Discussion
+
+**Sparsity control.** `PMA::SPC()`, `sparsepca::spca()`, `nsprcomp::nscumcomp()`,
+`amanpg::spca.amanpg()` and `sklearn.decomposition.SparsePCA()` do not provide satisfactory
+control over the sparsity of each loading vector, which makes an apples-to-apples comparison
+difficult. `PMA::SPC()` and `sklearn` control only a global $\ell_1$ bound, while
+`sparsepca::spca()`, `nscumcomp()` and `amanpg` tend to produce unbalanced components with one
+PC carrying almost all of the budget. It is difficult to calibrate these methods to an exact
+target number of nonzeros per component. The comparisons below therefore focus on
+`msPCA::mspca()`, `elasticnet::spca()`, `mixOmics::spca()` and `nsprcomp::nsprcomp()`.
+
+**Feasibility.** Among the packages considered, `msPCA::mspca()` is the only method that
+consistently returns small orthogonality violations on all four datasets, at or below 1e-4
+(its default feasibility tolerance). All other packages can return substantially
+non-orthogonal components, especially when $p$ is small relative to the total sparsity budget,
+so that trivially orthogonal disjoint-support solutions may not exist.
+
+**Variance explained.** `msPCA::mspca()` and `nsprcomp::nsprcomp()` are generally the
+best-performing methods, followed by `mixOmics::spca()` and `elasticnet::spca()`, though the
+relative ranking of the latter two varies across datasets. `msPCA` does not appear to sacrifice
+variance explained in order to achieve feasibility.
+
+**Scalability.** `msPCA::mspca()` scales to datasets with $p$ in the thousands in reasonable
+time, and the `type = "X"` interface yields substantial runtime and memory gains when
+$n \ll p$.
+
+## References
