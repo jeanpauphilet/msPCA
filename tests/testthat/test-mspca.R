@@ -70,7 +70,7 @@ test_that("mspca (Sigma) supports uncorrelatedness constraints", {
   expect_true(is.finite(res$objective_value))
   expect_true(is.finite(res$feasibility_violation))
   expect_equal(colSums(res$x_best^2), rep(1, 2L), tolerance = 1e-6)
-  expect_lte(colSums(res$x_best != 0), c(3L, 3L))
+  expect_true(all(colSums(res$x_best != 0) <= c(3L, 3L)))
   expect_equal(res$feasibility_violation,
                feasibility_violation_off(Sigma, res$x_best, 1L),
                tolerance = 1e-6)
@@ -122,7 +122,7 @@ test_that("mspca (X) supports uncorrelatedness constraints", {
   expect_equal(rownames(res$x_best), colnames(X))
   expect_true(all(is.finite(res$x_best)))
   expect_equal(colSums(res$x_best^2), rep(1, 2L), tolerance = 1e-6)
-  expect_lte(colSums(res$x_best != 0), c(3L, 3L))
+  expect_true(all(colSums(res$x_best != 0) <= c(3L, 3L)))
 })
 
 # ---------- Boundary cases --------------------------------------------------
@@ -149,7 +149,7 @@ test_that("mspca (Sigma) supports dense components with k equal to p", {
   expect_equal(dim(res$x_best), c(p, 2L))
   expect_true(all(is.finite(res$x_best)))
   expect_equal(colSums(res$x_best^2), c(1, 1), tolerance = 1e-6)
-  expect_lte(colSums(res$x_best != 0), c(p, p))
+  expect_true(all(colSums(res$x_best != 0) <= c(p, p)))
 })
 
 test_that("mspca (X) supports one-sparse and dense components", {
