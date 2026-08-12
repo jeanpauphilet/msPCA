@@ -1,4 +1,4 @@
-# msPCA 0.5.1 (development)
+# msPCA 0.5.1
 
 * Added the `snp500` dataset: the market-deflated correlation matrix of daily log-returns for 423 S&P 500 constituents, January 2010 - December 2019 (423 x 423, xz-compressed). Derived from a CC0-licensed Kaggle dataset by `data-raw/snp500.R`.
 * Added the vignette "Case study: sparse factors in S&P 500 returns", a full application of `mspca()` to `snp500` comparing the two non-redundancy constraints.
