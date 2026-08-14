@@ -78,7 +78,7 @@ Riemannian proximal gradient, and dictionary learning.
 ## Environment
 
 Experiments were conducted on a MacBook Air with an Apple M2 chip and 24 GB of RAM, with
-R version 4.6.0 (2026-04-24), `msPCA` v0.5.0, `elasticnet` v1.3, `PMA` v1.2.4, `sparsepca`
+R version 4.6.0 (2026-04-24), `msPCA` v0.5.1, `elasticnet` v1.3, `PMA` v1.2.4, `sparsepca`
 v0.1.2, `mixOmics` v6.36.0, `nsprcomp` v0.5.1.2, `amanpg` v0.1.0, `reticulate` v1.40.0, and
 `scikit-learn` v1.6.1 (Python 3.11). Full session information is recorded in
 [`replication/sessionInfo.txt`](https://github.com/jeanpauphilet/msPCA/blob/main/replication/sessionInfo.txt).

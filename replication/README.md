@@ -47,7 +47,7 @@ macOS on Apple M2. Required packages and the versions used for the results repor
 
 | Package | Version |
 |---------|---------|
-| msPCA | 0.5.0 |
+| msPCA | 0.5.1 |
 | elasticnet | 1.3 |
 | PMA | 1.2.4 |
 | sparsepca | 0.1.2 |
@@ -132,11 +132,13 @@ This sources all scripts in the correct order:
 5. `benchmarking/notebook_breast.R` — Section 5 benchmarking (breast cancer)
 6. `benchmarking/notebook_riboflavin.R` — Section 5 benchmarking (riboflavin)
 7. `case_study/case_study_SnP.R` — Section 6 case study
-8. `../notebooks/notebook_synthetic.R` — synthetic benchmark behind the README and pkgdown home-page figures
 
-Between them these regenerate every derived file the paper, the vignettes and the website display, including the three sets that live outside this folder: `../vignettes/figures/snp_*.png`, `../inst/vignette-data/snp_varyingk_results.csv` and `../man/figures/synthetic_*.png`. Nothing needs to be copied by hand.
+`run_all.R` runs the contents of this folder only. Between them these scripts regenerate the benchmarking tables, the paper figures, and the two sets consumed elsewhere in the package: `../vignettes/figures/snp_*.png` and `../inst/vignette-data/snp_varyingk_results.csv`. The case-study script writes both destinations on every run, so those need no copying by hand.
 
-`run_all.R` does not rebuild the rendered site in `docs/`. After a re-run, update the tables and prose in `vignettes/` to match the new numbers, then re-render with `pkgdown::build_site()`.
+Two things it deliberately leaves alone:
+
+- **The synthetic benchmark.** `notebooks/notebook_synthetic.R` produces the figures shown in the top-level README and on the pkgdown home page (`man/figures/synthetic_*.png`). It lives outside `replication/` and is run separately, from the repository root. It writes to `notebooks/`, so the two PNGs must then be copied into `man/figures/` — otherwise the README keeps displaying the previous run's figures.
+- **The rendered site.** After a re-run, update the tables and prose in `vignettes/` to match the new numbers, then re-render `docs/` with `pkgdown::build_site()`.
 
 Note: the riboflavin and breast cancer benchmarking notebooks are computationally intensive and may take several minutes to complete.
 

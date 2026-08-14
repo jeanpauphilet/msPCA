@@ -11,23 +11,23 @@
 ##   2. Worked example (Section 4)
 ##   3. Benchmarking notebooks (Section 5)
 ##   4. Case study: S&P 500 (Section 6)
-##   5. Synthetic benchmark (README / website figures)
 ##
-## Running this file regenerates every derived file that the paper, the
-## vignettes and the pkgdown site display:
+## This script runs the contents of replication/ only. It regenerates:
 ##
 ##   benchmarking/benchmarking_results_*.csv   benchmarking article tables
 ##   case_study/snp_*.pdf                      paper figures
 ##   ../vignettes/figures/snp_*.png            case-study vignette figures
 ##   ../inst/vignette-data/snp_varyingk_results.csv
 ##                                             read by the case-study vignette
-##   ../man/figures/synthetic_*.png            README and pkgdown home page
-##   ../notebooks/msPCA_synthetic_results.csv  synthetic benchmark results
 ##
-## The three destinations outside replication/ matter: writing only to the
-## replication folder is how the vignette and README came to display figures
-## older than the results behind them. The scripts now write to both places,
-## so nothing needs to be copied by hand.
+## The last two live outside this folder because the case-study vignette and
+## the website read them from there; case_study_SnP.R writes both destinations
+## on every run, so nothing needs copying by hand.
+##
+## NOT covered here: the synthetic benchmark behind the README and pkgdown
+## home-page figures (man/figures/synthetic_*.png). That is
+## notebooks/notebook_synthetic.R, which sits outside replication/ and is run
+## separately from the repository root.
 ##
 ## What this does NOT do is rebuild the rendered website in docs/. After a
 ## re-run, the tables and prose in vignettes/ have to be updated to match the
@@ -46,58 +46,42 @@ Sys.setenv(
 
 ## 1. Environment details
 cat("\n============================================================\n")
-cat(" [1/8] environment_details.R\n")
+cat(" [1/7] environment_details.R\n")
 cat("============================================================\n\n")
 source("environment_details.R")
 
 ## 2. Worked example
 cat("\n============================================================\n")
-cat(" [2/8] worked_example/worked_example.R\n")
+cat(" [2/7] worked_example/worked_example.R\n")
 cat("============================================================\n\n")
 source("worked_example/worked_example.R")
 
 ## 3. Benchmarking
 cat("\n============================================================\n")
-cat(" [3/8] benchmarking/notebook_mtcars.R\n")
+cat(" [3/7] benchmarking/notebook_mtcars.R\n")
 cat("============================================================\n\n")
 source("benchmarking/notebook_mtcars.R")
 
 cat("\n============================================================\n")
-cat(" [4/8] benchmarking/notebook_pitprops.R\n")
+cat(" [4/7] benchmarking/notebook_pitprops.R\n")
 cat("============================================================\n\n")
 source("benchmarking/notebook_pitprops.R")
 
 cat("\n============================================================\n")
-cat(" [5/8] benchmarking/notebook_breast.R\n")
+cat(" [5/7] benchmarking/notebook_breast.R\n")
 cat("============================================================\n\n")
 source("benchmarking/notebook_breast.R")
 
 cat("\n============================================================\n")
-cat(" [6/8] benchmarking/notebook_riboflavin.R\n")
+cat(" [6/7] benchmarking/notebook_riboflavin.R\n")
 cat("============================================================\n\n")
 source("benchmarking/notebook_riboflavin.R")
 
 ## 4. Case study
 cat("\n============================================================\n")
-cat(" [7/8] case_study/case_study_SnP.R\n")
+cat(" [7/7] case_study/case_study_SnP.R\n")
 cat("============================================================\n\n")
 source("case_study/case_study_SnP.R")
-
-## 5. Synthetic benchmark (README / pkgdown home-page figures)
-##
-## This one lives in ../notebooks/ rather than here, because its outputs are
-## package front-page assets rather than paper results. It is included so that
-## a single run of this script refreshes every generated file the README, the
-## vignettes and the website display -- man/figures/synthetic_*.png among them,
-## which previously went two months stale against the results behind them.
-##
-## Note: unlike the scripts above, it installs any missing dependencies
-## (mvtnorm, readr, dplyr, ggplot2, RColorBrewer) rather than failing.
-## It also locates the package root itself, so sourcing it from here is safe.
-cat("\n============================================================\n")
-cat(" [8/8] ../notebooks/notebook_synthetic.R\n")
-cat("============================================================\n\n")
-source("../notebooks/notebook_synthetic.R")
 
 cat("\n============================================================\n")
 cat(" All scripts completed.\n")

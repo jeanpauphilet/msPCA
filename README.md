@@ -146,11 +146,11 @@ figures below.
 ![Out-of-sample fraction of variance explained on synthetic data](man/figures/synthetic_variance_explained.png)
 
 To regenerate these files, run `notebooks/notebook_synthetic.R` from the
-repository root, or run `replication/run_all.R`, which sources it as its final
-step. Either way the figures are written to both `notebooks/` and
-`man/figures/`; the copies displayed above and on the website are the latter.
-For a broader comparison — seven competing packages on four
-real datasets — see the
+repository root. It writes to `notebooks/`; copy the two PNGs into
+`man/figures/` afterwards, since that is where this README and the website read
+them from. `replication/run_all.R` does not cover this script — it runs the
+contents of `replication/` only. For a broader comparison — seven competing
+packages on four real datasets — see the
 [benchmarking article](https://jeanpauphilet.github.io/msPCA/articles/benchmarking.html);
 its replication scripts are in [`replication/`](replication).
 

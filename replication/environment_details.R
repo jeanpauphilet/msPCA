@@ -1,6 +1,10 @@
+# Every package whose version the benchmarking article quotes must appear here,
+# otherwise the article's Environment section cannot be checked against the
+# recorded environment. amanpg and reticulate were previously quoted in the
+# article but not recorded; callr drives the benchmarking harness.
 compared_pkgs <- c(
   "msPCA", "elasticnet", "PMA", "sparsepca",
-  "mixOmics", "nsprcomp"
+  "mixOmics", "nsprcomp", "amanpg", "reticulate", "callr"
 )
 
 # Add dataset/helper packages used in a given script if relevant:
@@ -29,6 +33,21 @@ r_platform <- data.frame(
   release = Sys.info()[["release"]],
   sysname = Sys.info()[["sysname"]],
   stringsAsFactors = FALSE
+)
+
+# scikit-learn is quoted in the article too, but lives on the Python side;
+# record it here so the whole Environment section is verifiable from one file.
+sklearn_version <- tryCatch({
+  if (requireNamespace("reticulate", quietly = TRUE)) {
+    as.character(reticulate::import("sklearn")$`__version__`)
+  } else NA_character_
+}, error = function(e) NA_character_)
+
+pkg_versions <- rbind(
+  pkg_versions,
+  data.frame(package = "scikit-learn (Python)",
+             installed = !is.na(sklearn_version),
+             version = sklearn_version, stringsAsFactors = FALSE)
 )
 
 # Save machine-readable tables

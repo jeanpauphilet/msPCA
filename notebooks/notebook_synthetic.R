@@ -22,49 +22,10 @@ library(elasticnet)
 
 set.seed(42)
 
-## -----------------------------------------------------------
-## Output destinations
-##
-## The two figures produced below are displayed in README.md and on the
-## pkgdown home page, both of which read them from man/figures/ -- not
-## from notebooks/. Writing only to notebooks/ is how the README came to
-## be showing figures two months older than the results behind them, so
-## every figure is now saved to both locations.
-##
-## The script may be sourced from the repository root or from
-## replication/ (which is what run_all.R does), so locate the package
-## root by looking for DESCRIPTION rather than assuming the working
-## directory.
-## -----------------------------------------------------------
-find_pkg_root <- function() {
-  for (cand in c(".", "..", "../..")) {
-    if (file.exists(file.path(cand, "DESCRIPTION"))) return(normalizePath(cand))
-  }
-  stop("Could not locate the package root: no DESCRIPTION found in '.', '..' ",
-       "or '../..'. Run this script from the repository root or from ",
-       "replication/.", call. = FALSE)
-}
-
-PKG_ROOT   <- find_pkg_root()
-output_dir <- file.path(PKG_ROOT, "notebooks")
-manfig_dir <- file.path(PKG_ROOT, "man", "figures")
-for (d in c(output_dir, manfig_dir))
-  dir.create(d, recursive = TRUE, showWarnings = FALSE)
-
+output_dir <- if (dir.exists("notebooks")) "notebooks" else "."
 results_csv <- file.path(output_dir, "msPCA_synthetic_results.csv")
 fig_ortho <- file.path(output_dir, "synthetic_orthogonality_violation.png")
 fig_fve <- file.path(output_dir, "synthetic_variance_explained.png")
-
-## Save a figure to notebooks/ (working copy) and to man/figures/ (the
-## copy README.md and the pkgdown site actually display).
-save_figure_both <- function(path, plot, ...) {
-  ggplot2::ggsave(filename = path, plot = plot, ...)
-  ggplot2::ggsave(filename = file.path(manfig_dir, basename(path)),
-                  plot = plot, ...)
-  cat("  wrote ", path, "\n    and ", file.path(manfig_dir, basename(path)),
-      "\n", sep = "")
-  invisible(NULL)
-}
 
 p = 50 #Dimension
 r = 2 #Number of sparse PCs
@@ -182,7 +143,7 @@ p_ortho <- sumdf %>%
         panel.grid.minor = element_line(colour = "grey90"))
 
 print(p_ortho)
-save_figure_both(fig_ortho, p_ortho, width = 8, height = 5, dpi = 300)
+ggsave(filename = fig_ortho, plot = p_ortho, width = 8, height = 5, dpi = 300)
 
 p_fve <- sumdf %>%
   #filter(n <= 500) %>%
@@ -200,5 +161,5 @@ p_fve <- sumdf %>%
         panel.grid.minor = element_line(colour = "grey90"))
 
 print(p_fve)
-save_figure_both(fig_fve, p_fve, width = 8, height = 5, dpi = 300)
+ggsave(filename = fig_fve, plot = p_fve, width = 8, height = 5, dpi = 300)
 
