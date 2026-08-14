@@ -44,8 +44,8 @@ plus a `type` selector):
 With `type = "X"`, `mspca()` applies the algorithm to the data directly via
 the products `t(X) %*% (X %*% beta)` and never forms the `p x p` matrix. This is
 substantially faster and more memory-efficient when `n << p`: on the riboflavin
-benchmark (`n = 71`, `p = 4088`) it cuts runtime from 85.7 s to 2.2 s and peak
-working memory from 640 MB to 44 MB, at identical variance explained. Pass
+benchmark (`n = 71`, `p = 4088`) it cuts median runtime from 56.7 s to 1.8 s and
+peak working memory from 640 MB to 44 MB, at identical variance explained. Pass
 `type = "X"` whenever the number of variables greatly exceeds the number of
 observations; when `n > p` the dense `type = "Sigma"` path is cheaper.
 
@@ -146,7 +146,10 @@ figures below.
 ![Out-of-sample fraction of variance explained on synthetic data](man/figures/synthetic_variance_explained.png)
 
 To regenerate these files, run `notebooks/notebook_synthetic.R` from the
-repository root. For a broader comparison — seven competing packages on four
+repository root, or run `replication/run_all.R`, which sources it as its final
+step. Either way the figures are written to both `notebooks/` and
+`man/figures/`; the copies displayed above and on the website are the latter.
+For a broader comparison — seven competing packages on four
 real datasets — see the
 [benchmarking article](https://jeanpauphilet.github.io/msPCA/articles/benchmarking.html);
 its replication scripts are in [`replication/`](replication).

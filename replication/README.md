@@ -132,6 +132,11 @@ This sources all scripts in the correct order:
 5. `benchmarking/notebook_breast.R` — Section 5 benchmarking (breast cancer)
 6. `benchmarking/notebook_riboflavin.R` — Section 5 benchmarking (riboflavin)
 7. `case_study/case_study_SnP.R` — Section 6 case study
+8. `../notebooks/notebook_synthetic.R` — synthetic benchmark behind the README and pkgdown home-page figures
+
+Between them these regenerate every derived file the paper, the vignettes and the website display, including the three sets that live outside this folder: `../vignettes/figures/snp_*.png`, `../inst/vignette-data/snp_varyingk_results.csv` and `../man/figures/synthetic_*.png`. Nothing needs to be copied by hand.
+
+`run_all.R` does not rebuild the rendered site in `docs/`. After a re-run, update the tables and prose in `vignettes/` to match the new numbers, then re-render with `pkgdown::build_site()`.
 
 Note: the riboflavin and breast cancer benchmarking notebooks are computationally intensive and may take several minutes to complete.
 
