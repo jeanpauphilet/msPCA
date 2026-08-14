@@ -71,7 +71,10 @@ non-zero loadings per component.</p>
 
 <dt id="arg-c">C<a class="anchor" aria-label="anchor" href="#arg-c"></a></dt>
 <dd><p>(optional) A numeric matrix (p x p). The covariance or correlation
-matrix used when fitting. May be omitted for <code>type = "X"</code> results.</p></dd>
+matrix used when fitting. Not required: <code><a href="mspca.html">mspca()</a></code> stores the per-PC
+variance figures and the variable names on the fitted object, for both
+input types. Supplying <code>C</code> recomputes the variance figures from it and
+takes the row labels from its dimnames.</p></dd>
 
 
 <dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
@@ -101,7 +104,7 @@ may be omitted because the figures are stored inside the object.</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">TestMat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="mspca.html">mspca</a></span><span class="op">(</span><span class="va">TestMat</span>, r <span class="op">=</span> <span class="fl">2</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res</span>, <span class="va">TestMat</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> msPCA solution: 2 sparse PCs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Pct. variance explained: 32.45835 27.98031 </span>
@@ -109,14 +112,14 @@ may be omitted because the figures are stored inside the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Sparse PCs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            [,1]       [,2]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mpg  -0.4994877  0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cyl   0.4952709  0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> disp  0.5096594  0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hp    0.0000000 -0.5180516</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> wt    0.4954454  0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> qsec  0.0000000  0.5056626</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> vs    0.0000000  0.4935996</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> carb  0.0000000 -0.4819620</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mpg  -0.4994875  0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cyl   0.4952715  0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> disp  0.5096593  0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hp    0.0000000 -0.5180510</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> wt    0.4954450  0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> qsec  0.0000000  0.5056635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> vs    0.0000000  0.4935976</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> carb  0.0000000 -0.4819637</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -128,7 +131,7 @@ may be omitted because the figures are stored inside the object.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

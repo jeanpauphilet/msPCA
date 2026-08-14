@@ -156,7 +156,13 @@ correlation results.</p>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="va">results_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">results</span><span class="op">)</span></span></code></pre></div>
-<p>We also run <code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> <span class="citation">(Sigg 2019)</span> at the same budgets as a reference.
+<p>Note that <code>snp500</code> is a deflated correlation matrix:
+removing the market factor leaves
+<code>tr(snp500) = p - lambda_1 &lt; p</code>, so its average variance
+is below one. The <code>pwcorr</code> column is normalized by that
+average variance, which keeps it on the same scale as the orthogonality
+column and comparable across the two constraint types.</p>
+<p>We also run <code>nsprcomp::nsprcomp()</code> <span class="citation">(Sigg 2019)</span> at the same budgets as a reference.
 Note that <code>nsprcomp()</code> requires a data matrix rather than a
 covariance matrix, so it needs the deflated returns
 <code>XR &lt;- X %*% P</code> rather than <code>snp500</code>. That
@@ -209,66 +215,66 @@ grid.</caption>
 <tbody>
 <tr class="odd">
 <td align="right">5</td>
-<td align="right">0.0330</td>
-<td align="right">2e-04</td>
-<td align="right">0.0272</td>
-<td align="right">0.0537</td>
+<td align="right">0.0347</td>
+<td align="right">0.0155</td>
+<td align="right">0.0231</td>
+<td align="right">0.0403</td>
 <td align="right">0.0409</td>
 <td align="right">0.0000</td>
 </tr>
 <tr class="even">
 <td align="right">10</td>
-<td align="right">0.0647</td>
-<td align="right">1e-04</td>
-<td align="right">0.0384</td>
-<td align="right">0.0000</td>
-<td align="right">0.0684</td>
+<td align="right">0.0639</td>
+<td align="right">0.0001</td>
+<td align="right">0.0412</td>
+<td align="right">0.4018</td>
+<td align="right">0.0650</td>
 <td align="right">0.0000</td>
 </tr>
 <tr class="odd">
 <td align="right">15</td>
 <td align="right">0.0758</td>
-<td align="right">1e-04</td>
-<td align="right">0.0545</td>
-<td align="right">0.2917</td>
-<td align="right">0.0707</td>
+<td align="right">0.0001</td>
+<td align="right">0.0511</td>
+<td align="right">0.3083</td>
+<td align="right">0.0820</td>
 <td align="right">0.0000</td>
 </tr>
 <tr class="even">
 <td align="right">20</td>
-<td align="right">0.0919</td>
-<td align="right">1e-04</td>
-<td align="right">0.0721</td>
-<td align="right">0.4378</td>
-<td align="right">0.0986</td>
+<td align="right">0.0930</td>
+<td align="right">0.0001</td>
+<td align="right">0.0531</td>
+<td align="right">0.1306</td>
+<td align="right">0.0893</td>
 <td align="right">0.0000</td>
 </tr>
 <tr class="odd">
 <td align="right">25</td>
-<td align="right">0.0967</td>
-<td align="right">1e-04</td>
-<td align="right">0.0779</td>
-<td align="right">0.4744</td>
+<td align="right">0.0953</td>
+<td align="right">0.0001</td>
+<td align="right">0.0593</td>
+<td align="right">0.3229</td>
 <td align="right">0.1083</td>
 <td align="right">0.0148</td>
 </tr>
 <tr class="even">
 <td align="right">30</td>
-<td align="right">0.1004</td>
-<td align="right">1e-04</td>
-<td align="right">0.0863</td>
-<td align="right">0.4241</td>
-<td align="right">0.1025</td>
-<td align="right">0.1028</td>
+<td align="right">0.1113</td>
+<td align="right">0.0001</td>
+<td align="right">0.0686</td>
+<td align="right">0.3632</td>
+<td align="right">0.1026</td>
+<td align="right">0.1285</td>
 </tr>
 <tr class="odd">
 <td align="right">35</td>
-<td align="right">0.1139</td>
-<td align="right">1e-04</td>
-<td align="right">0.0830</td>
-<td align="right">0.5259</td>
-<td align="right">0.1052</td>
-<td align="right">0.1982</td>
+<td align="right">0.1142</td>
+<td align="right">0.0001</td>
+<td align="right">0.0751</td>
+<td align="right">0.4014</td>
+<td align="right">0.0949</td>
+<td align="right">0.0205</td>
 </tr>
 </tbody>
 </table>
@@ -279,7 +285,7 @@ grid.</caption>
 <p>The figures below report the fraction of variance explained (FVE),
 the orthogonality violation, and the uncorrelatedness violation as a
 function of <code>k</code>, for <code>msPCA</code> under each constraint
-type, against <code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> at the same sparsity
+type, against <code>nsprcomp::nsprcomp()</code> at the same sparsity
 budgets.</p>
 <p><img src="figures/snp_fve.png" class="r-plt" alt="" width="32%"><img src="figures/snp_orth.png" class="r-plt" alt="" width="32%"><img src="figures/snp_pwcorr.png" class="r-plt" alt="" width="32%"></p>
 <p><em>Left: fraction of variance explained vs. sparsity budget k.
@@ -287,25 +293,29 @@ Center: orthogonality violation vs. k. Right: uncorrelatedness violation
 vs. k. Results are shown for <code>msPCA</code> with orthogonality
 constraints (blue, solid), <code>msPCA</code> with zero pairwise
 correlation constraints (green, dashed), and
-<code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> (orange, dotted). All methods use r =
+<code>nsprcomp::nsprcomp()</code> (orange, dotted). All methods use r =
 4 components.</em></p>
-<p>On this dataset, <code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> returns orthogonal
-loading vectors for small-to-moderate sparsity budgets
+<p>On this dataset, <code>nsprcomp::nsprcomp()</code> returns exactly
+orthogonal loading vectors for small-to-moderate sparsity budgets
 (<code>k &lt;= 20</code>), reflecting the effectiveness of the deflation
-procedure when component supports are sufficiently disjoint. As
-<code>k</code> grows, however, the orthogonality violation increases,
-reaching 0.20 at <code>k = 35</code>.</p>
-<p>By contrast, <code>msPCA</code> with orthogonality constraints
-maintains near-zero orthogonality violation across all values of
-<code>k</code> — at most 1e-4, the default feasibility tolerance —
-because the penalty on constraint violation is explicitly tightened
-throughout the algorithm. At the smallest budget (<code>k = 5</code>)
-the violation is 2.2e-4, marginally above the default tolerance. In
-terms of FVE, <code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> achieves comparable or
-slightly higher values for most sparsity budgets, with
-<code>msPCA</code> ahead only at the largest budget
-(<code>k = 35</code>).</p>
-<p>Neither <code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> nor
+procedure when component supports are sufficiently disjoint. Beyond that
+the guarantee lapses, and not gradually: the violation is 0.015 at
+<code>k = 25</code>, 0.13 at <code>k = 30</code> and 0.020 at
+<code>k = 35</code>. The behaviour is not monotone in <code>k</code>, so
+it cannot be anticipated from the sparsity budget.</p>
+<p>By contrast, <code>msPCA</code> with orthogonality constraints holds
+the violation at or below 1e-4 — the default feasibility tolerance — at
+every budget from <code>k = 10</code> upward, because the penalty on
+constraint violation is explicitly tightened throughout the algorithm.
+The exception is the smallest budget, <code>k = 5</code>, where the
+solver terminates at 1.6e-2, well outside tolerance; with only 5
+nonzeros per component the feasible set is tight enough that the
+heuristic does not always reach it. In terms of FVE,
+<code>nsprcomp::nsprcomp()</code> is ahead at <code>k = 5, 10, 15</code>
+and <code>25</code>, while <code>msPCA</code> is ahead at
+<code>k = 20, 30</code> and <code>35</code>; neither dominates across
+the grid.</p>
+<p>Neither <code>nsprcomp::nsprcomp()</code> nor
 orthogonality-constrained <code>msPCA</code> yields uncorrelated PCs
 here. To obtain uncorrelated PCs we run <code>msPCA</code> with pairwise
 correlation constraints instead, which yields PCs with near-zero
@@ -334,8 +344,15 @@ Indices (2023)</span>].</p>
 <span><span class="va">res_corr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mspca.html">mspca</a></span><span class="op">(</span><span class="va">snp500</span>, r <span class="op">=</span> <span class="fl">4</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">4</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>                  maxIter <span class="op">=</span> <span class="fl">100</span>, feasibilityConstraintType <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res_orth</span>, <span class="va">snp500</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res_corr</span>, <span class="va">snp500</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res_orth</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res_corr</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> on either fit reports the violations under the
+constraint that fit actually enforced, and labels them as such, so the
+two summaries are not silently measuring different solutions with the
+same yardstick:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_orth</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_corr</span><span class="op">)</span></span></code></pre></div>
 <p><img src="figures/snp_heatmap.png" class="r-plt" alt="" width="95%"></p>
 <p><em>Loadings of the 4 PCs (sparsity k = 10) returned by
 <code>msPCA</code> with orthogonality (left) or zero-correlation (right)
@@ -344,7 +361,9 @@ constraints.</em></p>
 <h3 id="under-orthogonality-constraints">Under orthogonality constraints<a class="anchor" aria-label="anchor" href="#under-orthogonality-constraints"></a>
 </h3>
 <p>The four PCs concentrate entirely within the utility and REIT
-sectors, with no cross-sector loadings:</p>
+sectors, with no cross-sector loadings. Each PC has 10 nonzeros by
+construction, but a few are numerically negligible (below 1e-4); the
+economically meaningful names are:</p>
 <ul>
 <li>
 <strong>PC1</strong> loads on regulated electric utilities (AEP,
@@ -362,13 +381,18 @@ AWK, CMS, FE, LNT, SRE).</li>
 </ul>
 <p>The orthogonality constraint therefore fragments the market into
 three disjoint utility clusters and one diversified REIT basket, with
-each PC loading exclusively on one sector.</p>
+each PC loading exclusively on one sector. The four components carry
+comparable weight, explaining 2.13%, 1.62%, 1.52% and 1.21% of total
+variance respectively.</p>
 </div>
 <div class="section level3">
 <h3 id="under-zero-correlation-constraints">Under zero-correlation constraints<a class="anchor" aria-label="anchor" href="#under-zero-correlation-constraints"></a>
 </h3>
-<p>The components are more sector-diverse, each capturing a cross-sector
-contrast:</p>
+<p>The components are more sector-diverse, and their supports overlap
+rather than partitioning the universe — Consolidated Edison (ED) appears
+in all four. Variance is also far more concentrated in the leading
+component: 2.28%, 0.67%, 0.61% and 0.55%, against a much flatter profile
+under orthogonality.</p>
 <ul>
 <li>
 <strong>PC1</strong> consolidates the entire utility sector into a
@@ -376,25 +400,24 @@ single broad component (AEP, CMS, DTE, DUK, ED, ES, PNW, SO, WEC, XEL),
 merging stocks that the orthogonality constraint split across three
 separate PCs.</li>
 <li>
-<strong>PC2</strong> contrasts homebuilders and residential
-construction (DHI, LEN, NVR, PHM, positive; MAS and MGM in the same
-direction) against financials (TFC, EG) and industrials (BA) with
-negative loadings, capturing the interest-rate sensitivity of the
-housing sector.</li>
+<strong>PC2</strong> is an energy component: oil and gas exploration
+(APA, DVN) and oilfield services (BKR, HAL, SLB) load together at around
+0.40–0.44, alongside ED at 0.29, against small negative loadings on
+Dollar General (DG), State Street (STT) and Teradyne (TER).</li>
 <li>
-<strong>PC3</strong> identifies a managed-care and health-insurance
-theme: large health insurers and managed-care organizations (UNH, HUM,
-ELV, MOH, CNC, UHS) load positively alongside diagnostics providers
-(DGX, LH), while American Express (AXP) carries a large negative
-loading, reflecting the contrast between healthcare spending and
-consumer credit.</li>
+<strong>PC3</strong> identifies pharmaceutical distribution —
+McKesson (MCK), Cardinal Health (CAH) and Cencora (COR) all load above
+0.51 — extended by generics (VTRS) and diagnostics (LH), against Best
+Buy (BBY) and, more weakly, KLA (KLAC) and Air Products (APD).</li>
 <li>
-<strong>PC4</strong> loads positively on oil and gas exploration
-(APA, COP, DVN, EOG) and oilfield services (BKR, HAL, SLB), against
-financial custodians (STT) and semiconductor-test equipment (TER)
-negatively, capturing the energy sector’s divergence from interest-rate
-sensitive financials and technology.</li>
+<strong>PC4</strong> is a mega-cap technology component: Alphabet’s
+two share classes (GOOG, GOOGL) load at about -0.60, with Amazon (AMZN)
+at -0.38 and Microsoft (MSFT) at -0.22, against positive loadings on
+Best Buy (BBY) and Quanta Services (PWR).</li>
 </ul>
+<p>Signs are arbitrary up to a global flip within each component; what
+matters is the contrast between the positively and negatively loaded
+groups.</p>
 </div>
 </div>
 <div class="section level2">
@@ -402,11 +425,21 @@ sensitive financials and technology.</li>
 </h2>
 <p>Orthogonality and zero pairwise correlation are not interchangeable.
 On strongly correlated data they recover qualitatively different factor
-structures: the former partitions the market into disjoint single-sector
-blocks, the latter produces broader cross-sector contrasts. Choose
-orthogonality when the loading vectors will serve as a projection basis,
-and zero pairwise correlation when the goal is statistically
-decorrelated scores for downstream regression or classification.</p>
+structures. Orthogonality forces disjoint supports, and at
+<code>k = 10</code> it spends all four components inside two sectors:
+three separate utility clusters and one REIT basket. Zero pairwise
+correlation allows supports to overlap and recovers four distinct themes
+instead — utilities, energy, pharmaceutical distribution and mega-cap
+technology — each expressed as a contrast between positively and
+negatively loaded groups. The price is concentration: under zero
+correlation the leading component carries most of the explained variance
+(2.28% against 0.55–0.67% for the others), whereas orthogonality spreads
+it more evenly (2.13% down to 1.21%), and total FVE is markedly lower at
+every sparsity budget.</p>
+<p>Choose orthogonality when the loading vectors will serve as a
+projection basis, and zero pairwise correlation when the goal is
+statistically decorrelated scores for downstream regression or
+classification.</p>
 </div>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
@@ -433,7 +466,7 @@ Non-Negative and Sparse PCA</em>. <a href="https://CRAN.R-project.org/package=ns
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

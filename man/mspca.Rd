@@ -98,9 +98,9 @@ the former sums over all pairs \eqn{t \ge s} and so includes the
 normalization terms \eqn{|u_t^\top u_t - 1|} on the diagonal (under both
 constraint types, the diagonal terms are the unit-norm residuals),
 whereas the latter is the strictly off-diagonal sum returned by
-\code{\link[=feasibility_violation_off]{feasibility_violation_off()}}.
-The solver value is the quantity compared against \code{feasibilityTolerance}
-during the fit; the off-diagonal value is the redundancy diagnostic.
+\code{\link[=feasibility_violation_off]{feasibility_violation_off()}}. The solver value is the quantity compared
+against \code{feasibilityTolerance} during the fit; the off-diagonal value is
+the redundancy diagnostic.
 }
 \description{
 Returns multiple sparse principal components of a dataset using an iterative

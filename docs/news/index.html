@@ -43,6 +43,36 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.1" id="mspca-051">msPCA 0.5.1<a class="anchor" aria-label="anchor" href="#mspca-051"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-0-5-1">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-5-1"></a></h3>
+<ul><li>
+<code><a href="../reference/summary.mspca.html">summary.mspca()</a></code> no longer reports orthogonality violations for models fitted under uncorrelatedness constraints. The method defaulted <code>feasibilityConstraintType = 0</code> and <code><a href="../reference/mspca.html">mspca()</a></code> did not record the type used to fit, so a user who fitted with <code>feasibilityConstraintType = 1</code> and called <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> without repeating the setting silently received the wrong diagnostic. The fitted type is now stored in the object and is the default for all diagnostics. Reported by a referee.</li>
+<li>
+<code>summary(object, feasibilityConstraintType = 1)</code> on a result with no <code>C</code> argument previously substituted the identity for the covariance matrix in the scalar violation, returning the orthogonality figure under the uncorrelatedness label, while the pairwise matrix errored on <code>NULL</code>. Both paths now use the values stored at fit time and need no <code>C</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-behaviour-0-5-1">New behaviour<a class="anchor" aria-label="anchor" href="#new-behaviour-0-5-1"></a></h3>
+<ul><li>Uncorrelatedness violations are now normalized by the average variance <code>tr(Sigma)/p</code>, i.e. the pairwise term is <code>|u_t' Sigma u_s| / (tr(Sigma)/p)</code> rather than <code>|u_t' Sigma u_s|</code>. Because the loadings are unit-norm, the unnormalized quantity scaled linearly with <code>Sigma</code>, so <code>feasibilityTolerance</code> was effectively tighter on a covariance matrix with large variances than on the corresponding correlation matrix, and the same data expressed in different units gave different stopping behaviour. The normalized measure is invariant to a rescaling of <code>Sigma</code>. This affects <code>mspca(..., feasibilityConstraintType = 1)</code> (the <code>feasibility_violation</code> field, the stopping rule, and the dual step size), <code><a href="../reference/feasibility_violation_off.html">feasibility_violation_off()</a></code>, and the <code>uncorrelatedness</code> matrix in <code>nonredundancy</code>. Orthogonality violations are unchanged, as is the diagonal <code>|u_t' u_t - 1|</code> part of the solver’s measure. Numerical results under <code>feasibilityConstraintType = 1</code> will differ from earlier versions unless the input has <code>tr(Sigma)/p = 1</code> (e.g. a correlation matrix).</li>
+<li>
+<code><a href="../reference/mspca.html">mspca()</a></code> now records <code>feasibilityConstraintType</code> and <code>nonredundancy</code> in the returned object. <code>nonredundancy</code> holds two r x r matrices, <code>orthogonality</code> () and <code>uncorrelatedness</code> (), computed after the columns have been sorted by explained variance, so indices always match the reported PC order. Both are stored regardless of which constraint was enforced, so inspecting the solution under the other definition requires neither the covariance matrix nor a refit.</li>
+<li>For <code>type = "X"</code> these are formed via <code>t(X) %*% (X %*% v)</code>, so the p x p matrix is still never materialized.</li>
+<li>
+<code><a href="../reference/summary.mspca.html">summary.mspca()</a></code> gains <code>feasibility_perPC</code> (per-PC maximum violation against any other PC), a <code>max_violation</code> column in the summary table, and <code>feasibilityConstraintType</code> / <code>fittedConstraintType</code> fields. Its printed output now names the constraint definition in use and points to the stored matrices for the other one.</li>
+<li>Passing <code>feasibilityConstraintType</code> explicitly to <code><a href="../reference/summary.mspca.html">summary.mspca()</a></code> still works, for inspecting a solution under the definition that was not enforced, but now warns when it differs from the fitted type.</li>
+<li>
+<code><a href="../reference/mspca.html">mspca()</a></code> validates that <code>feasibilityConstraintType</code> is 0 or 1, and coerces it to integer.</li>
+<li>
+<code>type = "Sigma"</code> fits now carry the variable names on <code>x_best</code>, as <code>type = "X"</code> fits already did. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> therefore labels the loadings correctly without being passed <code>C</code>, which together with the stored variance figures and violation matrices means neither <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> nor <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> needs the covariance matrix for any input type.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-0-5-1">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-5-1"></a></h3>
+<ul><li>Documented that <code>object$feasibility_violation</code> (from the solver) and the violation reported by <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> are different statistics: the former sums over all pairs <code>t &gt;= s</code> and includes the normalization terms on the diagonal, the latter is the strictly off-diagonal sum of <code><a href="../reference/feasibility_violation_off.html">feasibility_violation_off()</a></code>. The solver value is what <code>feasibilityTolerance</code> is compared against; the off-diagonal value is the redundancy diagnostic.</li>
+<li>The <code>C</code> argument of <code><a href="../reference/summary.mspca.html">summary.mspca()</a></code> is soft-deprecated. Every figure the method reports is now stored in the object; <code>C</code> is used only for objects fitted with msPCA 0.5.0 or earlier and will be removed in a future release.</li>
+<li>The “Algorithm and implementation notes” vignette now states the feasibility violation separately for each constraint type, including the <code>tr(C)/p</code> normalization; the introductory vignette shows <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> picking up the fitted constraint type and the stored <code>nonredundancy</code> matrices.</li>
+<li>Documentation fixes: <code>README.md</code> referred to the removed <code>print_mspca()</code> and to a <code>test/</code> directory that is now <code>notebooks/</code>; the <code>mtcars</code> vignette stated the wrong default for <code>scale</code> in <code><a href="../reference/mspca.html">mspca()</a></code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="data-vignettes-and-infrastructure-0-5-1">Data, vignettes and infrastructure<a class="anchor" aria-label="anchor" href="#data-vignettes-and-infrastructure-0-5-1"></a></h3>
 <ul><li>Added the <code>snp500</code> dataset: the market-deflated correlation matrix of daily log-returns for 423 S&amp;P 500 constituents, January 2010 - December 2019 (423 x 423, xz-compressed). Derived from a CC0-licensed Kaggle dataset by <code>data-raw/snp500.R</code>.</li>
 <li>Added the vignette “Case study: sparse factors in S&amp;P 500 returns”, a full application of <code><a href="../reference/mspca.html">mspca()</a></code> to <code>snp500</code> comparing the two non-redundancy constraints.</li>
 <li>Added the vignette “Algorithm and implementation notes”, documenting the optimization problem, both algorithms, the implicit matrix-vector implementation, computational complexity, and guidance on parameter choices.</li>
@@ -52,8 +82,8 @@
 <code>_pkgdown.yml</code> now specifies the article ordering and a grouped reference index.</li>
 <li>
 <code>DESCRIPTION</code> gains <code>Depends: R (&gt;= 3.5)</code>, <code>LazyData: true</code>, <code>LazyDataCompression: xz</code> and <code>BugReports</code>.</li>
-<li>Documentation fixes: <code>README.md</code> referred to the removed <code>print_mspca()</code> and to a <code>test/</code> directory that is now <code>notebooks/</code>; the <code>mtcars</code> vignette stated the wrong default for <code>scale</code> in <code><a href="../reference/mspca.html">mspca()</a></code>.</li>
 </ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0" id="mspca-050">msPCA 0.5.0<a class="anchor" aria-label="anchor" href="#mspca-050"></a></h2><p class="text-muted">CRAN release: 2026-06-25</p>
 <ul><li>
@@ -111,7 +141,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

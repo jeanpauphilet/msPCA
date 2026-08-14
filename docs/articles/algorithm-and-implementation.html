@@ -164,11 +164,26 @@ Per-component contributions are returned by
 <code><a href="../reference/fraction_variance_explained_perPC.html">fraction_variance_explained_perPC()</a></code> and, unnormalised, by
 <code><a href="../reference/variance_explained_perPC.html">variance_explained_perPC()</a></code>.</p>
 <p><strong>Feasibility.</strong> The constraint violation measures how
-far the returned solution is from satisfying the coupling
-constraints,</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">v</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi></mrow><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">f</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑪</mi><mo>,</mo><mi mathvariant="bold-italic">𝑼</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∑</mo><mrow><mi>t</mi><mo>&gt;</mo><msup><mi>t</mi><mo>′</mo></msup></mrow></munder><mrow><mo stretchy="true" form="prefix">|</mo><msubsup><mi mathvariant="bold-italic">𝒖</mi><mi>t</mi><mi>⊤</mi></msubsup><mi mathvariant="bold-italic">𝑪</mi><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub><mo stretchy="true" form="postfix">|</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathrm{viol}_{\mathrm{off}}(\boldsymbol{C}, \boldsymbol{U}) =
+far the returned solution is from satisfying the coupling constraints.
+Under orthogonality it is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">v</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi></mrow><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">f</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑼</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∑</mo><mrow><mi>t</mi><mo>&gt;</mo><msup><mi>t</mi><mo>′</mo></msup></mrow></munder><mrow><mo stretchy="true" form="prefix">|</mo><msubsup><mi mathvariant="bold-italic">𝒖</mi><mi>t</mi><mi>⊤</mi></msubsup><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub><mo stretchy="true" form="postfix">|</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathrm{viol}_{\mathrm{off}}(\boldsymbol{U}) =
+  \sum_{t &gt; t'} \left| \boldsymbol{u}_t^\top \boldsymbol{u}_{t'} \right|,</annotation></semantics></math></p>
+<p>and under zero pairwise correlation</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">v</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi></mrow><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">f</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑪</mi><mo>,</mo><mi mathvariant="bold-italic">𝑼</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mi>p</mi><mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑪</mi><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><munder><mo>∑</mo><mrow><mi>t</mi><mo>&gt;</mo><msup><mi>t</mi><mo>′</mo></msup></mrow></munder><mrow><mo stretchy="true" form="prefix">|</mo><msubsup><mi mathvariant="bold-italic">𝒖</mi><mi>t</mi><mi>⊤</mi></msubsup><mi mathvariant="bold-italic">𝑪</mi><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub><mo stretchy="true" form="postfix">|</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathrm{viol}_{\mathrm{off}}(\boldsymbol{C}, \boldsymbol{U}) =
+  \frac{p}{\mathrm{tr}(\boldsymbol{C})}
   \sum_{t &gt; t'} \left| \boldsymbol{u}_t^\top \boldsymbol{C} \boldsymbol{u}_{t'} \right|,</annotation></semantics></math></p>
-<p>computed by <code><a href="../reference/feasibility_violation_off.html">feasibility_violation_off()</a></code>.</p>
+<p>both computed by <code><a href="../reference/feasibility_violation_off.html">feasibility_violation_off()</a></code>. The second
+is normalised by the average variance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑪</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>p</mi></mrow><annotation encoding="application/x-tex">\mathrm{tr}(\boldsymbol{C})/p</annotation></semantics></math>:
+the loading vectors are unit-norm, so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msubsup><mi mathvariant="bold-italic">𝒖</mi><mi>t</mi><mi>⊤</mi></msubsup><mi mathvariant="bold-italic">𝑪</mi><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|\boldsymbol{u}_t^\top \boldsymbol{C} \boldsymbol{u}_{t'}|</annotation></semantics></math>
+is homogeneous of degree one in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝑪</mi><annotation encoding="application/x-tex">\boldsymbol{C}</annotation></semantics></math>
+and the unnormalised sum would depend on the units of the data. With the
+normalisation, a fixed <code>feasibilityTolerance</code> means the same
+thing for a covariance matrix and for the corresponding correlation
+matrix. The same convention is used inside the solver, and for the
+<code>nonredundancy</code> matrices stored on the fitted object.</p>
 </div>
 <div class="section level2">
 <h2 id="lagrangian-alternating-maximization">Lagrangian alternating maximization<a class="anchor" aria-label="anchor" href="#lagrangian-alternating-maximization"></a>
@@ -508,6 +523,17 @@ is close to the identity, but can differ noticeably for strongly
 correlated datasets. See
 <code><a href="../articles/case-study-snp500.html">vignette("case-study-snp500", package = "msPCA")</a></code> for a
 worked comparison.</p>
+<p>The choice is recorded on the fitted object as
+<code>feasibilityConstraintType</code> and becomes the default for every
+diagnostic, so <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> always reports the constraint that
+was actually enforced and names it in its header. Both sets of pairwise
+violations are computed at fit time and stored in
+<code>nonredundancy</code>, so a solution can be scored under the
+definition that was <em>not</em> enforced without a refit:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mspca.html">mspca</a></span><span class="op">(</span><span class="va">Sigma</span>, r <span class="op">=</span> <span class="fl">3</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">3</span><span class="op">)</span>, feasibilityConstraintType <span class="op">=</span> <span class="fl">1</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span>                            <span class="co"># zero-correlation violations, as fitted</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">nonredundancy</span><span class="op">$</span><span class="va">orthogonality</span>         <span class="co"># how far the same solution is from orthogonal</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="iteration-and-restart-budgets">Iteration and restart budgets<a class="anchor" aria-label="anchor" href="#iteration-and-restart-budgets"></a>
@@ -613,7 +639,7 @@ Graphical Statistics</em> 15 (2): 265–86.
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

@@ -126,7 +126,7 @@ correlation matrix (p x p) when <code>type = "Sigma"</code>, or a raw data matri
 
 
 <dt id="arg-feasibilitytolerance">feasibilityTolerance<a class="anchor" aria-label="anchor" href="#arg-feasibilitytolerance"></a></dt>
-<dd><p>(optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to <code>feasibilityConstraintType</code>). Default 1e-4.</p></dd>
+<dd><p>(optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to <code>feasibilityConstraintType</code>). Under uncorrelatedness the violation is normalized by the average variance <code>tr(Sigma)/p</code>, so the tolerance carries the same meaning whether <code>M</code> is a covariance or a correlation matrix. Default 1e-4.</p></dd>
 
 
 <dt id="arg-stallingtolerance">stallingTolerance<a class="anchor" aria-label="anchor" href="#arg-stallingtolerance"></a></dt>
@@ -173,11 +173,37 @@ correlation matrix (p x p) when <code>type = "Sigma"</code>, or a raw data matri
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>"mspca"</code> (a list) with fields: <code>x_best</code> (p x r
 matrix of sparse PC loadings), <code>objective_value</code>, <code>feasibility_violation</code>,
-<code>runtime</code>, <code>variance_explained</code> (per-PC explained variance), and
-<code>total_variance</code> (trace of the covariance matrix). With <code>type = "X"</code> it
+<code>runtime</code>, <code>variance_explained</code> (per-PC explained variance),
+<code>total_variance</code> (trace of the covariance matrix),
+<code>feasibilityConstraintType</code> (the value used to fit, reused as the default
+for all diagnostics), and <code>nonredundancy</code>. With <code>type = "X"</code> it
 additionally records <code>inputType</code>, <code>center</code>, <code>scale</code>, <code>divisor</code>, <code>nObs</code>,
 and <code>p</code>. Use <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> to display the sparse loadings and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> for
 a full per-PC breakdown.</p>
+<p><code>nonredundancy</code> is a list of two r x r matrices, <code>orthogonality</code>
+(\(|u_t^\top u_s|\)) and <code>uncorrelatedness</code>
+(\(|u_t^\top \Sigma u_s| / (\mathrm{tr}(\Sigma)/p)\)), computed once at
+fit time from the sorted loadings. Only the strict upper triangle is
+populated; the diagonal and lower triangle are <code>NA</code>. Both are stored
+regardless of which constraint was enforced, so a summary under either
+definition is available without the covariance matrix and without
+refitting.</p>
+<p>The uncorrelatedness terms are normalized by the average variance
+\(\mathrm{tr}(\Sigma)/p\). The loadings being unit-norm,
+\(|u_t^\top \Sigma u_s|\) scales linearly with \(\Sigma\), so the raw
+quantity - and hence its comparison against <code>feasibilityTolerance</code> -
+would otherwise depend on the units of the data. After normalization the
+measure is invariant to a rescaling of \(\Sigma\), and a covariance and
+a correlation input are on the same footing.</p>
+<p>Note that <code>feasibility_violation</code> (returned by the solver) and the
+violation reported by <code><a href="summary.mspca.html">summary.mspca()</a></code> are <em>different statistics</em>:
+the former sums over all pairs \(t \ge s\) and so includes the
+normalization terms \(|u_t^\top u_t - 1|\) on the diagonal (under both
+constraint types, the diagonal terms are the unit-norm residuals),
+whereas the latter is the strictly off-diagonal sum returned by
+<code><a href="feasibility_violation_off.html">feasibility_violation_off()</a></code>. The solver value is the quantity compared
+against <code>feasibilityTolerance</code> during the fit; the off-diagonal value is
+the redundancy diagnostic.</p>
     </div>
 
     <div class="section level2">
@@ -185,7 +211,43 @@ a full per-PC breakdown.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># From a covariance/correlation matrix (the default type):</span></span></span>
 <span class="r-in"><span><span class="va">TestMat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">mspca</span><span class="op">(</span><span class="va">TestMat</span>, r <span class="op">=</span> <span class="fl">2</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res</span>, <span class="va">TestMat</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> msPCA solution: 2 sparse PCs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Pct. variance explained: 32.45835 27.98031 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Non-zero loadings per PC: 4 4 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Sparse PCs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            [,1]       [,2]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mpg   0.4994875  0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cyl  -0.4952715  0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> disp -0.5096593  0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hp    0.0000000 -0.5180505</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> wt   -0.4954450  0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> qsec  0.0000000  0.5056640</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> vs    0.0000000  0.4935983</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> carb  0.0000000 -0.4819630</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> msPCA summary: 2 sparse PC(s)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Input type   : Sigma </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Runtime (s)  : 0.017 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Constraint   : orthogonality (as fitted) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Per-component statistics:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   PC nonzero variance       fve cumulative_fve max_violation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  PC1       4 3.570419 0.3245835      0.3245835             0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  PC2       4 3.077834 0.2798031      0.6043866             0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Pairwise orthogonality violations (upper triangle):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     PC1 PC2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> PC1   .   0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> PC2   .   .</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Total: 0e+00 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violations under the other definition are stored in `$nonredundancy$uncorrelatedness`.</span>
+<span class="r-in"><span><span class="co"># Equivalent call from the raw data matrix:</span></span></span>
+<span class="r-in"><span><span class="va">res_X</span> <span class="op">&lt;-</span> <span class="fu">mspca</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span>, r <span class="op">=</span> <span class="fl">2</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"X"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res_X</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> msPCA solution: 2 sparse PCs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Pct. variance explained: 32.45835 27.98031 </span>
@@ -196,29 +258,11 @@ a full per-PC breakdown.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mpg   0.4994876  0.0000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> cyl  -0.4952711  0.0000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> disp -0.5096594  0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hp    0.0000000  0.5180512</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hp    0.0000000  0.5180513</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> wt   -0.4954453  0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> qsec  0.0000000 -0.5056634</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> qsec  0.0000000 -0.5056632</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> vs    0.0000000 -0.4935970</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> carb  0.0000000  0.4819641</span>
-<span class="r-in"><span><span class="co"># Equivalent call from the raw data matrix (C need not be passed to print):</span></span></span>
-<span class="r-in"><span><span class="va">res_X</span> <span class="op">&lt;-</span> <span class="fu">mspca</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span>, r <span class="op">=</span> <span class="fl">2</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"X"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res_X</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> msPCA solution: 2 sparse PCs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Pct. variance explained: 32.15198 27.98031 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Non-zero loadings per PC: 4 4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Sparse PCs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            [,1]       [,2]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mpg  -0.5250073  0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cyl   0.4063729  0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> disp  0.5345591  0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hp    0.0000000 -0.5180502</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> wt    0.5229483  0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> qsec  0.0000000  0.5056644</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> vs    0.0000000  0.4935988</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> carb  0.0000000 -0.4819624</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> carb  0.0000000  0.4819643</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -230,7 +274,7 @@ a full per-PC breakdown.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>
