@@ -20,8 +20,18 @@ A float.
 Computes the feasibility violation defined as
 \eqn{\sum_{t > s} |u_{t}^\top u_{s}|} if orthogonality constraints are
 enforced (\code{feasibilityConstraintType = 0}) and
-\eqn{\sum_{t > s} |u_{t}^\top C u_{s}|} if zero-correlation constraints are
-enforced (\code{feasibilityConstraintType = 1}).
+\eqn{\sum_{t > s} |u_{t}^\top C u_{s}| \big/ (\mathrm{tr}(C)/p)} if
+zero-correlation constraints are enforced
+(\code{feasibilityConstraintType = 1}).
+}
+\details{
+In the zero-correlation case the pairwise terms are normalized by the
+average variance \eqn{\mathrm{tr}(C)/p}. Because the PCs are unit-norm,
+\eqn{|u_{t}^\top C u_{s}|} is homogeneous of degree one in \code{C}, so the
+unnormalized quantity depends on the units of the data; dividing by
+\eqn{\mathrm{tr}(C)/p} makes it invariant to a rescaling of \code{C} and hence
+comparable across covariance and correlation input. This matches the
+definition used internally by \code{\link[=mspca]{mspca()}} against \code{feasibilityTolerance}.
 }
 \examples{
 TestMat <- cor(mtcars)

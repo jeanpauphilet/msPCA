@@ -1,5 +1,29 @@
 # msPCA 0.5.1
 
+## Bug fixes
+
+* `summary.mspca()` no longer reports orthogonality violations for models fitted under uncorrelatedness constraints. The method defaulted `feasibilityConstraintType = 0` and `mspca()` did not record the type used to fit, so a user who fitted with `feasibilityConstraintType = 1` and called `summary()` without repeating the setting silently received the wrong diagnostic. The fitted type is now stored in the object and is the default for all diagnostics. Reported by a referee.
+* `summary(object, feasibilityConstraintType = 1)` on a result with no `C` argument previously substituted the identity for the covariance matrix in the scalar violation, returning the orthogonality figure under the uncorrelatedness label, while the pairwise matrix errored on `NULL`. Both paths now use the values stored at fit time and need no `C`.
+
+## New behaviour
+
+* Uncorrelatedness violations are now normalized by the average variance `tr(Sigma)/p`, i.e. the pairwise term is `|u_t' Sigma u_s| / (tr(Sigma)/p)` rather than `|u_t' Sigma u_s|`. Because the loadings are unit-norm, the unnormalized quantity scaled linearly with `Sigma`, so `feasibilityTolerance` was effectively tighter on a covariance matrix with large variances than on the corresponding correlation matrix, and the same data expressed in different units gave different stopping behaviour. The normalized measure is invariant to a rescaling of `Sigma`. This affects `mspca(..., feasibilityConstraintType = 1)` (the `feasibility_violation` field, the stopping rule, and the dual step size), `feasibility_violation_off()`, and the `uncorrelatedness` matrix in `nonredundancy`. Orthogonality violations are unchanged, as is the diagonal `|u_t' u_t - 1|` part of the solver's measure. Numerical results under `feasibilityConstraintType = 1` will differ from earlier versions unless the input has `tr(Sigma)/p = 1` (e.g. a correlation matrix).
+* `mspca()` now records `feasibilityConstraintType` and `nonredundancy` in the returned object. `nonredundancy` holds two r x r matrices, `orthogonality` (\eqn{|u_t^\top u_s|}) and `uncorrelatedness` (\eqn{|u_t^\top \Sigma u_s| / (\mathrm{tr}(\Sigma)/p)}), computed after the columns have been sorted by explained variance, so indices always match the reported PC order. Both are stored regardless of which constraint was enforced, so inspecting the solution under the other definition requires neither the covariance matrix nor a refit.
+* For `type = "X"` these are formed via `t(X) %*% (X %*% v)`, so the p x p matrix is still never materialized.
+* `summary.mspca()` gains `feasibility_perPC` (per-PC maximum violation against any other PC), a `max_violation` column in the summary table, and `feasibilityConstraintType` / `fittedConstraintType` fields. Its printed output now names the constraint definition in use and points to the stored matrices for the other one.
+* Passing `feasibilityConstraintType` explicitly to `summary.mspca()` still works, for inspecting a solution under the definition that was not enforced, but now warns when it differs from the fitted type.
+* `mspca()` validates that `feasibilityConstraintType` is 0 or 1, and coerces it to integer.
+* `type = "Sigma"` fits now carry the variable names on `x_best`, as `type = "X"` fits already did. `print()` therefore labels the loadings correctly without being passed `C`, which together with the stored variance figures and violation matrices means neither `print()` nor `summary()` needs the covariance matrix for any input type.
+
+## Documentation
+
+* Documented that `object$feasibility_violation` (from the solver) and the violation reported by `summary()` are different statistics: the former sums over all pairs `t >= s` and includes the normalization terms on the diagonal, the latter is the strictly off-diagonal sum of `feasibility_violation_off()`. The solver value is what `feasibilityTolerance` is compared against; the off-diagonal value is the redundancy diagnostic.
+* The `C` argument of `summary.mspca()` is soft-deprecated. Every figure the method reports is now stored in the object; `C` is used only for objects fitted with msPCA 0.5.0 or earlier and will be removed in a future release.
+* The "Algorithm and implementation notes" vignette now states the feasibility violation separately for each constraint type, including the `tr(C)/p` normalization; the introductory vignette shows `summary()` picking up the fitted constraint type and the stored `nonredundancy` matrices.
+* Documentation fixes: `README.md` referred to the removed `print_mspca()` and to a `test/` directory that is now `notebooks/`; the `mtcars` vignette stated the wrong default for `scale` in `mspca()`.
+
+## Data, vignettes and infrastructure
+
 * Added the `snp500` dataset: the market-deflated correlation matrix of daily log-returns for 423 S&P 500 constituents, January 2010 - December 2019 (423 x 423, xz-compressed). Derived from a CC0-licensed Kaggle dataset by `data-raw/snp500.R`.
 * Added the vignette "Case study: sparse factors in S&P 500 returns", a full application of `mspca()` to `snp500` comparing the two non-redundancy constraints.
 * Added the vignette "Algorithm and implementation notes", documenting the optimization problem, both algorithms, the implicit matrix-vector implementation, computational complexity, and guidance on parameter choices.
@@ -7,7 +31,6 @@
 * Added `replication/`, the scripts reproducing the benchmarking and case-study results. Build-ignored.
 * `_pkgdown.yml` now specifies the article ordering and a grouped reference index.
 * `DESCRIPTION` gains `Depends: R (>= 3.5)`, `LazyData: true`, `LazyDataCompression: xz` and `BugReports`.
-* Documentation fixes: `README.md` referred to the removed `print_mspca()` and to a `test/` directory that is now `notebooks/`; the `mtcars` vignette stated the wrong default for `scale` in `mspca()`.
 
 # msPCA 0.5.0
 

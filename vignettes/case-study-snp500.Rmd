@@ -83,6 +83,12 @@ results <- lapply(ks_grid, function(k) {
 results_df <- do.call(rbind, results)
 ```
 
+Note that `snp500` is a deflated correlation matrix: removing the market factor
+leaves `tr(snp500) = p - lambda_1 < p`, so its average variance is below one.
+The `pwcorr` column is normalized by that average variance, which keeps it on
+the same scale as the orthogonality column and comparable across the two
+constraint types.
+
 We also run `nsprcomp::nsprcomp()` [@sigg2019nsprcomp] at the same budgets as a reference.
 Note that `nsprcomp()` requires a data matrix rather than a covariance matrix, so it needs the
 deflated returns `XR <- X %*% P` rather than `snp500`. That matrix is 2,515 x 423 and is not
@@ -131,17 +137,19 @@ orthogonality constraints (blue, solid), `msPCA` with zero pairwise correlation 
 (green, dashed), and `nsprcomp::nsprcomp()` (orange, dotted). All methods use r = 4
 components.*
 
-On this dataset, `nsprcomp::nsprcomp()` returns orthogonal loading vectors for small-to-moderate
-sparsity budgets (`k <= 20`), reflecting the effectiveness of the deflation procedure when
-component supports are sufficiently disjoint. As `k` grows, however, the orthogonality
-violation increases, reaching 0.20 at `k = 35`.
+On this dataset, `nsprcomp::nsprcomp()` returns exactly orthogonal loading vectors for
+small-to-moderate sparsity budgets (`k <= 20`), reflecting the effectiveness of the deflation
+procedure when component supports are sufficiently disjoint. Beyond that the guarantee lapses,
+and not gradually: the violation is 0.015 at `k = 25`, 0.13 at `k = 30` and 0.020 at `k = 35`.
+The behaviour is not monotone in `k`, so it cannot be anticipated from the sparsity budget.
 
-By contrast, `msPCA` with orthogonality constraints maintains near-zero orthogonality
-violation across all values of `k` --- at most 1e-4, the default feasibility tolerance ---
-because the penalty on constraint violation is explicitly tightened throughout the algorithm.
-At the smallest budget (`k = 5`) the violation is 2.2e-4, marginally above the default
-tolerance. In terms of FVE, `nsprcomp::nsprcomp()` achieves comparable or slightly higher
-values for most sparsity budgets, with `msPCA` ahead only at the largest budget (`k = 35`).
+By contrast, `msPCA` with orthogonality constraints holds the violation at or below 1e-4 --- the
+default feasibility tolerance --- at every budget from `k = 10` upward, because the penalty on
+constraint violation is explicitly tightened throughout the algorithm. The exception is the
+smallest budget, `k = 5`, where the solver terminates at 1.6e-2, well outside tolerance; with
+only 5 nonzeros per component the feasible set is tight enough that the heuristic does not
+always reach it. In terms of FVE, `nsprcomp::nsprcomp()` is ahead at `k = 5, 10, 15` and `25`,
+while `msPCA` is ahead at `k = 20, 30` and `35`; neither dominates across the grid.
 
 Neither `nsprcomp::nsprcomp()` nor orthogonality-constrained `msPCA` yields uncorrelated PCs
 here. To obtain uncorrelated PCs we run `msPCA` with pairwise correlation constraints instead,
@@ -167,8 +175,17 @@ set.seed(42)
 res_corr <- mspca(snp500, r = 4, ks = rep(10, 4), verbose = FALSE,
                   maxIter = 100, feasibilityConstraintType = 1)
 
-print(res_orth, snp500)
-print(res_corr, snp500)
+print(res_orth)
+print(res_corr)
+```
+
+`summary()` on either fit reports the violations under the constraint that fit
+actually enforced, and labels them as such, so the two summaries are not
+silently measuring different solutions with the same yardstick:
+
+```{r}
+summary(res_orth)
+summary(res_corr)
 ```
 
 ```{r, echo = FALSE, eval = TRUE, out.width = "95%"}
@@ -181,7 +198,8 @@ zero-correlation (right) constraints.*
 ### Under orthogonality constraints
 
 The four PCs concentrate entirely within the utility and REIT sectors, with no cross-sector
-loadings:
+loadings. Each PC has 10 nonzeros by construction, but a few are numerically negligible
+(below 1e-4); the economically meaningful names are:
 
 - **PC1** loads on regulated electric utilities (AEP, DUK, ED, ES, EVRG, NI, PNW, SO, WEC, XEL).
 - **PC2** consolidates the REIT segment into a single component spanning residential apartments
@@ -191,34 +209,48 @@ loadings:
 - **PC4** identifies a third utility subgroup (AEE, ATO, AWK, CMS, FE, LNT, SRE).
 
 The orthogonality constraint therefore fragments the market into three disjoint utility
-clusters and one diversified REIT basket, with each PC loading exclusively on one sector.
+clusters and one diversified REIT basket, with each PC loading exclusively on one sector. The
+four components carry comparable weight, explaining 2.13%, 1.62%, 1.52% and 1.21% of total
+variance respectively.
 
 ### Under zero-correlation constraints
 
-The components are more sector-diverse, each capturing a cross-sector contrast:
+The components are more sector-diverse, and their supports overlap rather than partitioning the
+universe --- Consolidated Edison (ED) appears in all four. Variance is also far more
+concentrated in the leading component: 2.28%, 0.67%, 0.61% and 0.55%, against a much flatter
+profile under orthogonality.
 
 - **PC1** consolidates the entire utility sector into a single broad component (AEP, CMS, DTE,
   DUK, ED, ES, PNW, SO, WEC, XEL), merging stocks that the orthogonality constraint split
   across three separate PCs.
-- **PC2** contrasts homebuilders and residential construction (DHI, LEN, NVR, PHM, positive;
-  MAS and MGM in the same direction) against financials (TFC, EG) and industrials (BA) with
-  negative loadings, capturing the interest-rate sensitivity of the housing sector.
-- **PC3** identifies a managed-care and health-insurance theme: large health insurers and
-  managed-care organizations (UNH, HUM, ELV, MOH, CNC, UHS) load positively alongside
-  diagnostics providers (DGX, LH), while American Express (AXP) carries a large negative
-  loading, reflecting the contrast between healthcare spending and consumer credit.
-- **PC4** loads positively on oil and gas exploration (APA, COP, DVN, EOG) and oilfield
-  services (BKR, HAL, SLB), against financial custodians (STT) and semiconductor-test
-  equipment (TER) negatively, capturing the energy sector's divergence from interest-rate
-  sensitive financials and technology.
+- **PC2** is an energy component: oil and gas exploration (APA, DVN) and oilfield services
+  (BKR, HAL, SLB) load together at around 0.40--0.44, alongside ED at 0.29, against small
+  negative loadings on Dollar General (DG), State Street (STT) and Teradyne (TER).
+- **PC3** identifies pharmaceutical distribution --- McKesson (MCK), Cardinal Health (CAH) and
+  Cencora (COR) all load above 0.51 --- extended by generics (VTRS) and diagnostics (LH),
+  against Best Buy (BBY) and, more weakly, KLA (KLAC) and Air Products (APD).
+- **PC4** is a mega-cap technology component: Alphabet's two share classes (GOOG, GOOGL) load at
+  about -0.60, with Amazon (AMZN) at -0.38 and Microsoft (MSFT) at -0.22, against positive
+  loadings on Best Buy (BBY) and Quanta Services (PWR).
+
+Signs are arbitrary up to a global flip within each component; what matters is the contrast
+between the positively and negatively loaded groups.
 
 ## Takeaway
 
 Orthogonality and zero pairwise correlation are not interchangeable. On strongly correlated
-data they recover qualitatively different factor structures: the former partitions the market
-into disjoint single-sector blocks, the latter produces broader cross-sector contrasts. Choose
-orthogonality when the loading vectors will serve as a projection basis, and zero pairwise
-correlation when the goal is statistically decorrelated scores for downstream regression or
-classification.
+data they recover qualitatively different factor structures. Orthogonality forces disjoint
+supports, and at `k = 10` it spends all four components inside two sectors: three separate
+utility clusters and one REIT basket. Zero pairwise correlation allows supports to overlap and
+recovers four distinct themes instead --- utilities, energy, pharmaceutical distribution and
+mega-cap technology --- each expressed as a contrast between positively and negatively loaded
+groups. The price is concentration: under zero correlation the leading component carries most
+of the explained variance (2.28% against 0.55--0.67% for the others), whereas orthogonality
+spreads it more evenly (2.13% down to 1.21%), and total FVE is markedly lower at every
+sparsity budget.
+
+Choose orthogonality when the loading vectors will serve as a projection basis, and zero
+pairwise correlation when the goal is statistically decorrelated scores for downstream
+regression or classification.
 
 ## References

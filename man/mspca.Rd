@@ -42,7 +42,7 @@ correlation matrix (p x p) when \code{type = "Sigma"}, or a raw data matrix
 
 \item{maxIter}{(optional) An integer. Maximum number of iterations of the algorithm. Default 200.}
 
-\item{feasibilityTolerance}{(optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to \code{feasibilityConstraintType}). Default 1e-4.}
+\item{feasibilityTolerance}{(optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to \code{feasibilityConstraintType}). Under uncorrelatedness the violation is normalized by the average variance \code{tr(Sigma)/p}, so the tolerance carries the same meaning whether \code{M} is a covariance or a correlation matrix. Default 1e-4.}
 
 \item{stallingTolerance}{(optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8.}
 
@@ -67,11 +67,40 @@ correlation matrix (p x p) when \code{type = "Sigma"}, or a raw data matrix
 \value{
 An object of class \code{"mspca"} (a list) with fields: \code{x_best} (p x r
 matrix of sparse PC loadings), \code{objective_value}, \code{feasibility_violation},
-\code{runtime}, \code{variance_explained} (per-PC explained variance), and
-\code{total_variance} (trace of the covariance matrix). With \code{type = "X"} it
+\code{runtime}, \code{variance_explained} (per-PC explained variance),
+\code{total_variance} (trace of the covariance matrix),
+\code{feasibilityConstraintType} (the value used to fit, reused as the default
+for all diagnostics), and \code{nonredundancy}. With \code{type = "X"} it
 additionally records \code{inputType}, \code{center}, \code{scale}, \code{divisor}, \code{nObs},
 and \code{p}. Use \code{\link[=print]{print()}} to display the sparse loadings and \code{\link[=summary]{summary()}} for
 a full per-PC breakdown.
+
+\code{nonredundancy} is a list of two r x r matrices, \code{orthogonality}
+(\eqn{|u_t^\top u_s|}) and \code{uncorrelatedness}
+(\eqn{|u_t^\top \Sigma u_s| / (\mathrm{tr}(\Sigma)/p)}), computed once at
+fit time from the sorted loadings. Only the strict upper triangle is
+populated; the diagonal and lower triangle are \code{NA}. Both are stored
+regardless of which constraint was enforced, so a summary under either
+definition is available without the covariance matrix and without
+refitting.
+
+The uncorrelatedness terms are normalized by the average variance
+\eqn{\mathrm{tr}(\Sigma)/p}. The loadings being unit-norm,
+\eqn{|u_t^\top \Sigma u_s|} scales linearly with \eqn{\Sigma}, so the raw
+quantity - and hence its comparison against \code{feasibilityTolerance} -
+would otherwise depend on the units of the data. After normalization the
+measure is invariant to a rescaling of \eqn{\Sigma}, and a covariance and
+a correlation input are on the same footing.
+
+Note that \code{feasibility_violation} (returned by the solver) and the
+violation reported by \code{\link[=summary.mspca]{summary.mspca()}} are \emph{different statistics}:
+the former sums over all pairs \eqn{t \ge s} and so includes the
+normalization terms \eqn{|u_t^\top u_t - 1|} on the diagonal (under both
+constraint types, the diagonal terms are the unit-norm residuals),
+whereas the latter is the strictly off-diagonal sum returned by
+\code{\link[=feasibility_violation_off]{feasibility_violation_off()}}.
+The solver value is the quantity compared against \code{feasibilityTolerance}
+during the fit; the off-diagonal value is the redundancy diagnostic.
 }
 \description{
 Returns multiple sparse principal components of a dataset using an iterative
@@ -87,8 +116,9 @@ and never forms the p x p matrix, which is substantially more scalable when
 # From a covariance/correlation matrix (the default type):
 TestMat <- cor(mtcars)
 res <- mspca(TestMat, r = 2, ks = c(4, 4), verbose = FALSE)
-print(res, TestMat)
-# Equivalent call from the raw data matrix (C need not be passed to print):
+print(res)
+summary(res)
+# Equivalent call from the raw data matrix:
 res_X <- mspca(as.matrix(mtcars), r = 2, ks = c(4, 4), type = "X", verbose = FALSE)
 print(res_X)
 }

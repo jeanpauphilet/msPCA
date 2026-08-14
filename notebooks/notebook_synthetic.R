@@ -9,6 +9,12 @@
 ##
 ## We compare with the spca method from the elasticnet package.
 ############################################################
+required_packages <- c("mvtnorm", "msPCA", "elasticnet", "readr", "dplyr",
+                       "ggplot2", "RColorBrewer")
+missing_packages <- setdiff(required_packages, rownames(installed.packages()))
+if (length(missing_packages) > 0) {
+  install.packages(missing_packages, repos = "https://cloud.r-project.org")
+}
 
 library(mvtnorm)
 library(msPCA)

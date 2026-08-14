@@ -119,11 +119,19 @@ double fnviolation(const Eigen::MatrixXd& x,
       }
     }
   } else {
-    // Uncorrelatedness: sum of |x_i^T Sigma x_j| for i != j, plus ||x_i||^2 - 1 on diagonal
+    // Uncorrelatedness: sum of |x_i^T Sigma x_j| for i != j, plus ||x_i||^2 - 1 on diagonal.
+    // The off-diagonal terms are normalised by the average variance tr(Sigma)/p. Since the
+    // columns of x are unit-norm, |x_i^T Sigma x_j| is homogeneous of degree 1 in Sigma, so
+    // without this normalisation the measure - and hence its comparison against
+    // feasibilityTolerance - would depend on the units of the data. Dividing by tr(Sigma)/p
+    // makes the off-diagonal part invariant to a rescaling of Sigma and puts it on the same
+    // scale as the (already scale-free) norm terms.
+    const double avgVar = op.trace() / static_cast<double>(x.rows());
+    const double invAvgVar = (avgVar > 0.0 ? 1.0 / avgVar : 1.0);
     Eigen::MatrixXd C = op.gram(x); // x^T Sigma x  (r x r), computed without materialising Sigma
     for (int i = 0; i < r; ++i) {
       for (int j = i; j < r; ++j) {
-        v += std::fabs(i == j ? y(i, j) - 1.0 : C(i, j));
+        v += (i == j ? std::fabs(y(i, j) - 1.0) : invAvgVar * std::fabs(C(i, j)));
       }
     }
   }
@@ -156,6 +164,13 @@ List iterativeDeflationHeuristic_impl(
 
   const double traceSigma = op.trace(); // Total variance tr(Sigma); precomputed once for normalised display
 
+  // Average variance tr(Sigma)/p. Under uncorrelatedness the constraint is enforced on the
+  // normalised matrix C = Sigma / avgVar = p * Sigma / tr(Sigma), which has tr(C) = p; this
+  // makes the constraint, and hence feasibilityTolerance, invariant to a rescaling of Sigma.
+  // Equals 1 for a correlation matrix, so nothing changes on correlation input. Guarded
+  // against a degenerate zero-trace input.
+  const double avgVar = (traceSigma > 0 ? traceSigma / static_cast<double>(p) : 1.0);
+
   double ofv_best = -1e10; // Objective value of the best solution found (solution = set of r PCs)
   double violation_best = p; // Feasibility violation of the best solution found
   Eigen::MatrixXd x_best = Eigen::MatrixXd::Zero(p, r); // Best solution found
@@ -168,7 +183,6 @@ List iterativeDeflationHeuristic_impl(
   double ofv_overall = 0; // Objective value of the current solution
 
   double theLambda = 0; // Penalty parameter on the orthogonality constraint
-  double scalingLambda = 1; // For memory: Scaling factor used to ensure the matrix passed to TPW is PSD
 
   Eigen::VectorXd weights = Eigen::VectorXd::Zero(r); // Weights assigned to each PC in the penalization heuristic (initialized through the first iteration of the algorithm)
 
@@ -223,6 +237,8 @@ List iterativeDeflationHeuristic_impl(
 
       // Build deflation functor — avoids materialising sigma_current (saves O(p^2) allocation + symmetrisation).
       // applyM(beta) = Sigma*beta - W * diag(d) * W^T * beta, where s-th column of W is w_s and d_s = lambda * weight_s.
+      // w_s is the gradient direction of the constraint being penalised: u_s under orthogonality
+      // (u_t^T u_s = 0), C u_s under uncorrelatedness (u_t^T C u_s = 0, C = Sigma / avgVar).
       int nOther = r - 1;
       Eigen::MatrixXd W(p, nOther);
       Eigen::VectorXd d(nOther);
@@ -235,7 +251,9 @@ List iterativeDeflationHeuristic_impl(
             if (feasibilityConstraintType == 0) {
               W.col(col) = x_current.col(s);
             } else {
-              W.col(col) = op.apply(x_current.col(s)); // Sigma * u_s, via operator (no explicit Sigma)
+              // C * u_s = Sigma * u_s / avgVar, via operator (no explicit Sigma). The penalty
+              // sum_s lambda_s (beta^T C u_s)^2 has matrix sum_s lambda_s (C u_s)(C u_s)^T
+              W.col(col) = op.apply(x_current.col(s)) / avgVar;
             }
             d(col) = theLambda * weights[s];
             col++;
@@ -243,12 +261,25 @@ List iterativeDeflationHeuristic_impl(
         }
       }
 
-      auto applyM = [&op, &W, &d, &scalingLambda, nOther](const Eigen::VectorXd& beta) -> Eigen::VectorXd {
+      // PSD shift for the truncated power method, which requires the matrix it is given to be PSD.
+      // For any beta, sum_s d_s (w_s^T beta)^2 <= (sum_s d_s ||w_s||^2) ||beta||^2, so adding
+      // psdShift * I makes applyM dominate Sigma and hence PSD. This is exact for this deflation
+      // structure: it needs no estimate of the spectrum of Sigma (the previous heuristic used the
+      // largest k-sparse eigenvalue squared, which understates ||C u_s||^2 = u_s^T C^2 u_s and so
+      // did not in fact guarantee PSD-ness), it is invariant to a rescaling of Sigma because w_s
+      // already carries the normalisation, and being the tightest shift of this form it preserves
+      // the eigengap the power method relies on. Under orthogonality ||w_s|| = ||u_s|| = 1 and it
+      // reduces to sum_s d_s, exactly what the scalingLambda = 1 branch used to supply.
+      const double psdShift = (nOther > 0)
+        ? (d.array() * W.colwise().squaredNorm().transpose().array()).sum()
+        : 0.0;
+
+      auto applyM = [&op, &W, &d, psdShift, nOther](const Eigen::VectorXd& beta) -> Eigen::VectorXd {
         Eigen::VectorXd y = op.apply(beta);
         if (nOther > 0) {
           Eigen::VectorXd c = W.transpose() * beta;
           y.noalias() -= W * (d.asDiagonal() * c);
-          y.noalias() += scalingLambda * d.sum() * beta;
+          y.noalias() += psdShift * beta;
         }
         return y;
       };
@@ -269,9 +300,9 @@ List iterativeDeflationHeuristic_impl(
 
       if (theIter == 1) // Initialize the weights on each PC at the first iteration
       {
-        if (t==1 && feasibilityConstraintType == 1) { // For the uncorrelatedness constraints, we need to ensure the matrix passed to TPW is PSD, which requires an appropriate scaling of the penalty parameter lambda (scalingLambda). We set this scaling to lambda_partial^2, where lambda_partial is the variance explained by the first PC, which is an upper bound on the largest sparse eigenvalue of Sigma and thus ensures the matrix passed to TPW is PSD.
-          scalingLambda = lambda_partial*lambda_partial; // Initial upper bound on the largest sparse eigenvalue of Sigma for the PSD shift
-        }
+        // No spectral bound is needed here any more: the PSD shift is now computed exactly from
+        // the columns of W at each inner step (see psdShift above), so it adapts to the current
+        // solution instead of being frozen at an iteration-1 estimate.
         if (feasibilityConstraintType == 0) {
               weights[t] = lambda_partial;
         } else {

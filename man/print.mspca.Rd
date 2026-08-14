@@ -10,7 +10,10 @@
 \item{x}{An object of class \code{"mspca"}, as returned by \code{\link[=mspca]{mspca()}}.}
 
 \item{C}{(optional) A numeric matrix (p x p). The covariance or correlation
-matrix used when fitting. May be omitted for \code{type = "X"} results.}
+matrix used when fitting. Not required: \code{\link[=mspca]{mspca()}} stores the per-PC
+variance figures and the variable names on the fitted object, for both
+input types. Supplying \code{C} recomputes the variance figures from it and
+takes the row labels from its dimnames.}
 
 \item{digits}{An integer or \code{NULL}. Number of significant digits for
 display. When \code{NULL} (the default), \code{getOption("digits")} is used,
@@ -37,5 +40,5 @@ may be omitted because the figures are stored inside the object.
 \examples{
 TestMat <- cor(mtcars)
 res <- mspca(TestMat, r = 2, ks = c(4, 4), verbose = FALSE)
-print(res, TestMat)
+print(res)
 }

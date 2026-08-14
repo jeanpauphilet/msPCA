@@ -3,194 +3,277 @@
 ## JSS replication script for "msPCA: Multiple Sparse PCA in R"
 ##
 ## Dataset: datasets::mtcars (p = 11 variables, n = 32 observations)
-## Task:    r = 2 sparse PCs with k = 4 nonzeros each
+## Task:    r = 3 sparse PCs with k = 4 nonzeros each
 ##
-## Methods compared: msPCA, elasticnet, PMA, sparsepca,
-##                   mixOmics, nsprcomp, dense PCA
+## Methods compared: msPCA (Sigma and X input), elasticnet (Sigma and X
+##                   input), PMA, sparsepca, amanpg, mixOmics, nsprcomp,
+##                   nscumcomp, dense PCA, scikit-learn SparsePCA
 ## For PMA (L1 penalty) and sparsepca (alpha penalty), the tuning
 ## parameter is set to achieve ~4 nonzeros per component.
-## For mixOmics::spca(), keepX = c(k, k) matches the cardinality
+## For mixOmics::spca(), keepX = rep(k, r) matches the cardinality
 ## budget exactly. For nsprcomp::nscumcomp(), k = r * k_per_pc
 ## gives the total nonzero budget across all components.
+##
+## Each method is timed AND memory-profiled by bench_utils.R, which runs
+## it in a fresh R subprocess and records peak resident set size from
+## getrusage(). See bench_utils.R for why R-level metrics (gc(),
+## bench::mark) would bias the comparison in msPCA's favour.
+##
+## NOTE ON MEMORY: mtcars is p = 11, so the numerical working set of
+## every method is a few kilobytes. msPCA, PMA, mixOmics, amanpg,
+## nsprcomp, sklearn and dense PCA accordingly report close to zero.
+## elasticnet, sparsepca and nscumcomp do not: they carry a fixed
+## working-memory floor of roughly 10-25 MB that is present even at
+## this size, on top of which cost scales with p. A single-repetition
+## check confirmed that floor is genuine allocation rather than
+## first-call package loading, which accounts for only about 4 MB of
+## it. The datasets where memory scaling dominates the floor are
+## notebook_breast.R (p = 500) and notebook_riboflavin.R (p = 4,088),
+## where Sigma is 2 MB and 128 MB respectively.
 ############################################################
 
 library("msPCA")
 library("elasticnet")
 library("PMA")
 library("sparsepca")
+library("amanpg")
 library("mixOmics")
 library("nsprcomp")
 library("datasets")
+library("reticulate")
+
+source("benchmarking/bench_utils.R")
+
+py_bin <- Sys.which("python3")
+use_python(py_bin, required = TRUE)
+sk_decomp <- import("sklearn.decomposition")
+
+## Helper: unit-normalise columns (matches existing pattern for sparsepca/mixOmics)
+unit_norm <- function(L) {
+  for (j in seq_len(ncol(L))) {
+    nm <- sqrt(sum(L[, j]^2))
+    if (nm > 0) L[, j] <- L[, j] / nm
+  }
+  L
+}
 
 S <- cor(datasets::mtcars)
+X_mtcars <- scale(datasets::mtcars)
 r <- 3L; k <- 4L
 
-## --- msPCA ---
-set.seed(43)
-t_mspca <- system.time(
-    mspca_res <- mspca(S, r = r, ks = rep(k, r), verbose = FALSE,
-                       feasibilityConstraintType = 0)
-  )
-cat("msPCA | NNZ:", colSums(abs(mspca_res$x_best) > 0),
-       "| FVE:", round(fraction_variance_explained(S, mspca_res$x_best), 4),
-       "| Orth:", format(feasibility_violation_off(S, mspca_res$x_best, 0),
-                         scientific = TRUE, digits = 3),
-       "| Time:", round(t_mspca["elapsed"], 3), "s\n")
+## Repetitions per method. Each repetition runs in its OWN process, so every
+## one yields an independent peak-RSS sample; runtime, memory and FVE are all
+## reported as medians over repetitions. Five is the minimum that gives the
+## memory median any resistance to outliers -- peak RSS varies substantially
+## run to run for methods that allocate heavily on R's heap (see bench_utils.R).
+REPS <- 5L
 
-## --- elasticnet ---
-t_enet <- system.time(
-    enet_res <- elasticnet::spca(S, K = r, sparse = "varnum",
-                                 para = rep(k, r), type = "Gram")
-  )
-cat("elasticnet | NNZ:", colSums(abs(enet_res$loadings) > 0),
-       "| FVE:", round(fraction_variance_explained(S, enet_res$loadings), 4),
-       "| Orth:", format(feasibility_violation_off(S, enet_res$loadings, 0),
-                         scientific = TRUE, digits = 3),
-       "| Time:", round(t_enet["elapsed"], 3), "s\n")
+## Tuning sweeps are exploratory and are NOT part of the measured runs.
+## They stay in the parent process so their allocations cannot contaminate
+## any method's peak-RSS reading. Set to FALSE to skip.
+RUN_TUNING_SWEEPS <- TRUE
 
-## --- PMA (sumabsv tuned for ~3 NNZ per PC) ---
-for (sv in seq(1.6, 1.8, by = 0.01)) {
-	pma_try <- PMA::SPC(S, sumabsv = sv, K = r, orth = TRUE, trace = FALSE)
-	cat("  sumabsv =", sv,
-              "| NNZ:", paste(colSums(abs(pma_try$v) > 0), collapse = " "), 
-              "| FVE:", round(fraction_variance_explained(S, pma_try$v), 4),
-"\n")
-}
-t_pma <- system.time(
-    pma_res <- PMA::SPC(S, sumabsv = 1.69, K = r, orth = TRUE, trace = FALSE)
-  )
-cat("PMA | NNZ:", colSums(abs(pma_res$v) > 0),
-       "| FVE:", round(fraction_variance_explained(S, pma_res$v), 4),
-       "| Orth:", format(feasibility_violation_off(S, pma_res$v, 0),
-                         scientific = TRUE, digits = 3),
-       "| Time:", round(t_pma["elapsed"], 3), "s\n")
+## Values selected from the sweeps below.
+PMA_SUMABSV     <- 1.69
+SPARSEPCA_ALPHA <- 0.004
+AMANPG_LAMBDA1  <- c(10, 3, 0.01)
+SKLEARN_ALPHA   <- 3.2
 
-## --- sparsepca (alpha tuned for ~3 NNZ per PC; normalize to unit norm) ---
-for (a in seq(0.001, 0.01, by = 0.001)) {
-	sparsepca_try <- sparsepca::spca(S, k = r, alpha = a, verbose = FALSE, scale = FALSE)
-       for (j in seq_len(r)) {
-              nm <- sqrt(sum(sparsepca_try$loadings[, j]^2))
-              if (nm > 0) sparsepca_try$loadings[, j] <- sparsepca_try$loadings[, j] / nm
-       }       
-	cat("  alpha =", a,
-              "| NNZ:", paste(colSums(abs(sparsepca_try$loadings) > 0), collapse = " "), 
-              "| FVE:", round(fraction_variance_explained(S, sparsepca_try$loadings), 4),
-"\n")
-}
-t_spca <- system.time(
-    spca_res <- sparsepca::spca(S, k = r, alpha = 0.004, verbose = FALSE, scale = FALSE)
-  )
-for (j in seq_len(r)) {
-    nm <- sqrt(sum(spca_res$loadings[, j]^2))
-    if (nm > 0) spca_res$loadings[, j] <- spca_res$loadings[, j] / nm
+
+############################################################
+## Tuning sweeps (untimed, unprofiled)
+############################################################
+
+if (RUN_TUNING_SWEEPS) {
+  ## --- PMA (sumabsv tuned for ~k NNZ per PC) ---
+  cat("PMA sumabsv sweep:\n")
+  for (sv in seq(1.6, 1.8, by = 0.01)) {
+    pma_try <- PMA::SPC(S, sumabsv = sv, K = r, orth = TRUE, trace = FALSE)
+    cat("  sumabsv =", sv,
+        "| NNZ:", paste(colSums(abs(pma_try$v) > 0), collapse = " "),
+        "| FVE:", round(fraction_variance_explained(S, pma_try$v), 4), "\n")
   }
-cat("sparsepca | NNZ:", colSums(abs(spca_res$loadings) > 0),
-       "| FVE:", round(fraction_variance_explained(S, spca_res$loadings), 4),
-       "| Orth:", format(feasibility_violation_off(S, spca_res$loadings, 0),
-                         scientific = TRUE, digits = 3),
-       "| Time:", round(t_spca["elapsed"], 3), "s\n")
+
+  ## --- sparsepca (alpha tuned for ~k NNZ per PC) ---
+  cat("sparsepca alpha sweep:\n")
+  for (a in seq(0.001, 0.01, by = 0.001)) {
+    sp_try <- unit_norm(
+      sparsepca::spca(S, k = r, alpha = a, verbose = FALSE, scale = FALSE)$loadings)
+    cat("  alpha =", a,
+        "| NNZ:", paste(colSums(abs(sp_try) > 0), collapse = " "),
+        "| FVE:", round(fraction_variance_explained(S, sp_try), 4), "\n")
+  }
+
+  ## --- sklearn SparsePCA (alpha tuned for ~k NNZ per PC) ---
+  cat("sklearn alpha sweep:\n")
+  for (a in seq(3, 4, by = 0.1)) {
+    m <- sk_decomp$SparsePCA(n_components = r, alpha = a, random_state = 43L)
+    m$fit(X_mtcars)
+    L <- unit_norm(t(m$components_))
+    cat("  alpha =", a, "| NNZ:", paste(colSums(abs(L) > 0), collapse = " "), "\n")
+  }
+}
 
 
-## --- mixOmics::spca (keepX = c(k, k) matches cardinality budget exactly) ---
+############################################################
+## Measured runs -- one fresh subprocess per method.
+## Each fun() returns a plain p x r loadings matrix.
+############################################################
+
+#### R METHODS ####
+
+## --- msPCA, Sigma input (dense p x p covariance operator) ---
+b_mspca_S <- bench_method(
+  fun = function(S, r, k) {
+    mspca(S, r = r, ks = rep(k, r), verbose = FALSE,
+          feasibilityConstraintType = 0)$x_best
+  },
+  inputs = list(S = S, r = r, k = k),
+  packages = "msPCA", reps = REPS, label = "msPCA (Sigma)")
+
+## --- msPCA, X input (matrix-free Gram operator, never forms p x p) ---
+## Same estimator, different internal covariance operator: Sigma is applied
+## implicitly as X^T(X v)/(n-1). This is the row that demonstrates the O(np)
+## rather than O(p^2) memory footprint; on mtcars the difference is nil, but
+## the row must exist here for the tables to line up across datasets.
+b_mspca_X <- bench_method(
+  fun = function(X, r, k) {
+    mspca(X, type = "X", r = r, ks = rep(k, r), verbose = FALSE,
+          feasibilityConstraintType = 0)$x_best
+  },
+  inputs = list(X = X_mtcars, r = r, k = k),
+  packages = "msPCA", reps = REPS, label = "msPCA (X)")
+
+## --- elasticnet, Sigma input ---
+b_enet_S <- bench_method(
+  fun = function(S, r, k) {
+    elasticnet::spca(S, K = r, sparse = "varnum",
+                     para = rep(k, r), type = "Gram")$loadings
+  },
+  inputs = list(S = S, r = r, k = k),
+  packages = "elasticnet", reps = REPS, label = "elasticnet (Sigma)")
+
+## --- elasticnet, X input ---
+b_enet_X <- bench_method(
+  fun = function(X, r, k) {
+    elasticnet::spca(X, K = r, sparse = "varnum",
+                     para = rep(k, r), type = "predictor")$loadings
+  },
+  inputs = list(X = X_mtcars, r = r, k = k),
+  packages = "elasticnet", reps = REPS, label = "elasticnet (X)")
+
+## --- PMA ---
+b_pma <- bench_method(
+  fun = function(S, r, sumabsv) {
+    PMA::SPC(S, sumabsv = sumabsv, K = r, orth = TRUE, trace = FALSE)$v
+  },
+  inputs = list(S = S, r = r, sumabsv = PMA_SUMABSV),
+  packages = "PMA", reps = REPS, label = "PMA")
+
+## --- sparsepca (normalised to unit norm) ---
+b_spca <- bench_method(
+  fun = function(S, r, alpha) {
+    unit_norm(sparsepca::spca(S, k = r, alpha = alpha,
+                              verbose = FALSE, scale = FALSE)$loadings)
+  },
+  inputs = list(S = S, r = r, alpha = SPARSEPCA_ALPHA),
+  globals = list(unit_norm = unit_norm),
+  packages = "sparsepca", reps = REPS, label = "sparsepca")
+
+## --- amanpg ---
+## type = 1: covariance matrix input; lambda1 is a vector of length r (one per PC)
+b_amanpg <- bench_method(
+  fun = function(S, r, lambda1) {
+    unit_norm(spca.amanpg(z = S, lambda1 = lambda1, lambda2 = Inf,
+                          k = r, type = 1, verbose = FALSE)$loadings)
+  },
+  inputs = list(S = S, r = r, lambda1 = AMANPG_LAMBDA1),
+  globals = list(unit_norm = unit_norm),
+  packages = "amanpg", reps = REPS, label = "amanpg")
+
+## --- mixOmics::spca (keepX = rep(k, r) matches cardinality budget exactly) ---
 ## mixOmics::spca() requires a raw data matrix; we pass the centred/scaled data.
-X_mtcars <- scale(datasets::mtcars)
-t_mixo <- system.time(
-    mixo_res <- mixOmics::spca(X_mtcars, ncomp = r,
-                               keepX = rep(k, r), center = TRUE, scale = TRUE)
-  )
-mixo_load <- mixo_res$loadings$X
-for (j in seq_len(r)) {
-    nm <- sqrt(sum(mixo_load[, j]^2))
-    if (nm > 0) mixo_load[, j] <- mixo_load[, j] / nm
-  }
-cat("mixOmics | NNZ:", colSums(abs(mixo_load) > 0),
-       "| FVE:", round(fraction_variance_explained(S, mixo_load), 4),
-       "| Orth:", format(feasibility_violation_off(S, mixo_load, 0),
-                         scientific = TRUE, digits = 3),
-       "| Time:", round(t_mixo["elapsed"], 3), "s\n")
+b_mixo <- bench_method(
+  fun = function(X, r, k) {
+    unit_norm(mixOmics::spca(X, ncomp = r, keepX = rep(k, r),
+                             center = TRUE, scale = TRUE)$loadings$X)
+  },
+  inputs = list(X = X_mtcars, r = r, k = k),
+  globals = list(unit_norm = unit_norm),
+  packages = "mixOmics", reps = REPS, label = "mixOmics")
 
-## --- nsprcomp (k nonzeros per PC) ---
-# Basic deflation
-t_nscomp <- system.time(
-              nscomp_load <- nsprcomp::nsprcomp(X_mtcars, ncomp = r, k = rep(k, r), nneg = FALSE, center = TRUE, scale. = TRUE)
-       )
-nscomp_load <- nscomp_load$rotation
-cat("nsprcomp | NNZ:", colSums(abs(nscomp_load) > 0),
-       "| FVE:", round(fraction_variance_explained(S, nscomp_load), 4),
-       "| Orth:", format(feasibility_violation_off(S, nscomp_load, 1),
-                         scientific = TRUE, digits = 3),
-       "| Time:", round(t_nscomp["elapsed"], 3), "s\n")
+## --- nsprcomp (k nonzeros per PC; basic deflation) ---
+b_nspr <- bench_method(
+  fun = function(X, r, k) {
+    nsprcomp::nsprcomp(X, ncomp = r, k = rep(k, r), nneg = FALSE,
+                       center = TRUE, scale. = TRUE)$rotation
+  },
+  inputs = list(X = X_mtcars, r = r, k = k),
+  packages = "nsprcomp", reps = REPS, label = "nsprcomp")
 
-# Joint optimization
-t_nscum <- system.time(
-              nscum_res <- nsprcomp::nscumcomp(X_mtcars, ncomp = r, k = k*r, nneg = FALSE,
-                                              center = TRUE, scale. = TRUE)
-       )
-nscum_load <- nscum_res$rotation
-cat("nscumcomp | NNZ:", colSums(abs(nscum_load) > 0),
-       "| FVE:", round(fraction_variance_explained(S, nscum_load), 4),
-       "| Orth:", format(feasibility_violation_off(S, nscum_load, 0),
-                         scientific = TRUE, digits = 3),
-       "| Time:", round(t_nscum["elapsed"], 3), "s\n")
+## --- nscumcomp (total budget r * k; joint optimisation) ---
+b_nscum <- bench_method(
+  fun = function(X, r, k) {
+    nsprcomp::nscumcomp(X, ncomp = r, k = k * r, nneg = FALSE,
+                        center = TRUE, scale. = TRUE)$rotation
+  },
+  inputs = list(X = X_mtcars, r = r, k = k),
+  packages = "nsprcomp", reps = REPS, label = "nscumcomp")
 
 ## --- Dense PCA ---
-t_pca <- system.time(
-       pca_res <- prcomp(datasets::mtcars, scale. = TRUE)
-)
-cat("Dense PCA | FVE:",
-       round(fraction_variance_explained(S, pca_res$rotation[, 1:2]), 4), "\n")
+b_pca <- bench_method(
+  fun = function(X, r) prcomp(X, scale. = TRUE)$rotation[, seq_len(r)],
+  inputs = list(X = datasets::mtcars, r = r),
+  packages = character(), reps = REPS, label = "Dense PCA")
 
-## --- Summary data frame ---
-results <- data.frame(
-    method  = c("msPCA", "elasticnet", "PMA", "sparsepca",
-                "mixOmics", "nsprcomp", "nscumcomp", "Dense PCA"),
-    nnz_pc1 = c(colSums(abs(mspca_res$x_best) > 0)[1],
-                colSums(abs(enet_res$loadings)  > 0)[1],
-                colSums(abs(pma_res$v)           > 0)[1],
-                colSums(abs(spca_res$loadings)   > 0)[1],
-                colSums(abs(mixo_load)           > 0)[1],
-                colSums(abs(nscomp_load)          > 0)[1],
-                colSums(abs(nscum_load)          > 0)[1],
-                11L),
-    nnz_pc2 = c(colSums(abs(mspca_res$x_best) > 0)[2],
-                colSums(abs(enet_res$loadings)  > 0)[2],
-                colSums(abs(pma_res$v)           > 0)[2],
-                colSums(abs(spca_res$loadings)   > 0)[2],
-                colSums(abs(mixo_load)           > 0)[2],
-                colSums(abs(nscomp_load)          > 0)[2],
-                colSums(abs(nscum_load)          > 0)[2],
-                11L),
-    nnz_pc3 = c(colSums(abs(mspca_res$x_best) > 0)[3],
-                colSums(abs(enet_res$loadings)  > 0)[3],
-                colSums(abs(pma_res$v)           > 0)[3],
-                colSums(abs(spca_res$loadings)   > 0)[3],
-                colSums(abs(mixo_load)           > 0)[3],
-                colSums(abs(nscomp_load)          > 0)[3],
-                colSums(abs(nscum_load)          > 0)[3],
-                11L),
-    fve     = round(c(fraction_variance_explained(S, mspca_res$x_best),
-                fraction_variance_explained(S, enet_res$loadings),
-                fraction_variance_explained(S, pma_res$v),
-                fraction_variance_explained(S, spca_res$loadings),
-                fraction_variance_explained(S, mixo_load),
-                fraction_variance_explained(S, nscomp_load),
-                fraction_variance_explained(S, nscum_load),
-                fraction_variance_explained(S, pca_res$rotation[, 1:r])
-                ),3),
-    orth    = c(feasibility_violation_off(S, mspca_res$x_best, 0),
-                feasibility_violation_off(S, enet_res$loadings, 0),
-                feasibility_violation_off(S, pma_res$v, 0),
-                feasibility_violation_off(S, spca_res$loadings, 0),
-                feasibility_violation_off(S, mixo_load, 0),
-                feasibility_violation_off(S, nscomp_load, 0),
-                feasibility_violation_off(S, nscum_load, 0),
-                feasibility_violation_off(S, pca_res$rotation[, 1:r], 0)
-              ),
-    runtime = round(c(t_mspca["elapsed"], t_enet["elapsed"],
-                t_pma["elapsed"],   t_spca["elapsed"],
-                t_mixo["elapsed"],  t_nscomp["elapsed"], t_nscum["elapsed"], t_pca["elapsed"]), 3)
-)
 
+#### PYTHON METHODS ####
+
+## --- sklearn SparsePCA ---
+## Takes X (not Sigma). components_ is (r x p) so we transpose to (p x r).
+## Initialising reticulate and importing sklearn costs on the order of 150 MB
+## of NumPy/SciPy that has nothing to do with the sparse-PCA solver, so it is
+## done in setup(): that cost lands in baseline_rss_mb and is excluded from
+## mem_delta_mb, which then measures the fit itself. peak_rss_mb still shows
+## the full footprint of the R + Python stack for readers who want it.
+b_sklearn <- bench_method(
+  setup = function() {
+    library(reticulate)
+    use_python(Sys.which("python3"), required = TRUE)
+    mod <- import("sklearn.decomposition")
+    ## Throwaway fit: sklearn defers several imports (scipy.linalg, the
+    ## dict-learning solver) until the first fit(), so warm them here rather
+    ## than letting them land in the first timed repetition.
+    mod$SparsePCA(n_components = 1L, alpha = 1)$fit(matrix(rnorm(20), 10, 2))
+    mod
+  },
+  ## `seed` is supplied by the harness, one value per repetition; sklearn does
+  ## not read R's RNG so it must be passed through as random_state.
+  fun = function(X, r, alpha, seed, setup) {
+    m <- setup$SparsePCA(n_components = r, alpha = alpha,
+                         random_state = as.integer(seed))
+    m$fit(X)
+    unit_norm(t(m$components_))
+  },
+  inputs = list(X = X_mtcars, r = r, alpha = SKLEARN_ALPHA),
+  globals = list(unit_norm = unit_norm),
+  packages = character(), reps = REPS, label = "sklearn SparsePCA")
+
+
+############################################################
+## Console report and summary table
+############################################################
+
+benches <- list(b_mspca_S, b_mspca_X, b_enet_S, b_enet_X, b_pma, b_spca,
+                b_amanpg, b_mixo, b_nspr, b_nscum, b_pca, b_sklearn)
+
+cat("\n")
+for (b in benches) report_bench(b, S)
+
+## bench_table() supplies method, runtime_s (median of REPS), working_set_mb,
+## input_mb, mem_delta_mb, peak_rss_mb, baseline_rss_mb, gc_max_mb.
+## quality_table() supplies nnz_pc1..r, fve, orth from the returned loadings.
+results <- cbind(bench_table(benches), quality_table(benches, S, r))
+
+print(results, row.names = FALSE)
 write.csv(results, "benchmarking/benchmarking_results_mtcars.csv", row.names = FALSE)
-
-

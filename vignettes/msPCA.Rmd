@@ -47,17 +47,24 @@ active variables, together with the percentage of variance explained and
 the number of non-zero loadings per component.
 
 ```{r print}
-print(res, Sigma)
+print(res)
 ```
 
-`summary()` gives a fuller breakdown: a per-PC table of variance explained
-and sparsity, followed by the pairwise feasibility violation matrix so you
-can see at a glance how well the orthogonality constraint is satisfied
-between each pair of components.
+`summary()` gives a fuller breakdown: a per-PC table of variance explained,
+sparsity, and each component's largest violation against any other
+component, followed by the full pairwise violation matrix so you can see at
+a glance how well the constraint is satisfied between each pair of
+components. The header names the constraint definition being reported and
+confirms that it is the one used to fit.
 
 ```{r summary}
-summary(res, Sigma)
+summary(res)
 ```
+
+Both methods take an optional `C` argument, but it is no longer needed:
+`mspca()` stores the variance figures, the loading names, and the pairwise
+violations in the fitted object. `C` is retained only for objects created by
+msPCA 0.5.0 or earlier.
 
 ## Working from the raw data matrix
 
@@ -79,9 +86,10 @@ The preprocessing arguments control which matrix is implicitly used:
   or `"n"`.
 
 With `scale = TRUE` and `divisor = "n-1"`, the raw-data call reproduces the
-correlation-matrix result above. When `type = "X"`, the variance figures are
-stored inside the object, so `C` need not be passed to `print()` or
-`summary()`.
+correlation-matrix result above. As with `type = "Sigma"`, everything
+`print()` and `summary()` report is stored in the fitted object, so no
+matrix has to be passed back in — which matters here, since the point of
+`type = "X"` is never to form the $p \times p$ matrix in the first place.
 
 ```{r fit_X}
 X <- as.matrix(mtcars)
@@ -105,25 +113,53 @@ solutions when the variables are strongly correlated.
 set.seed(42)
 res_corr <- mspca(Sigma, r = 2, ks = c(4, 4),
                   feasibilityConstraintType = 1, verbose = FALSE)
-print(res_corr, Sigma)
-summary(res_corr, Sigma, feasibilityConstraintType = 1)
+print(res_corr)
+summary(res_corr)
+```
+
+`summary()` reports the violations under the constraint that was actually
+enforced: the fitted `feasibilityConstraintType` is stored in the object and
+reused automatically, and the printed output names the definition in use.
+There is no need to repeat the setting, and no risk of reading an
+orthogonality summary for a solution fitted under zero correlation.
+
+Both sets of scores are computed at fit time and stored, so the solution can
+be inspected under the other definition without a refit:
+
+```{r nonredundancy}
+res_corr$nonredundancy$uncorrelatedness   # the constraint that was enforced
+res_corr$nonredundancy$orthogonality      # the one that was not
 ```
 
 ## Diagnostics
 
 The utility functions `feasibility_violation_off()` and
 `fraction_variance_explained()` can be called directly for custom reporting or
-for comparing solutions across methods.
+for comparing solutions across methods — in particular for scoring loadings
+that did not come from `mspca()`, such as those of a competing package, which
+carry no stored diagnostics.
 
 ```{r diagnostics}
 # Orthogonality and zero-correlation violations for the default solution
 feasibility_violation_off(Sigma, res$x_best, feasibilityConstraintType = 0)
 feasibility_violation_off(Sigma, res$x_best, feasibilityConstraintType = 1)
 
+# The same two numbers, already stored on the fitted object
+sum(res$nonredundancy$orthogonality,    na.rm = TRUE)
+sum(res$nonredundancy$uncorrelatedness, na.rm = TRUE)
+
 # Total and per-PC fraction of variance explained
 fraction_variance_explained(Sigma, res$x_best)
 fraction_variance_explained_perPC(Sigma, res$x_best)
 ```
+
+The zero-correlation violation is normalized by the average variance
+$\mathrm{tr}(C)/p$, so it is invariant to a rescaling of `C` and comparable
+between a covariance matrix and the corresponding correlation matrix. The
+orthogonality violation needs no such normalization. Note that
+`res$feasibility_violation`, the quantity the solver compares against
+`feasibilityTolerance`, additionally includes the diagonal norm terms and so
+is a slightly larger number than the off-diagonal diagnostic above.
 
 ## Comparison with dense PCA
 

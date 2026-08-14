@@ -14,15 +14,48 @@
 ## this dataset, we generate pseudo-data via MASS::mvrnorm() with
 ## the Pitprops matrix as the population covariance. FVE and
 ## orthogonality are then evaluated on the original pitprops matrix.
+##
+## Each method is timed AND memory-profiled by bench_utils.R, which
+## runs it in a fresh R subprocess and records peak resident set size
+## from getrusage(). See bench_utils.R for why R-level metrics (gc(),
+## bench::mark) would bias the comparison in msPCA's favour.
+##
+## NOTE ON MEMORY: p = 13, so the numerical working set of every
+## method is a few kilobytes. msPCA, PMA, mixOmics, amanpg and dense
+## PCA accordingly report close to zero. elasticnet, sparsepca and
+## nscumcomp do not: they carry a fixed working-memory floor of
+## roughly 10-25 MB that is present even at this size, on top of
+## which cost scales with p. Note also that the msPCA (X) row here
+## consumes MORE memory than msPCA (Sigma): the pseudo-data matrix is
+## 500 x 13 while the correlation matrix is only 13 x 13. That is the
+## expected ordering whenever n > p, and is worth reporting honestly
+## alongside the n << p results in notebook_riboflavin.R.
 ## ============================================================
 
 library("msPCA")
 library("elasticnet")
 library("PMA")
 library("sparsepca")
+library("amanpg")
 library("mixOmics")
 library("nsprcomp")
-library("MASS")
+library("reticulate")
+
+source("benchmarking/bench_utils.R")
+
+## Python packages (installed via pip: scikit-learn)
+py_bin <- Sys.which("python3")
+use_python(py_bin, required = TRUE)
+sk_decomp    <- import("sklearn.decomposition")
+
+## Helper: unit-normalise columns
+unit_norm <- function(L) {
+  for (j in seq_len(ncol(L))) {
+    nm <- sqrt(sum(L[, j]^2))
+    if (nm > 0) L[, j] <- L[, j] / nm
+  }
+  L
+}
 
 ## Pitprops correlation matrix from Jeffers (1967), Table 1.
 ## Variables: topdiam, length, moist, testsg, ovensg, ringtop,
@@ -67,220 +100,227 @@ set.seed(42)
 X_pseudo <- MASS::mvrnorm(n = 500L, mu = rep(0, p), Sigma = pitprops)
 colnames(X_pseudo) <- varnames
 
-## --- msPCA ---
-set.seed(43)
-t_mspca <- system.time(
-	mspca_res <- mspca(pitprops, r = r, ks = rep(k, r), 
-										 verbose = FALSE, feasibilityConstraintType = 0)
-)
-cat("msPCA | NNZ:", colSums(abs(mspca_res$x_best) > 0),
-		"| FVE:", round(fraction_variance_explained(pitprops, mspca_res$x_best), 4),
-		"| Orth:", format(feasibility_violation_off(pitprops, mspca_res$x_best, 0),
-											scientific = TRUE, digits = 3),
-		"| Time:", round(t_mspca["elapsed"], 4), "s\n")
+## Repetitions per method. Each repetition runs in its OWN process, so every
+## one yields an independent peak-RSS sample; runtime, memory and FVE are all
+## reported as medians over repetitions. Five is the minimum that gives the
+## memory median any resistance to outliers -- peak RSS varies substantially
+## run to run for methods that allocate heavily on R's heap (see bench_utils.R).
+REPS <- 5L
 
-## --- elasticnet ---
-t_enet <- system.time(
-	enet_res <- elasticnet::spca(pitprops, K = r, sparse = "varnum",
-															 para = rep(k, r), type = "Gram")
-)
-cat("elasticnet | NNZ:", colSums(abs(enet_res$loadings) > 0),
-		"| FVE:", round(fraction_variance_explained(pitprops, enet_res$loadings), 4),
-		"| Orth:", format(feasibility_violation_off(pitprops, enet_res$loadings, 0),
-											scientific = TRUE, digits = 3),
-		"| Time:", round(t_enet["elapsed"], 4), "s\n")
+## Tuning sweeps are exploratory and are NOT part of the measured runs.
+## They stay in the parent process so their allocations cannot contaminate
+## any method's peak-RSS reading. Set to FALSE to skip.
+RUN_TUNING_SWEEPS <- TRUE
 
-## --- PMA (sumabsv tuned for ~4 NNZ per	 PC on Pitprops) ---
-## Sweep to find appropriate sumabsv
-for (sv in seq(1.7, 1.8, by = 0.001)) {
-	pma_try <- PMA::SPC(pitprops, sumabsv = sv, K = r, orth = TRUE, trace = FALSE)
-	cat("  sumabsv =", sv,
-              "| NNZ:", paste(colSums(abs(pma_try$v) > 0), collapse = " "), 
-              "| FVE:", round(fraction_variance_explained(pitprops, pma_try$v), 4),
-"\n")
-}
-## Set sumabsv to the value that achieves ~4 NNZ per PC above, then run:
-t_pma <- system.time(
-	pma_res <- PMA::SPC(pitprops, sumabsv = 1.727, K = r,
-											orth = TRUE, trace = FALSE)
-)
-cat("PMA | NNZ:", colSums(abs(pma_res$v) > 0),
-		"| FVE:", round(fraction_variance_explained(pitprops, pma_res$v), 4),
-		"| Orth:", format(feasibility_violation_off(pitprops, pma_res$v, 0),
-											scientific = TRUE, digits = 3),
-		"| Time:", round(t_pma["elapsed"], 4), "s\n")
+## Values selected from the sweeps below.
+PMA_SUMABSV     <- 1.727
+SPARSEPCA_ALPHA <- 0.004
+AMANPG_LAMBDA1  <- c(1, 1, 5, 0.4, 0.4, 0)   # tuned for ~4 NNZ per PC
+SKLEARN_ALPHA   <- 3.1
 
-## --- sparsepca ---
-## --- sparsepca (alpha = 0.004 tuned for ~4 NNZ per PC; normalize to unit norm) ---
-for (a in seq(0.001, 0.005, by = 0.0005)) {
-	sparsepca_try <- sparsepca::spca(pitprops, k = r, alpha = a, verbose = FALSE, scale = TRUE)
-       for (j in seq_len(r)) {
-              nm <- sqrt(sum(sparsepca_try$loadings[, j]^2))
-              if (nm > 0) sparsepca_try$loadings[, j] <- sparsepca_try$loadings[, j] / nm
-       }       
-	cat("  alpha =", a,
-              "| NNZ:", paste(colSums(abs(sparsepca_try$loadings) > 0), collapse = " "), 
-              "| FVE:", round(fraction_variance_explained(pitprops, sparsepca_try$loadings), 4),
-"\n")
+## nscumcomp() may fail on datasets with high inter-variable correlations
+## ("Co-linear principal axes"); it is retried up to this many times.
+NSCUM_MAX_ATTEMPTS <- 20L
+
+
+## ============================================================
+## Tuning sweeps (untimed, unprofiled)
+## ============================================================
+
+if (RUN_TUNING_SWEEPS) {
+  ## --- PMA (sumabsv tuned for ~4 NNZ per PC on Pitprops) ---
+  cat("PMA sumabsv sweep:\n")
+  for (sv in seq(1.7, 1.8, by = 0.001)) {
+    pma_try <- PMA::SPC(pitprops, sumabsv = sv, K = r, orth = TRUE, trace = FALSE)
+    cat("  sumabsv =", sv,
+        "| NNZ:", paste(colSums(abs(pma_try$v) > 0), collapse = " "),
+        "| FVE:", round(fraction_variance_explained(pitprops, pma_try$v), 4), "\n")
+  }
+
+  ## --- sparsepca (alpha tuned for ~4 NNZ per PC) ---
+  cat("sparsepca alpha sweep:\n")
+  for (a in seq(0.001, 0.005, by = 0.0005)) {
+    sp_try <- unit_norm(
+      sparsepca::spca(pitprops, k = r, alpha = a, verbose = FALSE, scale = TRUE)$loadings)
+    cat("  alpha =", a,
+        "| NNZ:", paste(colSums(abs(sp_try) > 0), collapse = " "),
+        "| FVE:", round(fraction_variance_explained(pitprops, sp_try), 4), "\n")
+  }
+
+  ## --- sklearn SparsePCA (alpha tuned for ~4 NNZ per PC) ---
+  cat("sklearn alpha sweep:\n")
+  for (a in seq(2.5, 3.5, by = 0.05)) {
+    m <- sk_decomp$SparsePCA(n_components = r, alpha = a, random_state = 43L)
+    m$fit(X_pseudo)
+    L <- unit_norm(t(m$components_))
+    cat("  alpha =", a, "| NNZ:", paste(colSums(abs(L) > 0), collapse = " "), "\n")
+  }
 }
-t_spca <- system.time(
-	spca_res <- sparsepca::spca(pitprops, k = r, alpha = 0.004, scale = TRUE, verbose = FALSE)
-)
-for (j in seq_len(r)) {
-	nm <- sqrt(sum(spca_res$loadings[, j]^2))
-	if (nm > 0) spca_res$loadings[, j] <- spca_res$loadings[, j] / nm
-}
-cat("sparsepca | NNZ:", colSums(abs(spca_res$loadings) > 0),
-		"| FVE:", round(fraction_variance_explained(pitprops, spca_res$loadings), 4),
-		"| Orth:", format(feasibility_violation_off(pitprops, spca_res$loadings, 0),
-											scientific = TRUE, digits = 3),
-		"| Time:", round(t_spca["elapsed"], 4), "s\n")
+
+
+## ============================================================
+## Measured runs -- one fresh subprocess per method.
+## Each fun() returns a plain p x r loadings matrix.
+## ============================================================
+
+#### R METHODS ####
+
+## --- msPCA, Sigma input (dense p x p covariance operator) ---
+b_mspca_S <- bench_method(
+  fun = function(Sigma, r, k) {
+    mspca(Sigma, r = r, ks = rep(k, r),
+          verbose = FALSE, feasibilityConstraintType = 0)$x_best
+  },
+  inputs = list(Sigma = pitprops, r = r, k = k),
+  packages = "msPCA", reps = REPS, label = "msPCA (Sigma)")
+
+## --- msPCA, X input (matrix-free Gram operator, never forms p x p) ---
+b_mspca_X <- bench_method(
+  fun = function(X, r, k) {
+    mspca(X, type = "X", r = r, ks = rep(k, r),
+          verbose = FALSE, feasibilityConstraintType = 0)$x_best
+  },
+  inputs = list(X = X_pseudo, r = r, k = k),
+  packages = "msPCA", reps = REPS, label = "msPCA (X)")
+
+## --- elasticnet, Sigma input ---
+b_enet_S <- bench_method(
+  fun = function(Sigma, r, k) {
+    elasticnet::spca(Sigma, K = r, sparse = "varnum",
+                     para = rep(k, r), type = "Gram")$loadings
+  },
+  inputs = list(Sigma = pitprops, r = r, k = k),
+  packages = "elasticnet", reps = REPS, label = "elasticnet (Sigma)")
+
+## --- elasticnet, X input ---
+b_enet_X <- bench_method(
+  fun = function(X, r, k) {
+    elasticnet::spca(X, K = r, sparse = "varnum",
+                     para = rep(k, r), type = "predictor")$loadings
+  },
+  inputs = list(X = X_pseudo, r = r, k = k),
+  packages = "elasticnet", reps = REPS, label = "elasticnet (X)")
+
+## --- PMA ---
+b_pma <- bench_method(
+  fun = function(Sigma, r, sumabsv) {
+    PMA::SPC(Sigma, sumabsv = sumabsv, K = r, orth = TRUE, trace = FALSE)$v
+  },
+  inputs = list(Sigma = pitprops, r = r, sumabsv = PMA_SUMABSV),
+  packages = "PMA", reps = REPS, label = "PMA")
+
+## --- sparsepca (normalised to unit norm) ---
+b_spca <- bench_method(
+  fun = function(Sigma, r, alpha) {
+    unit_norm(sparsepca::spca(Sigma, k = r, alpha = alpha,
+                              scale = TRUE, verbose = FALSE)$loadings)
+  },
+  inputs = list(Sigma = pitprops, r = r, alpha = SPARSEPCA_ALPHA),
+  globals = list(unit_norm = unit_norm),
+  packages = "sparsepca", reps = REPS, label = "sparsepca")
+
+## --- amanpg ---
+## type = 1: covariance matrix input; lambda1 is a vector of length r (one per PC)
+b_amanpg <- bench_method(
+  fun = function(Sigma, r, lambda1) {
+    unit_norm(spca.amanpg(z = Sigma, lambda1 = lambda1, lambda2 = Inf,
+                          k = r, type = 1, verbose = FALSE)$loadings)
+  },
+  inputs = list(Sigma = pitprops, r = r, lambda1 = AMANPG_LAMBDA1),
+  globals = list(unit_norm = unit_norm),
+  packages = "amanpg", reps = REPS, label = "amanpg")
 
 ## --- mixOmics::spca (keepX tuned to k per component; uses pseudo-data) ---
-t_mixo <- system.time(
-	mixo_res <- mixOmics::spca(X_pseudo, ncomp = r, keepX = rep(k, r), center = TRUE)
-)
-mixo_load <- mixo_res$loadings$X
-for (j in seq_len(r)) {
-	nm <- sqrt(sum(mixo_load[, j]^2))
-	if (nm > 0) mixo_load[, j] <- mixo_load[, j] / nm
-}
-cat("mixOmics | NNZ:", colSums(abs(mixo_load) > 0),
-		"| FVE:", round(fraction_variance_explained(pitprops, mixo_load), 4),
-		"| Orth:", format(feasibility_violation_off(pitprops, mixo_load, 0),
-											scientific = TRUE, digits = 3),
-		"| Time:", round(t_mixo["elapsed"], 4), "s\n")
+b_mixo <- bench_method(
+  fun = function(X, r, k) {
+    unit_norm(mixOmics::spca(X, ncomp = r, keepX = rep(k, r),
+                             center = TRUE)$loadings$X)
+  },
+  inputs = list(X = X_pseudo, r = r, k = k),
+  globals = list(unit_norm = unit_norm),
+  packages = "mixOmics", reps = REPS, label = "mixOmics")
 
 ## --- nsprcomp (k nonzeros per PC; uses pseudo-data) ---
-## Basic deflation
-t_nspr <- system.time(
-	nspr_res <- nsprcomp::nsprcomp(X_pseudo, ncomp = r, k = rep(k, r), nneg = FALSE, center = TRUE)
-)
-nspr_load <- nspr_res$rotation
-cat("nsprcomp | NNZ:", colSums(abs(nspr_load) > 0),
-		"| FVE:", round(fraction_variance_explained(pitprops, nspr_load), 4),
-		"| Orth:", format(feasibility_violation_off(pitprops, nspr_load, 0),
-											scientific = TRUE, digits = 3),
-		"| Time:", round(t_nspr["elapsed"], 4), "s\n")
+b_nspr <- bench_method(
+  fun = function(X, r, k) {
+    nsprcomp::nsprcomp(X, ncomp = r, k = rep(k, r),
+                       nneg = FALSE, center = TRUE)$rotation
+  },
+  inputs = list(X = X_pseudo, r = r, k = k),
+  packages = "nsprcomp", reps = REPS, label = "nsprcomp")
 
 ## --- nscumcomp (total nonzeros = r * k; uses pseudo-data) ---
-## Note: nscumcomp() may fail on datasets with high inter-variable correlations
-## ("Co-linear principal axes"). We use tryCatch() for graceful failure reporting.
-max_attempts <- 20L
-nscum_res <- NULL
-last_err <- NULL
-
-t_nscum <- system.time({
-  for (attempt in seq_len(max_attempts)) {
-    fit <- tryCatch(
-      nsprcomp::nscumcomp(
-        X_pseudo, ncomp = r, k = r * k, nneg = FALSE,
-        center = TRUE
-      ),
-      error = function(e) e
-    )
-
-    if (!inherits(fit, "error")) {
-      nscum_res <- fit
-      break
+## Retries on "Co-linear principal axes"; returns NULL if all attempts fail,
+## which quality_table() propagates as NA rather than aborting the notebook.
+b_nscum <- bench_method(
+  fun = function(X, r, k, max_attempts) {
+    for (attempt in seq_len(max_attempts)) {
+      fit <- tryCatch(
+        nsprcomp::nscumcomp(X, ncomp = r, k = r * k, nneg = FALSE, center = TRUE),
+        error = function(e) e)
+      if (!inherits(fit, "error")) return(fit$rotation)
     }
-
-    last_err <- fit$message
-  }
-})
-
-nscum_load <- if (!is.null(nscum_res)) nscum_res$rotation else NULL
-
-if (is.null(nscum_load)) {
-  cat("nscumcomp failed after", max_attempts, "attempts. Last error:", last_err, "\n")
-} else {
-  cat("nscumcomp | NNZ:", colSums(abs(nscum_load) > 0),
-      "| FVE:", round(fraction_variance_explained(pitprops, nscum_load), 4),
-      "| Orth:", format(feasibility_violation_off(pitprops, nscum_load, 0),
-                        scientific = TRUE, digits = 3),
-      "| Time:", round(t_nscum["elapsed"], 4), "s\n")
-}
+    NULL
+  },
+  inputs = list(X = X_pseudo, r = r, k = k, max_attempts = NSCUM_MAX_ATTEMPTS),
+  packages = "nsprcomp", reps = REPS, label = "nscumcomp")
 
 ## --- Dense PCA ---
-t_pca <- system.time(
-	pca_res <- prcomp(t(pitprops), scale. = FALSE)  # treat as cov matrix
-)
-cat("Dense PCA (r=6) | FVE:",
-		round(fraction_variance_explained(pitprops, pca_res$rotation[, 1:6]), 4),
-		"| Time:", round(t_pca["elapsed"], 4), "s\n")
+## pitprops is a correlation matrix, not a data matrix; use eigen() directly.
+b_pca <- bench_method(
+  fun = function(Sigma, r) {
+    eigen(Sigma, symmetric = TRUE)$vectors[, seq_len(r)]
+  },
+  inputs = list(Sigma = pitprops, r = r),
+  packages = character(), reps = REPS, label = "Dense PCA")
 
-## --- Save results ---
-results_pitprops <- data.frame(
-	method  = c("msPCA", "elasticnet", "PMA", "sparsepca",
-							"mixOmics", "nsprcomp", "nscumcomp", "Dense PCA"),
-	nnz_pc1 = c(colSums(abs(mspca_res$x_best) > 0)[1],
-							colSums(abs(enet_res$loadings)  > 0)[1],
-							colSums(abs(pma_res$v)           > 0)[1],
-							colSums(abs(spca_res$loadings)   > 0)[1],
-							colSums(abs(mixo_load)           > 0)[1],
-							colSums(abs(nspr_load)           > 0)[1],
-							if (!is.null(nscum_load)) colSums(abs(nscum_load) > 0)[1] else NA,
-							13L),
-	nnz_pc2 = c(colSums(abs(mspca_res$x_best) > 0)[2],
-							colSums(abs(enet_res$loadings)  > 0)[2],
-							colSums(abs(pma_res$v)           > 0)[2],
-							colSums(abs(spca_res$loadings)   > 0)[2],
-							colSums(abs(mixo_load)           > 0)[2],
-							colSums(abs(nspr_load)           > 0)[2],
-							if (!is.null(nscum_load)) colSums(abs(nscum_load) > 0)[2] else NA,
-							13L),
-	nnz_pc3 = c(colSums(abs(mspca_res$x_best) > 0)[3],
-							colSums(abs(enet_res$loadings)  > 0)[3],
-							colSums(abs(pma_res$v)           > 0)[3],
-							colSums(abs(spca_res$loadings)   > 0)[3],
-							colSums(abs(mixo_load)           > 0)[3],
-							colSums(abs(nspr_load)           > 0)[3],
-							if (!is.null(nscum_load)) colSums(abs(nscum_load) > 0)[3] else NA,
-							13L),
-	nnz_pc4 = c(colSums(abs(mspca_res$x_best) > 0)[4],
-							colSums(abs(enet_res$loadings)  > 0)[4],
-							colSums(abs(pma_res$v)           > 0)[4],
-							colSums(abs(spca_res$loadings)   > 0)[4],
-							colSums(abs(mixo_load)           > 0)[4],
-							colSums(abs(nspr_load)           > 0)[4],
-							if (!is.null(nscum_load)) colSums(abs(nscum_load) > 0)[4] else NA,
-							13L),
-	nnz_pc5 = c(colSums(abs(mspca_res$x_best) > 0)[5],
-							colSums(abs(enet_res$loadings)  > 0)[5],
-							colSums(abs(pma_res$v)           > 0)[5],
-							colSums(abs(spca_res$loadings)   > 0)[5],
-							colSums(abs(mixo_load)           > 0)[5],
-							colSums(abs(nspr_load)           > 0)[5],
-							if (!is.null(nscum_load)) colSums(abs(nscum_load) > 0)[5] else NA,
-							13L),
-	nnz_pc6 = c(colSums(abs(mspca_res$x_best) > 0)[6],
-							colSums(abs(enet_res$loadings)  > 0)[6],
-							colSums(abs(pma_res$v)           > 0)[6],
-							colSums(abs(spca_res$loadings)   > 0)[6],
-							colSums(abs(mixo_load)           > 0)[6],
-							colSums(abs(nspr_load)           > 0)[6],
-							if (!is.null(nscum_load)) colSums(abs(nscum_load) > 0)[6] else NA,
-							13L),
-	fve     = round(c(fraction_variance_explained(pitprops, mspca_res$x_best),
-							fraction_variance_explained(pitprops, enet_res$loadings),
-							fraction_variance_explained(pitprops, pma_res$v),
-							fraction_variance_explained(pitprops, spca_res$loadings),
-							fraction_variance_explained(pitprops, mixo_load),
-							fraction_variance_explained(pitprops, nspr_load),
-							if (!is.null(nscum_load)) fraction_variance_explained(pitprops, nscum_load) else NA,
-							fraction_variance_explained(pitprops, pca_res$rotation[, 1:6])), 3),
-	orth    = c(feasibility_violation_off(pitprops, mspca_res$x_best, 0),
-							feasibility_violation_off(pitprops, enet_res$loadings, 0),
-							feasibility_violation_off(pitprops, pma_res$v, 0),
-							feasibility_violation_off(pitprops, spca_res$loadings, 0),
-							feasibility_violation_off(pitprops, mixo_load, 0),
-							feasibility_violation_off(pitprops, nspr_load, 0),
-							if (!is.null(nscum_load)) feasibility_violation_off(pitprops, nscum_load, 0) else NA,
-							feasibility_violation_off(pitprops, pca_res$rotation[, 1:6], 0)),
-	runtime = round(c(t_mspca["elapsed"], t_enet["elapsed"],
-							t_pma["elapsed"],   t_spca["elapsed"],
-							t_mixo["elapsed"],  t_nspr["elapsed"],
-							t_nscum["elapsed"], t_pca["elapsed"]), 3)
-)
+
+#### PYTHON METHODS ####
+
+## --- sklearn SparsePCA ---
+## Takes X_pseudo (raw data matrix). components_ is (r x p), transpose to (p x r).
+## Initialising reticulate and importing sklearn costs on the order of 150 MB of
+## NumPy/SciPy unrelated to the sparse-PCA solver, so it happens in setup():
+## that cost lands in baseline_rss_mb and is excluded from mem_delta_mb.
+b_sklearn <- bench_method(
+  setup = function() {
+    library(reticulate)
+    use_python(Sys.which("python3"), required = TRUE)
+    mod <- import("sklearn.decomposition")
+    ## Throwaway fit: sklearn defers several imports (scipy.linalg, the
+    ## dict-learning solver) until the first fit(), so warm them here rather
+    ## than letting them land in the first timed repetition.
+    mod$SparsePCA(n_components = 1L, alpha = 1)$fit(matrix(rnorm(20), 10, 2))
+    mod
+  },
+  ## `seed` is supplied by the harness, one value per repetition; sklearn does
+  ## not read R's RNG so it must be passed through as random_state.
+  fun = function(X, r, alpha, seed, setup) {
+    m <- setup$SparsePCA(n_components = r, alpha = alpha,
+                         random_state = as.integer(seed))
+    m$fit(X)
+    unit_norm(t(m$components_))
+  },
+  inputs = list(X = X_pseudo, r = r, alpha = SKLEARN_ALPHA),
+  globals = list(unit_norm = unit_norm),
+  packages = character(), reps = REPS, label = "sklearn SparsePCA")
+
+
+## ============================================================
+## Console report and summary table
+## ============================================================
+
+benches <- list(b_mspca_S, b_mspca_X, b_enet_S, b_enet_X, b_pma, b_spca,
+                b_amanpg, b_mixo, b_nspr, b_nscum, b_pca, b_sklearn)
+
+cat("\n")
+for (b in benches) report_bench(b, pitprops)
+
+## FVE and orthogonality are evaluated on the published pitprops correlation
+## matrix, not on the covariance of the pseudo-data.
+results_pitprops <- cbind(bench_table(benches),
+                          quality_table(benches, pitprops, r))
+
+print(results_pitprops, row.names = FALSE)
 write.csv(results_pitprops, "benchmarking/benchmarking_results_pitprops.csv",
 					row.names = FALSE)

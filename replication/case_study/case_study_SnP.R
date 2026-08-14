@@ -2,47 +2,80 @@
 ## Section 5 Case Study: S&P 500 Factor Analysis
 ## JSS replication script for "msPCA: Multiple Sparse PCA in R"
 ##
-## Dataset: SnP_returns_cleaned.csv
-##   423 stocks, Jan 2010 -- Dec 2019 (2,515 trading days)
-##   Daily log-returns; market component removed via spectral
-##   deflation before applying msPCA.
+## Data: the deflated correlation matrix ships with the package as
+##   data(snp500): 423 stocks, Jan 2010 -- Dec 2019 (2,515 trading
+##   days), daily log-returns, market component removed via spectral
+##   deflation.  Everything based on msPCA runs from this matrix
+##   alone.
+##
+##   The raw returns (case_study/SnP_returns_cleaned.csv, ~36 MB) are
+##   too large to ship and are only needed for the nsprcomp reference
+##   curve, which requires a data matrix rather than a correlation
+##   matrix.  Section 3 below detects whether that file is present
+##   and falls back to cached nsprcomp results otherwise.
 ## ============================================================
 
 library("msPCA")
-library("RSpectra")
-library("readr")
-library("dplyr")
 library("ggplot2")
-library("nsprcomp")
+## nsprcomp and RSpectra are called with :: and only in the branch of
+## section 3 that needs the raw returns; they are not required to run
+## the rest of the script.
 
 ## -----------------------------------------------------------
-## 1. Load data and compute the correlation matrix
-## -----------------------------------------------------------
-df_returns <- read_csv("case_study/SnP_returns_cleaned.csv") |>
-  filter(Date < "2020-01-01")
-X  <- as.matrix(df_returns[, -1])  # drop Date column
-Sigma  <- cor(X)
-
-## -----------------------------------------------------------
-## 2. Remove market component via spectral deflation
+## 0. Output destinations
 ##
-## The leading eigenvector v1 of S captures the "market factor"
-## that loads positively on virtually every stock.  Projecting
-## S onto the orthogonal complement of v1 suppresses this
-## market-wide movement and exposes cross-sectional structure
-## (sector / style effects).
+## Everything this script produces is consumed in two places:
+##   * replication/case_study/ -- PDFs and CSVs, for the paper;
+##   * the package sources     -- PNGs under vignettes/figures/ and the
+##     pre-computed sweep under inst/vignette-data/, for the vignette
+##     and the pkgdown site.
+##
+## Writing only to the first is how the vignette came to be three days
+## out of date against the replication outputs, still describing
+## factors the re-run had replaced. save_figure() below and the copy at
+## the end of section 3b keep the two in step, so a re-run of this
+## script refreshes the website as well.
+##
+## Paths assume the script is sourced from the replication/ directory,
+## which is what run_all.R and the README instruct.
 ## -----------------------------------------------------------
-v1 <- eigs_sym(Sigma, k = 1, which = "LA")$vectors[, 1]
-v1 <- v1 / sqrt(sum(v1^2))           # ensure unit norm
-P  <- diag(length(v1)) - tcrossprod(v1)
-SigmaR <- crossprod(P, Sigma) %*% P          # SigmaR = P Sigma P^T
-rownames(SigmaR) <- colnames(SigmaR) <- colnames(X)  # preserve tickers
+PKG_ROOT  <- ".."
+FIG_DIR   <- file.path(PKG_ROOT, "vignettes", "figures")
+VDATA_DIR <- file.path(PKG_ROOT, "inst", "vignette-data")
 
-XR <- X %*% P
-colnames(XR) <- colnames(SigmaR)
+for (d in c("case_study", FIG_DIR, VDATA_DIR))
+  dir.create(d, recursive = TRUE, showWarnings = FALSE)
+
+## Save one figure twice: PDF for the paper, PNG for the vignette.
+## 150 dpi matches the existing assets -- a 4 x 3 in panel becomes
+## 600 x 450 px -- so figure sizing in the vignette is unaffected.
+save_figure <- function(name, plot, width, height, dpi = 150) {
+  ggsave(file.path("case_study", paste0(name, ".pdf")), plot,
+         width = width, height = height, units = "in")
+  ggsave(file.path(FIG_DIR, paste0(name, ".png")), plot,
+         width = width, height = height, units = "in", dpi = dpi)
+  cat("  wrote case_study/", name, ".pdf and ", FIG_DIR, "/", name, ".png\n",
+      sep = "")
+  invisible(NULL)
+}
 
 ## -----------------------------------------------------------
-## 3. Sweep over k for both constraint types
+## 1. Load the market-deflated correlation matrix
+##
+## The leading eigenvector v1 of the raw correlation matrix Sigma
+## captures the "market factor" that loads positively on virtually
+## every stock.  Projecting Sigma onto the orthogonal complement of
+## v1 suppresses this market-wide movement and exposes
+## cross-sectional structure (sector / style effects):
+##   SigmaR = P Sigma P^T,   P = I - v1 v1^T.
+## This deflation is already applied in the shipped data object; see
+## ?snp500 and data-raw/snp500.R for the derivation.
+## -----------------------------------------------------------
+data("snp500", package = "msPCA")
+SigmaR <- snp500
+
+## -----------------------------------------------------------
+## 2. Sweep over k for both constraint types
 ##    feasibilityConstraintType = 0  : orthogonality
 ##    feasibilityConstraintType = 1  : zero pairwise correlation
 ## -----------------------------------------------------------
@@ -75,11 +108,43 @@ cat("Running zero-correlation sweep...\n")
 res_corr <- run_sweep(1)
 
 
-## Also run nsprcomp at same sparsity budgets for comparison
-res_nsprcomp <- do.call(rbind, lapply(ks_grid, function(k) {
+## -----------------------------------------------------------
+## 3. nsprcomp reference curve at the same sparsity budgets
+##
+## nsprcomp needs a data matrix, not a correlation matrix, so it
+## cannot be run from snp500 alone.  If the raw returns file is
+## available we rebuild the deflated data matrix XR and run the
+## method, caching the results; otherwise we read the cached
+## results back; if neither exists we warn and skip nsprcomp.
+## -----------------------------------------------------------
+returns_file  <- "case_study/SnP_returns_cleaned.csv"
+nsprcomp_file <- "case_study/snp_nsprcomp_results.csv"
+
+have_nsprcomp <- requireNamespace("nsprcomp", quietly = TRUE) &&
+                 requireNamespace("RSpectra", quietly = TRUE)
+
+if (file.exists(returns_file) && have_nsprcomp) {
+
+  cat("Raw returns found: running nsprcomp...\n")
+
+  df_returns <- utils::read.csv(returns_file, check.names = FALSE)
+  df_returns <- df_returns[df_returns$Date < "2020-01-01", ]
+  X     <- as.matrix(df_returns[, -1])   # drop Date column
+  Sigma <- stats::cor(X)
+
+  ## Reconstruct the deflation projector P = I - v1 v1^T used for snp500
+  v1 <- RSpectra::eigs_sym(Sigma, k = 1, which = "LA")$vectors[, 1]
+  v1 <- v1 / sqrt(sum(v1^2))             # ensure unit norm
+  P  <- diag(length(v1)) - tcrossprod(v1)
+
+  XR <- X %*% P
+  colnames(XR) <- colnames(SigmaR)
+
+  res_nsprcomp <- do.call(rbind, lapply(ks_grid, function(k) {
     cat("  nsprcomp k =", k, "\n")
-    fit <- nsprcomp::nsprcomp(XR, ncomp = r, k = rep(k, r), nneg = FALSE, center = TRUE, scale. = TRUE)
-        
+    fit <- nsprcomp::nsprcomp(XR, ncomp = r, k = rep(k, r), nneg = FALSE,
+                              center = TRUE, scale. = TRUE)
+
     data.frame(
       k              = k,
       constraint     = "nsprcomp",
@@ -90,6 +155,27 @@ res_nsprcomp <- do.call(rbind, lapply(ks_grid, function(k) {
     )
   }))
 
+  ## Cache so the comparison remains reproducible without the raw data
+  write.csv(res_nsprcomp, nsprcomp_file, row.names = FALSE)
+
+} else if (file.exists(nsprcomp_file)) {
+
+  cat("Raw returns not found: loading cached nsprcomp results from ",
+      nsprcomp_file, "\n", sep = "")
+  res_nsprcomp <- utils::read.csv(nsprcomp_file, stringsAsFactors = FALSE)
+
+} else {
+
+  warning("nsprcomp cannot be run (raw returns file '", returns_file,
+          "' missing, or packages nsprcomp/RSpectra not installed) and no ",
+          "cached results were found at '", nsprcomp_file, "'; the nsprcomp ",
+          "comparison will be omitted from the results table and figures. ",
+          "Rebuild the returns file from the source Kaggle dataset (see ",
+          "section (B) of data-raw/snp500.R) to run it.", call. = FALSE)
+  res_nsprcomp <- NULL
+
+}
+
 results_df <- rbind(res_orth, res_corr, res_nsprcomp)
 
 ## -----------------------------------------------------------
@@ -97,9 +183,19 @@ results_df <- rbind(res_orth, res_corr, res_nsprcomp)
 ## -----------------------------------------------------------
 write.csv(results_df, "case_study/snp_varyingk_results.csv", row.names = FALSE)
 
+## The vignette reads this table via system.file("vignette-data", ...), so the
+## packaged copy has to be refreshed alongside the replication copy. Without
+## this the vignette silently keeps rendering an older sweep.
+file.copy("case_study/snp_varyingk_results.csv",
+          file.path(VDATA_DIR, "snp_varyingk_results.csv"), overwrite = TRUE)
+cat("  wrote case_study/snp_varyingk_results.csv and ",
+    VDATA_DIR, "/snp_varyingk_results.csv\n", sep = "")
+
 
 ## -----------------------------------------------------------
-## 4. Produce figures (saved to figures/)
+## 4. Produce figures
+##    Each is written twice by save_figure(): PDF to case_study/ for
+##    the paper, PNG to vignettes/figures/ for the vignette and site.
 ## -----------------------------------------------------------
 
 ## Helper theme
@@ -139,8 +235,7 @@ p_fve <- ggplot(results_df,
           y = "FVE",
          color = NULL, linetype = NULL, shape = NULL) +
     theme_jss()
-ggsave("case_study/snp_fve.pdf", p_fve,
-          width = 4, height = 3.0, units = "in")
+save_figure("snp_fve", p_fve, width = 4, height = 3.0)
 
 ## Figure: Orthogonality violation vs k
 p_orth <- ggplot(results_df,
@@ -155,8 +250,7 @@ p_orth <- ggplot(results_df,
          y = "Orthogonality violation ",
          color = NULL, linetype = NULL, shape = NULL) +
     theme_jss()
-ggsave("case_study/snp_orth.pdf", p_orth,
-          width = 4, height = 3.0, units = "in")
+save_figure("snp_orth", p_orth, width = 4, height = 3.0)
 
 ## Figure: Pairwise Sigma-correlation vs k
 p_pwcorr <- ggplot(results_df,
@@ -171,8 +265,7 @@ p_pwcorr <- ggplot(results_df,
          y = "Zero-correlation violation",
          color = NULL, linetype = NULL, shape = NULL) +
     theme_jss()
-ggsave("case_study/snp_pwcorr.pdf", p_pwcorr,
-          width = 4, height = 3.0, units = "in")
+save_figure("snp_pwcorr", p_pwcorr, width = 4, height = 3.0)
 
 ## -----------------------------------------------------------
 ## 5. Focal analysis at k = 10 (orthogonality constraint)
@@ -181,16 +274,23 @@ set.seed(42)
 res_k10 <- mspca(SigmaR, r = r, ks = rep(10, r),
                    verbose = TRUE,
                    feasibilityConstraintType = 0)
-print_mspca(res_k10, SigmaR)
-out <- capture.output(print_mspca(res_k10, SigmaR))
+## print()/summary() take their figures from the fitted object; SigmaR does not
+## need to be passed back in. summary() reports the violations under the
+## constraint type that was enforced (orthogonality here) and labels them.
+print(res_k10)
+summary(res_k10)
+out <- capture.output(print(res_k10))
 writeLines(out, "case_study/snp_k10_orthogonality_loadings.txt")
 
 set.seed(42)
 res_k10_corr <- mspca(SigmaR, r = r, ks = rep(10, r),
                    verbose = TRUE,
                    feasibilityConstraintType = 1)
-print_mspca(res_k10_corr, SigmaR)
-out <- capture.output(print_mspca(res_k10_corr, SigmaR))
+## Zero-correlation fit: summary() picks up feasibilityConstraintType = 1 from
+## the object, so this reports pairwise correlations, not orthogonality.
+print(res_k10_corr)
+summary(res_k10_corr)
+out <- capture.output(print(res_k10_corr))
 writeLines(out, "case_study/snp_k10_correlation_loadings.txt")
 
 ## -----------------------------------------------------------
@@ -275,5 +375,4 @@ p_heat <- ggplot(df_heat_sub,
     panel.grid       = element_blank()
   )
 
-ggsave("case_study/snp_heatmap.pdf", p_heat,
-       width = 7.0, height = 6.0, units = "in")
+save_figure("snp_heatmap", p_heat, width = 7.0, height = 6.0)

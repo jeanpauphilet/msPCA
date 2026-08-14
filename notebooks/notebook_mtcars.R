@@ -8,6 +8,12 @@
 ## we tuned the penalty on the sparsity/L1 norm in order to achieve a sparsity pattern
 ## as close as possible (sparsity of 4 for each PC).
 ############################################################
+required_packages <- c("msPCA", "elasticnet", "PMA", "sparsepca")
+missing_packages <- setdiff(required_packages, rownames(installed.packages()))
+if (length(missing_packages) > 0) {
+	install.packages(missing_packages, repos = "https://cloud.r-project.org")
+}
+
 library(datasets)
 df <- datasets::mtcars
 S <- cor(df)
@@ -28,7 +34,8 @@ msPCA::fraction_variance_explained(S,U)
 
 ## Second method: Iterative Deflation Heuristic for multiple sparse PCs
 mspca_results <- msPCA::mspca(S, 2, c(4,4), type="Sigma", verbose=TRUE, feasibilityConstraintType = 0)
-msPCA::print_mspca(mspca_results, S)
+print(mspca_results)
+summary(mspca_results)
 
 #Sparsity
 colSums(abs(mspca_results$x_best) > 0)

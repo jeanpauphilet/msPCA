@@ -4,18 +4,22 @@
 \alias{summary.mspca}
 \title{Summarize an mspca Object}
 \usage{
-\method{summary}{mspca}(object, C = NULL, feasibilityConstraintType = 0L, digits = NULL, ...)
+\method{summary}{mspca}(object, C = NULL, feasibilityConstraintType = NULL, digits = NULL, ...)
 }
 \arguments{
 \item{object}{An object of class \code{"mspca"}, as returned by \code{\link[=mspca]{mspca()}}.}
 
 \item{C}{(optional) A numeric matrix (p x p). The covariance or correlation
-matrix used when fitting. May be omitted for \code{type = "X"} results, where
-the figures are stored inside the object.}
+matrix used when fitting. No longer required: \code{\link[=mspca]{mspca()}} stores every
+figure this method reports. It is retained only so that objects fitted
+with msPCA 0.5.0 or earlier, which lack the stored diagnostics, can still be
+summarized, and is ignored otherwise. It will be removed in a future
+release.}
 
-\item{feasibilityConstraintType}{An integer. Type of constraint used to
-compute the feasibility violation reported in the summary. \code{0} (default)
-for orthogonality; \code{1} for zero pairwise correlation.}
+\item{feasibilityConstraintType}{(optional) An integer or \code{NULL}. Type of
+constraint used to compute the violations reported in the summary. \code{0}
+for orthogonality; \code{1} for zero pairwise correlation. When \code{NULL} (the
+default) the type stored in \code{object} at fit time is used.}
 
 \item{digits}{An integer or \code{NULL}. Number of significant digits for
 display. When \code{NULL} (the default), \code{getOption("digits")} is used.}
@@ -27,12 +31,20 @@ by this method.}
 Invisibly returns a list of class \code{"summary.mspca"} with fields:
 \describe{
 \item{\code{table}}{Data frame with columns \code{PC}, \code{nonzero}, \code{variance},
-\code{fve}, and \code{cumulative_fve}.}
-\item{\code{feasibility_mat}}{r x r matrix of pairwise feasibility violations
-(\eqn{|u_i^\top u_j|} or \eqn{|u_i^\top C u_j|}). Diagonal and lower
-triangle are \code{NA}.}
-\item{\code{feasibility}}{Scalar total feasibility violation (sum of the
-upper triangle of \code{feasibility_mat}).}
+\code{fve}, \code{cumulative_fve}, and \code{max_violation} (the largest violation
+of that PC against any other PC).}
+\item{\code{feasibility_mat}}{r x r matrix of pairwise violations
+(\eqn{|u_i^\top u_j|} or
+\eqn{|u_i^\top \Sigma u_j| \big/ (\mathrm{tr}(\Sigma)/p)}).
+Diagonal and lower triangle are \code{NA}.}
+\item{\code{feasibility}}{Scalar total violation (sum of the upper triangle
+of \code{feasibility_mat}). Strictly off-diagonal, and therefore not
+comparable with \code{object$feasibility_violation}; see \code{\link[=mspca]{mspca()}}.}
+\item{\code{feasibility_perPC}}{Named vector of per-PC maximum violations.}
+\item{\code{feasibilityConstraintType}}{The constraint type the reported
+violations refer to.}
+\item{\code{fittedConstraintType}}{The constraint type enforced at fit time,
+or \code{NA} for objects fitted with msPCA 0.5.0 or earlier.}
 \item{\code{runtime}}{Solver runtime in seconds (if stored in the object).}
 \item{\code{r}}{Number of sparse PCs.}
 \item{\code{inputType}}{\code{"Sigma"} or \code{"X"}.}
@@ -42,10 +54,30 @@ upper triangle of \code{feasibility_mat}).}
 S3 summary method for objects of class \code{"mspca"} returned by \code{\link[=mspca]{mspca()}}.
 Returns (and prints) a per-PC summary table (number of non-zero loadings,
 variance explained, FVE, and cumulative FVE) together with the pairwise
-feasibility violation matrix and the total solver runtime.
+non-redundancy (feasibility) violation matrix and the total solver runtime.
+}
+\details{
+The violations are reported under the constraint type that was actually
+enforced when the object was fitted, which \code{\link[=mspca]{mspca()}} records in
+\code{object$feasibilityConstraintType}. The printed output always names the
+definition in use. Passing \code{feasibilityConstraintType} explicitly overrides
+this in order to inspect the solution under the other definition; a warning
+is emitted when the requested type differs from the fitted one, since the
+resulting figure does not describe a constraint the solver enforced.
 }
 \examples{
 TestMat <- cor(mtcars)
 res <- mspca(TestMat, r = 2, ks = c(4, 4), verbose = FALSE)
-summary(res, TestMat)
+summary(res)
+
+# Fitting under uncorrelatedness: the summary follows the fit automatically.
+res_u <- mspca(TestMat, r = 2, ks = c(4, 4),
+               feasibilityConstraintType = 1, verbose = FALSE)
+summary(res_u)
+
+# The other set of scores is stored too, and needs no refit:
+res_u$nonredundancy$orthogonality
+}
+\seealso{
+\code{\link[=mspca]{mspca()}} for the stored \code{nonredundancy} matrices.
 }

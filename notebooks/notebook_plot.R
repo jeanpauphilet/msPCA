@@ -3,13 +3,17 @@
 ## the PCs obtained with the msPCA package.
 ## The code requires the dplyr, ggplot2, and ggforce packages.
 ############################################################
+required_packages <- c("msPCA", "dplyr", "ggplot2", "ggforce")
+missing_packages <- setdiff(required_packages, rownames(installed.packages()))
+if (length(missing_packages) > 0) {
+  install.packages(missing_packages, repos = "https://cloud.r-project.org")
+}
+
 library(datasets)
 df <- datasets::mtcars
 S <- cor(df)
 
 library(msPCA)
-mspca_results <- msPCA::mspca(S, 2, c(6,6), type="Sigma", verbose=TRUE)
-
 mspca_results <- msPCA::mspca(S, 3, c(6,6,6), type="Sigma", verbose=TRUE)
 
 library(dplyr)
@@ -32,7 +36,7 @@ data.frame(t(v)) %>%
   aes(x=!!sym(dim1), y=!!sym(dim2), label = pc_id) +
   geom_point(shape=4) + geom_text(hjust=-0.5,vjust=-0.5,size=6) +
   geom_segment(aes(x = origin, xend = !!sym(dim1), y = origin, yend = !!sym(dim2)),
-               arrow = arrow(angle = 20, length = unit(0.15, "inches"))) +
+               arrow = arrow(angle = 20, length = grid::unit(0.15, "inches"))) +
   geom_point(aes(x=0, y=0), inherit.aes=FALSE) +
   geom_circle(aes(x0=0, y0=0, r=1), inherit.aes=FALSE) + coord_fixed()
 

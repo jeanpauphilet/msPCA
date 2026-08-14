@@ -76,12 +76,24 @@ orthogonal projection onto the span of $\boldsymbol{U}$. Per-component contribut
 `fraction_variance_explained_perPC()` and, unnormalised, by `variance_explained_perPC()`.
 
 **Feasibility.** The constraint violation measures how far the returned solution is from
-satisfying the coupling constraints,
+satisfying the coupling constraints. Under orthogonality it is
+
+$$\mathrm{viol}_{\mathrm{off}}(\boldsymbol{U}) =
+  \sum_{t > t'} \left| \boldsymbol{u}_t^\top \boldsymbol{u}_{t'} \right|,$$
+
+and under zero pairwise correlation
 
 $$\mathrm{viol}_{\mathrm{off}}(\boldsymbol{C}, \boldsymbol{U}) =
+  \frac{p}{\mathrm{tr}(\boldsymbol{C})}
   \sum_{t > t'} \left| \boldsymbol{u}_t^\top \boldsymbol{C} \boldsymbol{u}_{t'} \right|,$$
 
-computed by `feasibility_violation_off()`.
+both computed by `feasibility_violation_off()`. The second is normalised by the average
+variance $\mathrm{tr}(\boldsymbol{C})/p$: the loading vectors are unit-norm, so
+$|\boldsymbol{u}_t^\top \boldsymbol{C} \boldsymbol{u}_{t'}|$ is homogeneous of degree one in
+$\boldsymbol{C}$ and the unnormalised sum would depend on the units of the data. With the
+normalisation, a fixed `feasibilityTolerance` means the same thing for a covariance matrix and
+for the corresponding correlation matrix. The same convention is used inside the solver, and
+for the `nonredundancy` matrices stored on the fitted object.
 
 ## Lagrangian alternating maximization
 
@@ -269,6 +281,18 @@ statistical decorrelation of the projected data. In our experience the two optio
 similar results when $\boldsymbol{\Sigma}$ is close to the identity, but can differ noticeably for
 strongly correlated datasets. See `vignette("case-study-snp500", package = "msPCA")` for a
 worked comparison.
+
+The choice is recorded on the fitted object as `feasibilityConstraintType` and becomes the
+default for every diagnostic, so `summary()` always reports the constraint that was actually
+enforced and names it in its header. Both sets of pairwise violations are computed at fit time
+and stored in `nonredundancy`, so a solution can be scored under the definition that was *not*
+enforced without a refit:
+
+```{r eval = FALSE}
+res <- mspca(Sigma, r = 3, ks = rep(5, 3), feasibilityConstraintType = 1, verbose = FALSE)
+summary(res)                            # zero-correlation violations, as fitted
+res$nonredundancy$orthogonality         # how far the same solution is from orthogonal
+```
 
 ### Iteration and restart budgets
 
