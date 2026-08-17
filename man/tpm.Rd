@@ -12,7 +12,7 @@ tpm(
   verbose = TRUE,
   timeLimit = 10,
   center = TRUE,
-  scale = FALSE,
+  scale = TRUE,
   divisor = c("n-1", "n"),
   checkPSD = TRUE,
   symTolerance = 1e-08,
@@ -37,7 +37,7 @@ matrix) or "X" (\code{M} is a raw data matrix).}
 
 \item{center}{(optional, type = "X") A Boolean. Center the columns of \code{M}. Default TRUE.}
 
-\item{scale}{(optional, type = "X") A Boolean. Scale the columns of \code{M} to unit variance. Default FALSE.}
+\item{scale}{(optional, type = "X") A Boolean. Scale the columns of \code{M} to unit variance. Default TRUE.}
 
 \item{divisor}{(optional, type = "X") Either "n-1" (default) or "n".}
 

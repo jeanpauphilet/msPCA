@@ -10,11 +10,10 @@
 \item{object}{An object of class \code{"mspca"}, as returned by \code{\link[=mspca]{mspca()}}.}
 
 \item{C}{(optional) A numeric matrix (p x p). The covariance or correlation
-matrix used when fitting. No longer required: \code{\link[=mspca]{mspca()}} stores every
-figure this method reports. It is retained only so that objects fitted
-with msPCA 0.5.0 or earlier, which lack the stored diagnostics, can still be
-summarized, and is ignored otherwise. It will be removed in a future
-release.}
+matrix used when fitting. \code{\link[=mspca]{mspca()}} stores every figure this method
+reports, so \code{C} is ignored for objects that carry those stored
+diagnostics; it is needed only to summarize an object that does not. It
+will be removed in a future release.}
 
 \item{feasibilityConstraintType}{(optional) An integer or \code{NULL}. Type of
 constraint used to compute the violations reported in the summary. \code{0}
@@ -44,7 +43,7 @@ comparable with \code{object$feasibility_violation}; see \code{\link[=mspca]{msp
 \item{\code{feasibilityConstraintType}}{The constraint type the reported
 violations refer to.}
 \item{\code{fittedConstraintType}}{The constraint type enforced at fit time,
-or \code{NA} for objects fitted with msPCA 0.5.0 or earlier.}
+or \code{NA} for objects that do not record it.}
 \item{\code{runtime}}{Solver runtime in seconds (if stored in the object).}
 \item{\code{r}}{Number of sparse PCs.}
 \item{\code{inputType}}{\code{"Sigma"} or \code{"X"}.}
