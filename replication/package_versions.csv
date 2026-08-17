@@ -5,3 +5,7 @@
 "sparsepca",TRUE,"0.1.2"
 "mixOmics",TRUE,"6.36.0"
 "nsprcomp",TRUE,"0.5.1.2"
+"amanpg",TRUE,"0.3.4"
+"reticulate",TRUE,"1.46.0"
+"callr",TRUE,"3.8.0"
+"scikit-learn (Python)",TRUE,"1.6.1"

@@ -95,7 +95,7 @@
 <li>
 <code>ks</code>: integer vector of length <code>r</code> with sparsity budgets.</li>
 </ul>
-<p>With <code>type = "X"</code>, <code><a href="reference/mspca.html">mspca()</a></code> applies the algorithm to the data directly via the products <code>t(X) %*% (X %*% beta)</code> and never forms the <code>p x p</code> matrix. This is substantially faster and more memory-efficient when <code>n &lt;&lt; p</code>: on the riboflavin benchmark (<code>n = 71</code>, <code>p = 4088</code>) it cuts median runtime from 56.7 s to 1.8 s and peak working memory from 640 MB to 44 MB, at identical variance explained. Pass <code>type = "X"</code> whenever the number of variables greatly exceeds the number of observations; when <code>n &gt; p</code> the dense <code>type = "Sigma"</code> path is cheaper.</p>
+<p>With <code>type = "X"</code>, <code><a href="reference/mspca.html">mspca()</a></code> applies the algorithm to the data directly via the products <code>t(X) %*% (X %*% beta)</code> and never forms the <code>p x p</code> matrix. This is substantially faster and more memory-efficient when <code>n &lt;&lt; p</code>. Pass <code>type = "X"</code> whenever the number of variables greatly exceeds the number of observations; when <code>n &gt; p</code> the dense <code>type = "Sigma"</code> path is cheaper.</p>
 <p>Output fields:</p>
 <ul>
 <li>
@@ -199,7 +199,7 @@
 <div class="float">
 <img src="reference/figures/synthetic_variance_explained.png" alt="Out-of-sample fraction of variance explained on synthetic data"><div class="figcaption">Out-of-sample fraction of variance explained on synthetic data</div>
 </div>
-<p>To regenerate these files, run <code>notebooks/notebook_synthetic.R</code> from the repository root. It writes to <code>notebooks/</code>; copy the two PNGs into <code>man/figures/</code> afterwards, since that is where this README and the website read them from. <code>replication/run_all.R</code> does not cover this script — it runs the contents of <code>replication/</code> only. For a broader comparison — seven competing packages on four real datasets — see the <a href="https://jeanpauphilet.github.io/msPCA/articles/benchmarking.html">benchmarking article</a>; its replication scripts are in <a href="replication"><code>replication/</code></a>.</p>
+<p>To regenerate these files, run <code>notebooks/notebook_synthetic.R</code> from the repository root. It writes to <code>notebooks/</code>; copy the two PNGs into <code>man/figures/</code> afterwards, since that is where this README and the website read them from. For a broader comparison — seven competing packages on four real datasets — see the <a href="https://jeanpauphilet.github.io/msPCA/articles/benchmarking.html">benchmarking article</a>; its replication scripts are in <a href="replication"><code>replication/</code></a>.</p>
 </div>
 <div class="section level2">
 <h2 id="main-functions">Main functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>

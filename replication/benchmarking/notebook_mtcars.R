@@ -44,9 +44,29 @@ library("reticulate")
 
 source("benchmarking/bench_utils.R")
 
-py_bin <- Sys.which("python3")
-use_python(py_bin, required = TRUE)
-sk_decomp <- import("sklearn.decomposition")
+## Python: the scikit-learn comparison runs through reticulate. The Python
+## environment it uses is configured in one place -- python_setup.R -- which
+## declares `scikit-learn` for reticulate's managed (uv) environment and hands
+## back the interpreter that was actually resolved. Read that file for the
+## RETICULATE_PYTHON / RETICULATE_USE_MANAGED_VENV escape hatches, and for why
+## a system python3 with scikit-learn installed is no longer enough under
+## reticulate >= 1.41.
+##
+## A missing scikit-learn is NOT fatal. The sklearn row is dropped and every
+## other method still runs, in the same spirit as the case-study script when the
+## raw returns file is absent.
+source("python_setup.R")
+
+py <- sklearn_setup()
+HAVE_SKLEARN <- py$available
+py_bin <- py$python   # resolved interpreter, passed to the benchmark subprocesses
+if (HAVE_SKLEARN) {
+  sk_decomp <- import("sklearn.decomposition")
+  cat("Using Python at ", py_bin, " (scikit-learn ", py$version, ")\n", sep = "")
+} else {
+  sk_decomp <- NULL
+  warning(sklearn_missing_message(py), call. = FALSE)
+}
 
 ## Helper: unit-normalise columns (matches existing pattern for sparsepca/mixOmics)
 unit_norm <- function(L) {
@@ -68,52 +88,67 @@ r <- 3L; k <- 4L
 ## run to run for methods that allocate heavily on R's heap (see bench_utils.R).
 REPS <- 5L
 
-## Tuning sweeps are exploratory and are NOT part of the measured runs.
-## They stay in the parent process so their allocations cannot contaminate
-## any method's peak-RSS reading. Set to FALSE to skip.
-RUN_TUNING_SWEEPS <- TRUE
-
-## Values selected from the sweeps below.
-PMA_SUMABSV     <- 1.69
-SPARSEPCA_ALPHA <- 0.004
-AMANPG_LAMBDA1  <- c(10, 3, 0.01)
-SKLEARN_ALPHA   <- 3.2
-
-
 ############################################################
-## Tuning sweeps (untimed, unprofiled)
+## Automatic tuning of the penalty-parameterized methods
+##
+## msPCA, elasticnet, mixOmics and nsprcomp accept an exact cardinality per
+## component, so they need no tuning at all. PMA, sparsepca, amanpg and
+## scikit-learn expose only a penalty magnitude or an l1 bound: for each we
+## sweep a grid and keep the value whose realised sparsity is closest to the
+## target of k = 4 nonzeros per component, breaking ties on FVE.
+##
+## Nothing below is hand-picked. Selected values therefore cannot go stale when
+## an input, a grid or a package version changes -- which is exactly what
+## happened to PMA's `sumabsv` when the input to SPC() was corrected.
+##
+## Note on amanpg: spca.amanpg() takes a VECTOR of per-component l1 penalties,
+## and it needs one. With lambda2 = Inf the method soft-thresholds the columns
+## of Sigma %*% A, whose scale follows the eigenvalues, so a single shared value
+## empties the trailing components as the spectrum decays -- it produced
+## (5,0,0) here and (8,4,2,0,0,0) on Pitprops. tune_parameter_vector() therefore
+## tunes the entries by coordinate descent. Every method whose interface offers
+## per-component control gets it, so this is parity, not preferential treatment.
+##
+## Tuning runs in the parent process, before any measurement, so it cannot
+## contaminate the peak-RSS readings.
 ############################################################
 
-if (RUN_TUNING_SWEEPS) {
-  ## --- PMA (sumabsv tuned for ~k NNZ per PC) ---
-  cat("PMA sumabsv sweep:\n")
-  for (sv in seq(1.6, 1.8, by = 0.01)) {
-    pma_try <- PMA::SPC(S, sumabsv = sv, K = r, orth = TRUE, trace = FALSE)
-    cat("  sumabsv =", sv,
-        "| NNZ:", paste(colSums(abs(pma_try$v) > 0), collapse = " "),
-        "| FVE:", round(fraction_variance_explained(S, pma_try$v), 4), "\n")
-  }
+TARGET_NNZ <- rep(k, r)
 
-  ## --- sparsepca (alpha tuned for ~k NNZ per PC) ---
-  cat("sparsepca alpha sweep:\n")
-  for (a in seq(0.001, 0.01, by = 0.001)) {
-    sp_try <- unit_norm(
-      sparsepca::spca(S, k = r, alpha = a, verbose = FALSE, scale = FALSE)$loadings)
-    cat("  alpha =", a,
-        "| NNZ:", paste(colSums(abs(sp_try) > 0), collapse = " "),
-        "| FVE:", round(fraction_variance_explained(S, sp_try), 4), "\n")
-  }
+PMA_SUMABSV <- tune_parameter(
+  fit    = function(sv) PMA::SPC(X_mtcars, sumabsv = sv, K = r, orth = TRUE,
+                          trace = FALSE)$v,
+  grid   = seq(1.2, 3.2, by = 0.05),
+  target = TARGET_NNZ, C = S, label = "PMA::SPC sumabsv")
 
-  ## --- sklearn SparsePCA (alpha tuned for ~k NNZ per PC) ---
-  cat("sklearn alpha sweep:\n")
-  for (a in seq(3, 4, by = 0.1)) {
-    m <- sk_decomp$SparsePCA(n_components = r, alpha = a, random_state = 43L)
-    m$fit(X_mtcars)
-    L <- unit_norm(t(m$components_))
-    cat("  alpha =", a, "| NNZ:", paste(colSums(abs(L) > 0), collapse = " "), "\n")
-  }
-}
+SPARSEPCA_ALPHA <- tune_parameter(
+  fit    = function(a) unit_norm(sparsepca::spca(S, k = r, alpha = a,
+                          verbose = FALSE, scale = FALSE)$loadings),
+  grid   = seq(0.0005, 0.0200, by = 0.0005),
+  target = TARGET_NNZ, C = S, label = "sparsepca::spca alpha")
 
+AMANPG_LAMBDA1 <- tune_parameter_vector(
+  fit    = function(lam) unit_norm(spca.amanpg(z = S, lambda1 = lam,
+                          lambda2 = Inf, k = r, type = 1, verbose = FALSE)$loadings),
+  grid   = seq(0.05, 6, by = 0.05),
+  target = TARGET_NNZ, C = S, label = "amanpg::spca.amanpg lambda1")
+
+SKLEARN_ALPHA <- if (!HAVE_SKLEARN) NA_real_ else tune_parameter(
+  fit    = function(a) {
+             m <- sk_decomp$SparsePCA(n_components = r, alpha = a, random_state = 43L)
+             m$fit(X_mtcars)
+             unit_norm(t(m$components_))
+           },
+  grid   = seq(1, 6, by = 0.1),
+  target = TARGET_NNZ, C = S, label = "sklearn SparsePCA alpha")
+
+
+## Record the selected values next to the results, so the article's "Tuning:"
+## lines can be read off a file rather than transcribed by hand. The table
+## also carries the realised sparsity and FVE at each selected value, so the
+## choice is auditable rather than just asserted.
+write.csv(tuning_table(), "benchmarking/benchmarking_tuning_mtcars.csv",
+          row.names = FALSE)
 
 ############################################################
 ## Measured runs -- one fresh subprocess per method.
@@ -163,11 +198,20 @@ b_enet_X <- bench_method(
   packages = "elasticnet", reps = REPS, label = "elasticnet (X)")
 
 ## --- PMA ---
+## SPC() is documented to take a data matrix of dimension n x p ("Data matrix of
+## dimension n x p"), and it centres the columns itself (center = TRUE). It was
+## previously given the correlation matrix here, which SPC() would have treated
+## as 11 observations on 11 variables -- not the intended input.
+##
+## Note also what orth = TRUE does: it makes the LEFT factors u orthogonal
+## (Section 3.2 of Witten, Tibshirani & Hastie 2009), not the sparse loadings v.
+## We extract and score v, so SPC() makes no orthogonality claim about the
+## quantity reported in the orth column.
 b_pma <- bench_method(
-  fun = function(S, r, sumabsv) {
-    PMA::SPC(S, sumabsv = sumabsv, K = r, orth = TRUE, trace = FALSE)$v
+  fun = function(X, r, sumabsv) {
+    PMA::SPC(X, sumabsv = sumabsv, K = r, orth = TRUE, trace = FALSE)$v
   },
-  inputs = list(S = S, r = r, sumabsv = PMA_SUMABSV),
+  inputs = list(X = X_mtcars, r = r, sumabsv = PMA_SUMABSV),
   packages = "PMA", reps = REPS, label = "PMA")
 
 ## --- sparsepca (normalised to unit norm) ---
@@ -236,10 +280,10 @@ b_pca <- bench_method(
 ## done in setup(): that cost lands in baseline_rss_mb and is excluded from
 ## mem_delta_mb, which then measures the fit itself. peak_rss_mb still shows
 ## the full footprint of the R + Python stack for readers who want it.
-b_sklearn <- bench_method(
+b_sklearn <- if (!HAVE_SKLEARN) NULL else bench_method(
   setup = function() {
     library(reticulate)
-    use_python(Sys.which("python3"), required = TRUE)
+    if (nzchar(py_bin)) try(use_python(py_bin, required = TRUE), silent = TRUE)
     mod <- import("sklearn.decomposition")
     ## Throwaway fit: sklearn defers several imports (scipy.linalg, the
     ## dict-learning solver) until the first fit(), so warm them here rather
@@ -256,7 +300,7 @@ b_sklearn <- bench_method(
     unit_norm(t(m$components_))
   },
   inputs = list(X = X_mtcars, r = r, alpha = SKLEARN_ALPHA),
-  globals = list(unit_norm = unit_norm),
+  globals = list(unit_norm = unit_norm, py_bin = py_bin),
   packages = character(), reps = REPS, label = "sklearn SparsePCA")
 
 
@@ -264,8 +308,8 @@ b_sklearn <- bench_method(
 ## Console report and summary table
 ############################################################
 
-benches <- list(b_mspca_S, b_mspca_X, b_enet_S, b_enet_X, b_pma, b_spca,
-                b_amanpg, b_mixo, b_nspr, b_nscum, b_pca, b_sklearn)
+benches <- Filter(Negate(is.null), list(b_mspca_S, b_mspca_X, b_enet_S, b_enet_X, b_pma, b_spca,
+                b_amanpg, b_mixo, b_nspr, b_nscum, b_pca, b_sklearn))
 
 cat("\n")
 for (b in benches) report_bench(b, S)

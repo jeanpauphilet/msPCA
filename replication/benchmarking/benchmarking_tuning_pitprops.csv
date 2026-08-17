@@ -1,0 +1,5 @@
+"parameter","value","selected_nnz","deviation","fve","n_rejected"
+"amanpg::spca.amanpg lambda1","4.80 4.40 1.95 5.50 0.20 0.05","3 3 4 3 4 6",5,0.863,NA
+"PMA::SPC sumabsv","1.55","3 4 4 4 3 4",2,0.7141,0
+"sklearn SparsePCA alpha","2.6","7 3 4 3 5 4",6,0.9067,0
+"sparsepca::spca alpha","0.005","7 3 4 2 4 4",6,0.7563,0

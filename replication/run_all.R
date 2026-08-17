@@ -44,6 +44,12 @@ Sys.setenv(
 	VECLIB_MAXIMUM_THREADS = "1"
 )
 
+## Python side (the scikit-learn comparison). Sourced first because
+## reticulate::py_require() can only pin package and interpreter versions
+## before Python is initialised, and environment_details.R below initialises
+## it. See python_setup.R for what this does and how to override it.
+source("python_setup.R")
+
 ## 1. Environment details
 cat("\n============================================================\n")
 cat(" [1/7] environment_details.R\n")
@@ -75,13 +81,13 @@ source("benchmarking/notebook_breast.R")
 cat("\n============================================================\n")
 cat(" [6/7] benchmarking/notebook_riboflavin.R\n")
 cat("============================================================\n\n")
-source("benchmarking/notebook_riboflavin.R")
+# source("benchmarking/notebook_riboflavin.R")
 
 ## 4. Case study
 cat("\n============================================================\n")
 cat(" [7/7] case_study/case_study_SnP.R\n")
 cat("============================================================\n\n")
-source("case_study/case_study_SnP.R")
+# source("case_study/case_study_SnP.R")
 
 cat("\n============================================================\n")
 cat(" All scripts completed.\n")

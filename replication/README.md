@@ -59,11 +59,39 @@ macOS on Apple M2. Required packages and the versions used for the results repor
 
 Additional packages used in specific scripts: `ggplot2`, `dplyr`, `tidyr`, `tibble`, `MASS`, `hdi`, `datasets` (base R). `RSpectra` is needed only for the `nsprcomp` branch of the case study, i.e. when the raw returns file is present. `callr` is required by all four benchmarking notebooks.
 
+### scikit-learn and reticulate
+
+The mtcars, Pitprops and breast-cancer notebooks compare against `sklearn.decomposition.SparsePCA` through `reticulate`. The Python environment is configured in a single file, `python_setup.R`, sourced by `run_all.R` before anything else and by each script that touches Python, so the scripts also run one at a time.
+
+From version 1.41 `reticulate` no longer searches the machine for an interpreter by default: it provisions its own ephemeral environment with `uv` (on macOS under `~/Library/Caches/org.R-project.R/R/reticulate/uv/`) containing only what the session declares through `py_require()`. `python_setup.R` declares `scikit-learn==1.6.1` on Python 3.11 — the versions quoted above — so `uv` downloads and caches them on first run and the comparison reproduces without a manual `pip install`. Note that a system `python3` with scikit-learn installed is **not** enough under `reticulate >= 1.41`: it is not the interpreter reticulate imports from, which is why a notebook that ran under 1.40 can report scikit-learn missing after an upgrade.
+
+Two environment variables override this, neither of which requires editing any script:
+
+```bash
+# use your own interpreter (it must already have scikit-learn)
+RETICULATE_PYTHON=/path/to/python3 Rscript run_all.R
+
+# disable managed environments and restore pre-1.41 discovery of python3 on PATH
+RETICULATE_USE_MANAGED_VENV=no Rscript run_all.R
+```
+
+If scikit-learn still cannot be reached the notebooks **warn and continue**, omitting the `sklearn` row from the results table; the R comparisons are unaffected. `py_require()` can only pin versions before Python is initialised, so if Python has already come up earlier in the session the declaration is ignored — restart R and source `run_all.R` from the top. The resolved interpreter is printed on startup and passed explicitly to the benchmark subprocesses, so parent and children cannot disagree.
+
 `sessionInfo.txt`, `package_versions.csv` and `r_platform_info.csv` in this folder are the authoritative record of the environment used; the table above is a summary.
 
 ### How runtime and memory are measured
 
 `benchmarking/bench_utils.R` runs each method in a fresh R subprocess (`callr::r()`) and records both timing and peak resident set size, read from `getrusage(RUSAGE_SELF).ru_maxrss` via a small compiled probe. R-level memory metrics (`gc()`, `bench::mark(mem_alloc)`) are deliberately not used: `msPCA` works in RcppEigen buffers and `scikit-learn` in the embedded CPython heap, neither of which R's garbage collector sees, so an R-level metric would under-report those two and fully charge the pure-R packages.
+
+### Tuning is automatic
+
+`msPCA`, `elasticnet`, `mixOmics` and `nsprcomp` accept an exact cardinality per component and need no tuning. `PMA::SPC`, `sparsepca::spca`, `amanpg::spca.amanpg` and `sklearn.decomposition.SparsePCA` expose only a penalty magnitude or an ℓ1 bound, so `bench_utils.R` provides `tune_parameter()`: it sweeps a grid, scores each value by the total absolute deviation of the realised per-component cardinality from the target, breaks ties on FVE, and returns the winner. The notebooks call it and pass the result straight into the measured run — no constant is transcribed by hand.
+
+This exists because hand-picked constants go stale silently. Correcting the input to `PMA::SPC()` invalidated a `sumabsv` that had been tuned against the old input, and the mismatch survived a full re-run unnoticed. If the selected value lands on an endpoint of its grid with a non-zero deviation, `tune_parameter()` warns that the grid is too narrow.
+
+For `amanpg`, which accepts a vector of per-component penalties, a single shared value is tuned and replicated, so that every penalty-parameterised method gets the same tuning effort.
+
+The selected values are written to `benchmarking/benchmarking_tuning_<dataset>.csv`.
 
 **One repetition per process.** `ru_maxrss` is a monotone high-water mark, so several methods in one session — or even several repetitions of one method — contaminate each other. Every repetition therefore gets its own fresh R process. The algorithm is invoked exactly as many times as it would be otherwise, so this costs only the extra R startups, and in exchange each repetition yields an independent peak-RSS sample.
 

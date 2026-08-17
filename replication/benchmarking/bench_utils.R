@@ -143,6 +143,10 @@ if (!requireNamespace("callr", quietly = TRUE))
 ## Base seed; repetition i uses .BENCH_SEED0 + i - 1.
 .BENCH_SEED0 <- 43L
 
+## Store for the values chosen by tune_parameter(); emptied whenever this file
+## is sourced, which each notebook does exactly once.
+.BENCH_TUNING <- new.env(parent = emptyenv())
+
 ## ---------------------------------------------------------------
 ## Compiled peak-RSS probe.
 ##
@@ -339,6 +343,220 @@ bench_method <- function(fun, inputs = list(), globals = list(), setup = NULL,
        results            = results,
        result             = results[[which(ok)[1]]],
        error              = if (length(errs)) errs[1] else NA_character_)
+}
+
+
+#' Choose a tuning parameter automatically, by sparsity.
+#'
+#' `msPCA`, `elasticnet`, `mixOmics` and `nsprcomp` accept an exact cardinality
+#' per component and need no tuning. `PMA`, `sparsepca`, `amanpg` and
+#' `scikit-learn` expose only a penalty magnitude or an l1 bound, so the value
+#' that comes closest to the target sparsity has to be searched for. Doing that
+#' by eye and pasting a constant into the script is how those constants go stale
+#' -- correcting the input to PMA::SPC() silently invalidated a `sumabsv` that
+#' had been tuned against the old input, and the mismatch survived a full re-run.
+#' This function removes the manual step: the sweep and the selection happen in
+#' the same place, every time the notebook runs.
+#'
+#' Selection minimises the total absolute deviation of the realised
+#' per-component cardinality from `target`. Ties are broken on FVE when `C` is
+#' supplied, so that among equally-sparse candidates the better solution wins.
+#'
+#' @param fit    Function of one grid value returning a p x r loadings matrix,
+#'               or NULL / an error if that value is infeasible.
+#' @param grid   Values to try. A numeric vector, or a list when the parameter
+#'               is itself a vector; `grid[[i]]` is passed to `fit`.
+#' @param target Integer vector of length r: the desired nonzeros per component.
+#' @param C      Optional matrix for the FVE tie-break and for reporting.
+#' @param label  Name used in the console output.
+#' @param quiet  Suppress the per-value trace, keeping only the selection line.
+#'
+#' @return The selected element of `grid`.
+tune_parameter <- function(fit, grid, target, C = NULL, label = "parameter",
+                           quiet = FALSE) {
+  n    <- length(grid)
+  dev  <- rep(NA_real_, n)
+  fve  <- rep(NA_real_, n)
+  live <- rep(FALSE, n)          # did the candidate return r NON-EMPTY components?
+  nnzs <- vector("list", n)
+
+  cat("  tuning ", label, " over ", n, " values...\n", sep = "")
+  for (i in seq_len(n)) {
+    L <- tryCatch(fit(grid[[i]]), error = function(e) NULL)
+    if (is.null(L) || !is.matrix(L)) next
+    nnz     <- colSums(abs(L) > 0)
+    nnzs[[i]] <- nnz
+    dev[i]  <- sum(abs(nnz - target))
+    live[i] <- all(nnz > 0)
+    if (!is.null(C)) fve[i] <- fraction_variance_explained(C, L)
+    if (!quiet)
+      cat("    ", format(grid[[i]]), " | NNZ: ", paste(nnz, collapse = " "),
+          " | deviation: ", dev[i],
+          if (!is.null(C)) paste0(" | FVE: ", round(fve[i], 4)) else "",
+          if (!live[i]) "  [rejected: empty component]" else "", "\n", sep = "")
+  }
+
+  if (all(is.na(dev)))
+    stop("tune_parameter(): every value in the grid for ", label, " failed.",
+         call. = FALSE)
+
+  ## A penalty large enough to empty a component has not produced a sparse
+  ## solution -- it has produced FEWER THAN r COMPONENTS, which is a different
+  ## and worse thing. Scoring by |nnz - target| alone rewards exactly that: an
+  ## empty component costs only k, while destroying the variance that component
+  ## would have explained. On mtcars this let sparsepca select (4,4,0) over
+  ## (7,4,1), dropping FVE from 0.585 to 0.427, and amanpg select (5,0,0) over
+  ## (7,4,2), dropping it from 0.649 to 0.311. Such candidates are excluded.
+  usable <- which(live)
+  if (length(usable) == 0L) {
+    warning("Every candidate for ", label, " left at least one component empty; ",
+            "falling back to the smallest deviation overall. The method cannot ",
+            "return ", length(target), " non-empty components anywhere on this ",
+            "grid -- widen it, or report the method as unable to meet the ",
+            "budget.", call. = FALSE)
+    usable <- which(!is.na(dev))
+  }
+
+  best <- usable[dev[usable] == min(dev[usable], na.rm = TRUE)]
+  if (length(best) > 1 && !all(is.na(fve[best])))
+    best <- best[which.max(fve[best])]
+  best <- best[1]
+
+  n_rejected <- sum(!live & !is.na(dev))
+  cat("  -> ", label, " = ", format(grid[[best]]),
+      " | NNZ: ", paste(nnzs[[best]], collapse = " "),
+      " | deviation ", dev[best], " from target ", paste(target, collapse = " "),
+      if (!is.na(fve[best])) paste0(" | FVE ", round(fve[best], 4)) else "",
+      if (n_rejected) paste0("  (", n_rejected, " of ", n,
+                             " candidates rejected for empty components)") else "",
+      "\n", sep = "")
+
+  ## A selection sitting on the edge of the grid usually means the grid is too
+  ## narrow and the real optimum lies outside it. Say so rather than silently
+  ## returning a boundary value.
+  if (dev[best] > 0 && (best == min(usable) || best == max(usable)))
+    warning(label, " was selected at the ",
+            if (best == min(usable)) "lower" else "upper",
+            " end of its usable grid with a non-zero deviation (", dev[best],
+            "). The grid may be too narrow -- widen it and re-run.",
+            call. = FALSE)
+
+  ## Record the choice so tuning_table() can write it out; this is what makes
+  ## the article's "Tuning:" lines readable off a file instead of transcribed.
+  assign(label, list(parameter = label, value = grid[[best]],
+                     nnz = nnzs[[best]], deviation = dev[best],
+                     fve = fve[best], n_rejected = n_rejected),
+         envir = .BENCH_TUNING)
+
+  grid[[best]]
+}
+
+
+#' Tune a VECTOR-valued penalty, one coordinate at a time.
+#'
+#' For methods whose penalty is a vector with one entry per component --
+#' `amanpg::spca.amanpg()`'s `lambda1` is the only one here -- a single shared
+#' value cannot deliver balanced sparsity. With `lambda2 = Inf` the amanpg
+#' formulation soft-thresholds the columns of Sigma %*% A at lambda1[j], and
+#' those columns scale with the eigenvalue of component j. A threshold that
+#' leaves k nonzeros on the leading component therefore annihilates the trailing
+#' ones as the spectrum decays: tuning a shared value produced (5,0,0) on mtcars
+#' and (8,4,2,0,0,0) on Pitprops.
+#'
+#' Since the package exposes per-component penalties, we tune them. Methods
+#' whose interface offers per-component control -- elasticnet, mixOmics,
+#' nsprcomp, msPCA -- all receive it, so this is parity rather than preferential
+#' treatment.
+#'
+#' The search is coordinate descent: start from the best shared value, then
+#' sweep each coordinate in turn against the FULL objective (total deviation
+#' across all components), since changing one entry moves the whole solution.
+#' Two passes are enough in practice; the second rarely moves anything.
+#'
+#' @inheritParams tune_parameter
+#' @param passes Number of coordinate-descent sweeps.
+#' @return Numeric vector of length `length(target)`.
+tune_parameter_vector <- function(fit, grid, target, C = NULL,
+                                  label = "parameter", passes = 2L) {
+  r <- length(target)
+
+  score <- function(vec) {
+    L <- tryCatch(fit(vec), error = function(e) NULL)
+    if (is.null(L) || !is.matrix(L)) return(list(dev = Inf, nnz = NULL, fve = NA_real_))
+    nnz <- colSums(abs(L) > 0)
+    list(dev = if (any(nnz == 0)) Inf else sum(abs(nnz - target)),
+         nnz = nnz,
+         fve = if (!is.null(C)) fraction_variance_explained(C, L) else NA_real_)
+  }
+
+  cat("  tuning ", label, " (vector of ", r, ") by coordinate descent\n", sep = "")
+
+  ## Start from the best shared value, so the search begins somewhere sensible.
+  shared <- lapply(grid, function(g) score(rep(g, r)))
+  devs   <- vapply(shared, function(z) z$dev, 0)
+  cur    <- rep(grid[[which.min(devs)]], r)
+  best   <- score(cur)
+  if (!is.finite(best$dev)) {
+    ## No shared value keeps every component alive; start from the smallest
+    ## penalty in the grid, which is the least likely to empty anything.
+    cur  <- rep(min(unlist(grid)), r)
+    best <- score(cur)
+  }
+  cat("    start: ", paste(format(cur), collapse = " "),
+      " | NNZ: ", paste(best$nnz, collapse = " "),
+      " | deviation: ", best$dev, "\n", sep = "")
+
+  for (pass in seq_len(passes)) {
+    moved <- FALSE
+    for (j in seq_len(r)) {
+      for (g in grid) {
+        cand <- cur; cand[j] <- g
+        s <- score(cand)
+        better <- s$dev < best$dev ||
+          (s$dev == best$dev && !is.na(s$fve) && !is.na(best$fve) && s$fve > best$fve)
+        if (better) { cur <- cand; best <- s; moved <- TRUE }
+      }
+    }
+    cat("    pass ", pass, ": ", paste(format(cur), collapse = " "),
+        " | NNZ: ", paste(best$nnz, collapse = " "),
+        " | deviation: ", best$dev,
+        if (!is.na(best$fve)) paste0(" | FVE: ", round(best$fve, 4)) else "", "\n", sep = "")
+    if (!moved) break
+  }
+
+  if (!is.finite(best$dev))
+    warning(label, ": no combination on this grid keeps all ", r,
+            " components non-empty. The method cannot meet the budget here.",
+            call. = FALSE)
+
+  cat("  -> ", label, " = ", paste(format(cur), collapse = " "),
+      " | NNZ: ", paste(best$nnz, collapse = " "),
+      " | deviation ", best$dev, " from target ", paste(target, collapse = " "),
+      if (!is.na(best$fve)) paste0(" | FVE ", round(best$fve, 4)) else "", "\n", sep = "")
+
+  assign(label, list(parameter = label, value = cur, nnz = best$nnz,
+                     deviation = best$dev, fve = best$fve, n_rejected = NA_integer_),
+         envir = .BENCH_TUNING)
+  cur
+}
+
+
+#' Selected tuning values for this notebook, as a data frame.
+#'
+#' Populated by tune_parameter(); reset each time bench_utils.R is sourced, so
+#' one notebook's selections cannot leak into another's.
+tuning_table <- function() {
+  keys <- ls(.BENCH_TUNING)
+  if (!length(keys)) return(NULL)
+  rows <- mget(keys, envir = .BENCH_TUNING)
+  do.call(rbind, lapply(rows, function(z) data.frame(
+    parameter    = z$parameter,
+    value        = paste(format(z$value), collapse = " "),
+    selected_nnz = paste(z$nnz, collapse = " "),
+    deviation    = z$deviation,
+    fve          = round(z$fve, 4),
+    n_rejected   = z$n_rejected,
+    stringsAsFactors = FALSE)))
 }
 
 

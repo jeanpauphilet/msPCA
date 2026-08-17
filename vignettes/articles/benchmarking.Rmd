@@ -58,22 +58,74 @@ accounts are needed anywhere.
 
 ## Methods compared
 
-We compare `msPCA` against seven competing methods:
+We compare `msPCA::mspca()` against seven competing functions. Each entry below names the exact
+function called, not merely the package, since several packages expose more than one sparse PCA
+routine and `nsprcomp` in particular provides two with quite different behaviour.
 
-| Package | Reference | Language | Approach |
+| Function | Reference | Language | Approach |
 |---|---|---|---|
-| `elasticnet` | @zou2006sparse | R | elastic-net regularization, LARS-like |
-| `PMA` | @witten2009penalized | R | penalized matrix decomposition |
-| `sparsepca` | @erichson2020sparse | R | variable projection with $\ell_1$ penalty |
-| `mixOmics` | @rohart2017mixomics | R | regularized SVD [@shen2008sparse] |
-| `nsprcomp` | @sigg2019nsprcomp | R | expectation-maximization [@sigg2008expectation] + deflation |
-| `amanpg` | @chen2020proximal | R | alternating manifold proximal gradient |
-| `sklearn.decomposition.SparsePCA` | @pedregosa2011scikit | Python | dictionary learning |
+| `elasticnet::spca()` | @zou2006sparse | R | elastic-net regularization, LARS-like |
+| `PMA::SPC()` | @witten2009penalized | R | penalized matrix decomposition |
+| `sparsepca::spca()` | @erichson2020sparse | R | variable projection with $\ell_1$ penalty |
+| `mixOmics::spca()` | @rohart2017mixomics | R | regularized SVD [@shen2008sparse] |
+| `nsprcomp::nsprcomp()` | @sigg2019nsprcomp | R | expectation-maximization [@sigg2008expectation] + deflation |
+| `nsprcomp::nscumcomp()` | @sigg2019nsprcomp | R | cumulative variant, all components jointly |
+| `amanpg::spca.amanpg()` | @chen2020proximal | R | alternating manifold proximal gradient |
+| `sklearn.decomposition.SparsePCA()` | @pedregosa2011scikit | Python | dictionary learning |
 
 `scikit-learn` is called from R via the `reticulate` package [@ushey2023reticulate]. Together
 these cover the main methodological approaches to sparse PCA: elastic-net regularization,
 penalized matrix decomposition, variable-projection optimization, regularized SVD, deflation,
 Riemannian proximal gradient, and dictionary learning.
+
+### How each function obtains multiple components, and what its tuning parameter controls
+
+The comparison turns on two things that are easy to conflate: how a method gets from one sparse
+component to $r$ of them, and what the parameter the user actually turns is doing. The second
+column below states the mechanism; the last two classify the parameter we tune as controlling
+**sparsity**, **optimization convergence**, an **orthogonality penalty**, or a **feasibility
+tolerance**.
+
+| Function | Multiple-component mechanism | Parameter tuned | What it controls |
+|---|---|---|---|
+| `msPCA::mspca()` | Iterative deflation heuristic; all $r$ components are refined together, with the non-redundancy constraint enforced across every pair and its penalty tightened over the iterations | `ks` | **Sparsity** --- exact cardinality, one budget per component |
+| `elasticnet::spca()` | All $r$ jointly: alternates an orthonormal Procrustes update of an auxiliary factor with per-component elastic-net regressions. Orthonormality is imposed on the auxiliary factor, not on the returned sparse loadings | `para` (with `sparse = "varnum"`) | **Sparsity** --- exact cardinality per component |
+| `PMA::SPC()` | Sequential rank-1 penalized matrix decompositions with deflation. `orth = TRUE` selects the variant of Section 3.2 of @witten2009penalized, which requires the *left* factors $\boldsymbol{u}_k$ to be mutually orthogonal --- not the sparse loadings $\boldsymbol{v}_k$ that the function returns and that we score | `sumabsv` | **Sparsity** --- an $\ell_1$ bound on each loading vector, not a cardinality |
+| `sparsepca::spca()` | All $r$ jointly, by variable projection on the SPCA objective | `alpha` | **Sparsity** --- magnitude of the $\ell_1$ penalty, with no per-component control |
+| `mixOmics::spca()` | Sequential regularized rank-1 SVDs with deflation | `keepX` | **Sparsity** --- exact number of variables retained per component |
+| `nsprcomp::nsprcomp()` | Sequential cardinality-constrained components via an EM-style iteration, combined with the deflation of @mackey2008deflation | `k` | **Sparsity** --- exact cardinality per component |
+| `nsprcomp::nscumcomp()` | All $r$ jointly, under one cumulative budget | `k`, `gamma` | `k`: **sparsity**, as a *total* budget $\sum_t k_t$; `gamma`: **orthogonality penalty**, left at its default of 0 |
+| `amanpg::spca.amanpg()` | All $r$ jointly: alternates a proximal-gradient step on the sparse loadings with a manifold update of an orthonormal factor on the Stiefel manifold | `lambda1` | **Sparsity** --- a vector of per-component $\ell_1$ penalties |
+| `sklearn...SparsePCA()` | All `n_components` jointly, by dictionary learning | `alpha` | **Sparsity** --- magnitude of the $\ell_1$ penalty on the loadings |
+
+Two observations follow, and they frame everything below.
+
+First, **every competing function is tuned through sparsity alone**. Four of them
+(`elasticnet::spca()`, `mixOmics::spca()`, `nsprcomp::nsprcomp()` and `msPCA::mspca()`) accept an
+exact cardinality per component and hit it. The rest expose only a penalty magnitude
+(`sparsepca::spca()`, `amanpg::spca.amanpg()`, `sklearn...SparsePCA()`), an $\ell_1$ bound
+(`PMA::SPC()`), or a single cumulative budget it may distribute as it likes
+(`nsprcomp::nscumcomp()`) --- which is why their realised sparsity patterns in the tables below
+miss the target and are often badly unbalanced across components, as in the (96,4,2) and (56,3,6)
+splits on breast cancer.
+
+Second, **only `nsprcomp::nscumcomp()` offers any control over the non-redundancy of the returned
+loadings, and only as a soft penalty** (`gamma`, default 0, which we leave at the default so that
+its cumulative budget is the only thing being varied). `PMA::SPC()`'s `orth` switch is not a
+counterexample: it orthogonalises the left factors $\boldsymbol{u}_k$, while the sparse loadings
+$\boldsymbol{v}_k$ it returns carry no orthogonality guarantee either way. No competing function
+exposes a feasibility tolerance --- there is no parameter to set that says how orthogonal, or how
+uncorrelated, the returned components must be. `msPCA::mspca()`'s `feasibilityTolerance`
+(default 1e-4) is exactly that parameter, and the feasibility results below should be read in
+that light: the comparison is not between a method that satisfies a constraint well and others
+that satisfy it badly, but between a method that takes the constraint as an input and others that
+do not offer it as one.
+
+Each function also has convergence controls --- `maxIter` and `stallingTolerance` in
+`msPCA::mspca()`, `em_tol`/`em_maxiter`/`nrestart` in `nsprcomp`, `tol`/`maxiter` in `amanpg`,
+`tol`/`max_iter` in `scikit-learn` --- which govern **optimization convergence** rather than the
+solution's sparsity or feasibility. These are left at package defaults throughout, with the
+single exception of `maxIter = 100` for `msPCA::mspca()` on riboflavin, noted where it arises.
 
 ## Environment
 
@@ -89,35 +141,55 @@ Comparing sparse PCA methods is complicated because different packages parameter
 differently. Some accept a covariance or correlation matrix, others apply only to the data
 matrix, and some support both.
 
-- **`msPCA`** --- `mspca()` with both `type = "Sigma"` and `type = "X"` on all four datasets.
+- **`msPCA::mspca()`** --- run with both `type = "Sigma"` and `type = "X"` on all four datasets.
   On riboflavin ($n \ll p$) the $p \times p$ covariance matrix is rank-deficient, making
-  `type = "X"` the natural choice; we report both modes to quantify the runtime gain.
-- **`elasticnet`** --- `spca()`, which takes a list of cardinality budgets (one per PC) and
-  applies interchangeably to $\boldsymbol{\Sigma}$ or $\boldsymbol{X}$. We report both input modes on mtcars,
-  Pitprops and breast cancer.
-- **`PMA`** --- `SPC()` with `orth = TRUE`. It takes the covariance matrix and a bound
-  `sumabsv` on $\sum_t \|\boldsymbol{u}_t\|_1$, which we tune manually per dataset to get
-  per-component sparsity as close as possible to the target.
-- **`sparsepca`** --- `spca()` applied to $\boldsymbol{\Sigma}$, which only exposes the magnitude of
-  the $\ell_1$ penalty `alpha`. We tune it per dataset to achieve a total sparsity
+  `type = "X"` the natural choice; we report both modes to quantify the runtime and memory gain.
+- **`elasticnet::spca()`** --- takes a list of cardinality budgets (one per PC) via
+  `sparse = "varnum"`, and applies interchangeably to $\boldsymbol{\Sigma}$ (`type = "Gram"`) or
+  $\boldsymbol{X}$ (`type = "predictor"`). We report both input modes on mtcars, Pitprops and breast
+  cancer.
+- **`PMA::SPC()`** --- applied to the **data matrix** on all three datasets, as documented
+  (`x` is "a data matrix of dimension $n \times p$", and `SPC()` centres its columns itself). On
+  Pitprops that means the pseudo-data, since no real data matrix exists. `sumabsv` bounds the
+  $\ell_1$ norm of each loading vector (subject to unit $\ell_2$ norm) and must lie between 1
+  and $\sqrt{p}$; we tune it per dataset to bring per-component sparsity as close to the target
+  as the parameterization allows. We set `orth = TRUE`, which selects the multiple-component
+  variant of Section 3.2 of @witten2009penalized; note that this orthogonalises the left factors
+  $\boldsymbol{u}_k$ rather than the sparse loadings $\boldsymbol{v}_k$ we extract, so the
+  orthogonality violations reported for `PMA::SPC()` below are not a failure to deliver something
+  the function promised.
+- **`sparsepca::spca()`** --- applied to $\boldsymbol{\Sigma}$. It exposes only the magnitude of the
+  $\ell_1$ penalty `alpha`, which we tune per dataset to achieve a total sparsity
   $\sum_t k_t$ close to the target. This method tends to return PCs with very unequal sparsity
   levels, the first typically denser than the rest.
-- **`mixOmics`** --- `spca()`, which takes the data matrix and the list of sparsity budgets.
-- **`nsprcomp`** --- two functions, both based on the EM algorithm of @sigg2008expectation.
-  `nsprcomp()` computes the leading sparse PC then applies the deflation procedure of
-  @mackey2008deflation for subsequent PCs; it takes the data matrix and a list of sparsity
-  levels. `nscumcomp()` solves for all $r$ PCs simultaneously, taking a total sparsity budget
-  $\sum_t k_t$ and a penalty parameter `gamma` on orthogonality violation (default 0).
-- **`amanpg`** --- `spca.amanpg()` applied to the correlation matrix (`type = 1`). It solves a
-  single-component problem with an $\ell_1$ penalty `lambda1` and applies sequential deflation;
-  we tune `lambda1` per dataset.
-- **`scikit-learn`** --- `sklearn.decomposition.SparsePCA()` via `reticulate`. The class
-  computes $r$ components simultaneously using dictionary learning with an $\ell_1$ penalty
-  `alpha` on the loadings, applied to the data matrix. We tune `alpha` per dataset.
+- **`mixOmics::spca()`** --- takes the data matrix and the list of per-component budgets
+  `keepX`, so it hits the cardinality target exactly.
+- **`nsprcomp::nsprcomp()`** and **`nsprcomp::nscumcomp()`** --- two functions from the same
+  package, both based on the EM algorithm of @sigg2008expectation, which behave differently
+  enough that we report them separately. `nsprcomp()` computes the leading sparse PC then
+  applies the deflation procedure of @mackey2008deflation for subsequent PCs; it takes the data
+  matrix and a vector of per-component cardinalities. `nscumcomp()` solves for all $r$ PCs
+  simultaneously under a single cumulative budget $\sum_t k_t$, which it distributes as it sees
+  fit, plus a penalty parameter `gamma` on divergence from orthonormality (default 0, left at
+  the default here).
+- **`amanpg::spca.amanpg()`** --- accepts either input and is told which via `type`: `type = 0`
+  declares `z` to be a data matrix, any non-zero value declares it a covariance matrix. We use
+  `type = 1` with the correlation matrix on mtcars and Pitprops, where the correlation matrix is
+  the natural object, and `type = 0` with the data matrix on breast cancer. It computes all $r$
+  components jointly, alternating a proximal-gradient step on the sparse loadings with a manifold
+  update of an orthonormal factor on the Stiefel manifold; `lambda1` is a vector of per-component
+  $\ell_1$ penalties, which we tune per dataset, and we set `lambda2 = Inf`.
+- **`sklearn.decomposition.SparsePCA()`** --- called via `reticulate`. The class computes
+  `n_components` components simultaneously using dictionary learning with an $\ell_1$ penalty
+  `alpha` on the loadings, applied to the data matrix. We tune `alpha` per dataset and fix
+  `random_state` to the repetition's seed.
 
 For Pitprops only the correlation matrix is available, so we generate pseudo-data via
 `MASS::mvrnorm()` with the Pitprops matrix as the population covariance ($n = 500$) for the
-methods that require $\boldsymbol{X}$.
+methods that require $\boldsymbol{X}$ --- `mixOmics::spca()`, `nsprcomp::nsprcomp()`,
+`nsprcomp::nscumcomp()`, `PMA::SPC()` and `sklearn...SparsePCA()`. FVE and the orthogonality
+violation are always evaluated against the published Pitprops correlation matrix, never against
+the covariance of the pseudo-data.
 
 For each method we report the actual number of nonzero loadings per PC, the FVE computed on
 the original correlation matrix, the orthogonality violation, the runtime, and the memory

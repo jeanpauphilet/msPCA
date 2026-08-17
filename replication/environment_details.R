@@ -37,8 +37,16 @@ r_platform <- data.frame(
 
 # scikit-learn is quoted in the article too, but lives on the Python side;
 # record it here so the whole Environment section is verifiable from one file.
+# python_setup.R declares the scikit-learn requirement for reticulate's
+# managed environment and must be sourced before Python is initialised -- this
+# script is the first thing run_all.R runs, so this is where Python first comes
+# up in a full replication run.
+if (file.exists("python_setup.R")) source("python_setup.R")
+
 sklearn_version <- tryCatch({
-  if (requireNamespace("reticulate", quietly = TRUE)) {
+  if (exists("sklearn_setup", mode = "function")) {
+    sklearn_setup()$version
+  } else if (requireNamespace("reticulate", quietly = TRUE)) {
     as.character(reticulate::import("sklearn")$`__version__`)
   } else NA_character_
 }, error = function(e) NA_character_)
