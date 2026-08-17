@@ -4,6 +4,12 @@ output: rmarkdown::html_vignette
 bibliography: thebib.bib
 ---
 
+<!--
+  %\VignetteIndexEntry{Benchmarking against other sparse PCA packages}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+-->
+
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 ```
