@@ -10,7 +10,8 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Algorithm and implementation notes">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<meta property="og:title" content="Algorithm and implementation notes">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -132,16 +133,13 @@ problem solved by <code>msPCA</code> is</p>
 <p>Orthogonality corresponds to
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝑪</mi><mo>=</mo><mi mathvariant="double-struck">𝕀</mi></mrow><annotation encoding="application/x-tex">\boldsymbol{C} = \mathbb{I}</annotation></semantics></math>
 and zero correlation to
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝑪</mi><mo>=</mo><mi mathvariant="bold">𝚺</mi></mrow><annotation encoding="application/x-tex">\boldsymbol{C} = \boldsymbol{\Sigma}</annotation></semantics></math>;
-both reduce to standard PCA when the sparsity constraint is relaxed
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>t</mi></msub><mo>=</mo><mi>p</mi></mrow><annotation encoding="application/x-tex">k_t = p</annotation></semantics></math>).
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝑪</mi><mo>=</mo><mi mathvariant="bold">𝚺</mi></mrow><annotation encoding="application/x-tex">\boldsymbol{C} = \boldsymbol{\Sigma}</annotation></semantics></math>.
 In the zero-correlation case the implementation uses
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold">𝚺</mi><annotation encoding="application/x-tex">\boldsymbol{\Sigma}</annotation></semantics></math>
 divided by the average variance
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold">𝚺</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>p</mi></mrow><annotation encoding="application/x-tex">\mathrm{tr}(\boldsymbol{\Sigma})/p</annotation></semantics></math>.
-This leaves the feasible set unchanged and makes both the penalty scale
-and the violation measure below invariant to a rescaling of the
-data.</p>
+This leaves the feasible set unchanged and makes both the violation
+measure invariant to a rescaling of the data.</p>
 <p>The objective is the sum of per-component variances. Most approaches
 for sparse PCA with multiple PCs use this objective <span class="citation">(Zou et al. 2006; Journée et al. 2010; Lu and Zhang
 2012; Vu et al. 2013; Benidis et al. 2016; Cory-Wright and Pauphilet
@@ -649,7 +647,7 @@ Graphical Statistics</em> 15 (2): 265–86.
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

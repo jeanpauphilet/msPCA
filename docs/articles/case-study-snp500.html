@@ -10,7 +10,8 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Case study: sparse factors in S&amp;P 500 returns">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<meta property="og:title" content="Case study: sparse factors in S&amp;P 500 returns">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -73,17 +74,15 @@
 <p>This vignette works through a complete, non-trivial application of
 <code>msPCA</code> to financial return data. It illustrates the
 practical difference between the two notions of non-redundancy that the
-package supports — orthogonal loadings and uncorrelated principal
-components — and shows that the choice materially changes the factors
-you recover.</p>
+package supports —orthogonal loadings and uncorrelated principal
+components— and shows that the choice materially changes the factors you
+recover.</p>
 <p>Every <code>msPCA</code> result below reproduces from data shipped
 with the package: no downloads, no accounts, no external files. The
 fitting chunks are marked <code>eval = FALSE</code> only to keep the
-vignette quick to build — the full sparsity grid takes several minutes —
-but each runs as written once you have called <code>data(snp500)</code>.
-The one exception is the <code>nsprcomp</code> reference curve, which
-needs a data matrix rather than a correlation matrix; that is flagged
-where it arises.</p>
+vignette quick to build (the full sparsity grid takes several minutes).
+Note that the benchmark method,<br><code>nsprcomp</code> needs a data matrix rather than a correlation
+matrix.</p>
 <div class="section level2">
 <h2 id="the-data">The data<a class="anchor" aria-label="anchor" href="#the-data"></a>
 </h2>
@@ -103,31 +102,26 @@ constituents with complete price histories from January 2010 to December
 <span><span class="co">#&gt; AAPL  0.004  0.716 0.012 -0.048</span></span>
 <span><span class="co">#&gt; ABT   0.031  0.012 0.614  0.010</span></span>
 <span><span class="co">#&gt; ACGL -0.027 -0.048 0.010  0.631</span></span></code></pre></div>
-<p>Two points about how it was constructed. First, S&amp;P 500 returns
-are dominated by a “market factor” that loads positively on virtually
-every stock and absorbs a disproportionate share of total variance. To
-expose cross-sectional structure — sector and style effects — rather
-than market-wide movements, the leading eigenvector
+<p>The matrix was constructed from the <a href="https://www.kaggle.com/datasets/yash16jr/s-and-p500-daily-update-dataset" class="external-link">S&amp;P
+500 daily update dataset</a> on Kaggle, released under CC0 1.0.
+Typically, stock returns are dominated by a “market factor” that absorbs
+a disproportionate share of total variance. To expose cross-sectional
+structure (sector and style effects) rather than market-wide movements,
+we projected out the leading eigenvector
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mn>1</mn></msub><annotation encoding="application/x-tex">v_1</annotation></semantics></math>
 of the empirical correlation matrix
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Σ</mi><annotation encoding="application/x-tex">\Sigma</annotation></semantics></math>
-has been projected out,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Σ</mi><annotation encoding="application/x-tex">\Sigma</annotation></semantics></math>,
+so
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="monospace">𝚜𝚗𝚙𝟻𝟶𝟶</mtext><mo>=</mo><msup><mi>P</mi><mi>⊤</mi></msup><mi mathvariant="normal">Σ</mi><mi>P</mi></mrow><annotation encoding="application/x-tex">\texttt{snp500} = P^\top \Sigma P</annotation></semantics></math>
 with
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mi>I</mi><mo>−</mo><msub><mi>v</mi><mn>1</mn></msub><msubsup><mi>v</mi><mn>1</mn><mi>⊤</mi></msubsup></mrow><annotation encoding="application/x-tex">P = I - v_1 v_1^\top</annotation></semantics></math>.
-The matrix is therefore rank
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">p - 1</annotation></semantics></math>:</p>
+The matrix is rank
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>−</mo><mn>1</mn><mo>=</mo><mn>422</mn></mrow><annotation encoding="application/x-tex">p - 1=422</annotation></semantics></math>:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/eigen.html" class="external-link">eigen</a></span><span class="op">(</span><span class="va">snp500</span>, symmetric <span class="op">=</span> <span class="cn">TRUE</span>, only.values <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">values</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">ev</span> <span class="op">&gt;</span> <span class="fl">1e-8</span><span class="op">)</span>          <span class="co"># 422: the market direction has been removed</span></span>
 <span><span class="co">#&gt; [1] 422</span></span></code></pre></div>
-<p>Second, only the deflated correlation matrix is distributed, not the
-underlying returns — it is the only object this analysis needs. The raw
-prices come from the <a href="https://www.kaggle.com/datasets/yash16jr/s-and-p500-daily-update-dataset" class="external-link">S&amp;P
-500 daily update dataset</a> on Kaggle, released under CC0 1.0. Because
-that dataset is refreshed daily, <code>snp500</code> is the archival
-record for the fixed window above. The full derivation — adjusted closes
-to log returns to deflated correlations — is scripted in
+<p>The full data processing script is provided in
 <code>data-raw/snp500.R</code> in the package repository, and
 <code><a href="../reference/snp500.html">?snp500</a></code> documents the format.</p>
 </div>
@@ -156,20 +150,14 @@ correlation results.</p>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="va">results_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">results</span><span class="op">)</span></span></code></pre></div>
-<p>Note that <code>snp500</code> is a deflated correlation matrix:
-removing the market factor leaves
-<code>tr(snp500) = p - lambda_1 &lt; p</code>, so its average variance
-is below one. The <code>pwcorr</code> column is normalized by that
-average variance, which keeps it on the same scale as the orthogonality
-column and comparable across the two constraint types.</p>
-<p>We also run <code>nsprcomp::nsprcomp()</code> <span class="citation">(Sigg 2019)</span> at the same budgets as a reference.
+<p>We also run <code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> <span class="citation">(Sigg 2019)</span> at the same budgets as a reference.
 Note that <code>nsprcomp()</code> requires a data matrix rather than a
 covariance matrix, so it needs the deflated returns
 <code>XR &lt;- X %*% P</code> rather than <code>snp500</code>. That
 matrix is 2,515 x 423 and is not shipped with the package;
 <code>data-raw/snp500.R</code> documents how to rebuild it from the raw
-prices. The pre-computed comparison is included instead, so the numbers
-below can be inspected and re-plotted without a rerun:</p>
+prices. We include a pre-computed comparison instead here, so the
+numbers below can be inspected and re-plotted without a rerun:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"vignette-data"</span>, <span class="st">"snp_varyingk_results.csv"</span>,</span>
 <span>                                 package <span class="op">=</span> <span class="st">"msPCA"</span><span class="op">)</span><span class="op">)</span></span>
@@ -187,8 +175,8 @@ below can be inspected and re-plotted without a rerun:</p>
 <span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
 <span>  <span class="va">tab</span>, digits <span class="op">=</span> <span class="fl">4</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"k"</span>, <span class="st">"FVE (orth)"</span>, <span class="st">"orth viol (orth)"</span>, <span class="st">"FVE (zero-corr)"</span>,</span>
-<span>                <span class="st">"orth viol (zero-corr)"</span>, <span class="st">"FVE (nsprcomp)"</span>, <span class="st">"orth viol (nsprcomp)"</span><span class="op">)</span>,</span>
+<span>  col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"k"</span>, <span class="st">"FVE (msPCA - orth)"</span>, <span class="st">"orth viol (msPCA - orth)"</span>, <span class="st">"FVE (msPCA - zero-corr)"</span>,</span>
+<span>                <span class="st">"orth viol (msPCA - zero-corr)"</span>, <span class="st">"FVE (nsprcomp)"</span>, <span class="st">"orth viol (nsprcomp)"</span><span class="op">)</span>,</span>
 <span>  caption <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"FVE and orthogonality violation across the sparsity grid."</span>,</span>
 <span>                  <span class="st">"Every violation column reports the orthogonality violation,"</span>,</span>
 <span>                  <span class="st">"including for the fits run under the zero-correlation constraint."</span><span class="op">)</span></span>
@@ -199,19 +187,19 @@ violation column reports the orthogonality violation, including for the
 fits run under the zero-correlation constraint.</caption>
 <colgroup>
 <col width="2%">
+<col width="13%">
+<col width="18%">
+<col width="17%">
+<col width="21%">
 <col width="10%">
-<col width="16%">
 <col width="15%">
-<col width="20%">
-<col width="14%">
-<col width="20%">
 </colgroup>
 <thead><tr class="header">
 <th align="right">k</th>
-<th align="right">FVE (orth)</th>
-<th align="right">orth viol (orth)</th>
-<th align="right">FVE (zero-corr)</th>
-<th align="right">orth viol (zero-corr)</th>
+<th align="right">FVE (msPCA - orth)</th>
+<th align="right">orth viol (msPCA - orth)</th>
+<th align="right">FVE (msPCA - zero-corr)</th>
+<th align="right">orth viol (msPCA - zero-corr)</th>
 <th align="right">FVE (nsprcomp)</th>
 <th align="right">orth viol (nsprcomp)</th>
 </tr></thead>
@@ -288,7 +276,7 @@ fits run under the zero-correlation constraint.</caption>
 <p>The figures below report the fraction of variance explained (FVE),
 the orthogonality violation, and the uncorrelatedness violation as a
 function of <code>k</code>, for <code>msPCA</code> under each constraint
-type, against <code>nsprcomp::nsprcomp()</code> at the same sparsity
+type, against <code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> at the same sparsity
 budgets.</p>
 <p><img src="figures/snp_fve.png" class="r-plt" alt="" width="32%"><img src="figures/snp_orth.png" class="r-plt" alt="" width="32%"><img src="figures/snp_pwcorr.png" class="r-plt" alt="" width="32%"></p>
 <p><em>Left: fraction of variance explained vs. sparsity budget k.
@@ -296,28 +284,22 @@ Center: orthogonality violation vs. k. Right: uncorrelatedness violation
 vs. k. Results are shown for <code>msPCA</code> with orthogonality
 constraints (blue, solid), <code>msPCA</code> with zero pairwise
 correlation constraints (green, dashed), and
-<code>nsprcomp::nsprcomp()</code> (orange, dotted). All methods use r =
+<code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> (orange, dotted). All methods use r =
 4 components.</em></p>
-<p>On this dataset, <code>nsprcomp::nsprcomp()</code> returns exactly
+<p>On this dataset, <code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> returns exactly
 orthogonal loading vectors for small-to-moderate sparsity budgets
 (<code>k &lt;= 20</code>), reflecting the effectiveness of the deflation
-procedure when component supports are sufficiently disjoint. Beyond that
-the guarantee lapses: the violation is 0.015 at <code>k = 25</code>,
+procedure when component supports can easily be disjoint. Beyond that
+orthogonality breaks: the violation is 0.015 at <code>k = 25</code>,
 0.13 at <code>k = 30</code> and 0.020 at <code>k = 35</code>, and is not
 monotone in <code>k</code>.</p>
 <p>By contrast, <code>msPCA</code> with orthogonality constraints holds
 the violation at or below 1e-4 — the default feasibility tolerance — at
 every budget from <code>k = 10</code> upward, because the penalty on
 constraint violation is explicitly tightened throughout the algorithm.
-The exception is the smallest budget, <code>k = 5</code>, where the
-solver terminates at 1.6e-2, well outside tolerance; with only 5
-nonzeros per component the feasible set is tight enough that the
-heuristic does not always reach it. In terms of FVE,
-<code>nsprcomp::nsprcomp()</code> is ahead at <code>k = 5, 10, 15</code>
-and <code>25</code>, while <code>msPCA</code> is ahead at
-<code>k = 20, 30</code> and <code>35</code>; neither dominates across
-the grid.</p>
-<p>Neither <code>nsprcomp::nsprcomp()</code> nor
+In terms of FVE, both methods are comparable with a small edge for
+<code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code>.</p>
+<p>Neither <code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> nor
 orthogonality-constrained <code>msPCA</code> yields uncorrelated PCs
 here. To obtain uncorrelated PCs we run <code>msPCA</code> with pairwise
 correlation constraints instead, which yields PCs with near-zero
@@ -405,10 +387,10 @@ separate PCs.</li>
 0.40–0.44, alongside ED at 0.29, against small negative loadings on
 Dollar General (DG), State Street (STT) and Teradyne (TER).</li>
 <li>
-<strong>PC3</strong> identifies pharmaceutical distribution —
-McKesson (MCK), Cardinal Health (CAH) and Cencora (COR) all load above
-0.51 — extended by generics (VTRS) and diagnostics (LH), against Best
-Buy (BBY) and, more weakly, KLA (KLAC) and Air Products (APD).</li>
+<strong>PC3</strong> identifies pharmaceutical distribution
+—McKesson (MCK), Cardinal Health (CAH) and Cencora (COR) all load above
+0.51— extended by generics (VTRS) and diagnostics (LH), against Best Buy
+(BBY) and, more weakly, KLA (KLAC) and Air Products (APD).</li>
 <li>
 <strong>PC4</strong> is a mega-cap technology component: Alphabet’s
 two share classes (GOOG, GOOGL) load at about -0.60, with Amazon (AMZN)
@@ -425,21 +407,18 @@ groups.</p>
 </h2>
 <p>Orthogonality and zero pairwise correlation are not interchangeable.
 On strongly correlated data they recover qualitatively different factor
-structures. Orthogonality forces disjoint supports, and at
-<code>k = 10</code> it spends all four components inside two sectors:
-three separate utility clusters and one REIT basket. Zero pairwise
-correlation allows supports to overlap and recovers four distinct themes
-instead — utilities, energy, pharmaceutical distribution and mega-cap
-technology — each expressed as a contrast between positively and
-negatively loaded groups. The price is concentration: under zero
-correlation the leading component carries most of the explained variance
-(2.28% against 0.55–0.67% for the others), whereas orthogonality spreads
-it more evenly (2.13% down to 1.21%), and total FVE is markedly lower at
-every sparsity budget.</p>
-<p>Choose orthogonality when the loading vectors will serve as a
-projection basis, and zero pairwise correlation when the goal is
-statistically decorrelated scores for downstream regression or
-classification.</p>
+structures. On this stock return data, orthogonality returns disjoint
+supports spends all four components inside two sectors: three separate
+utility clusters and one REIT basket. Zero pairwise correlation, on the
+other hand, returns overlapping supports and recovers four distinct
+themes instead —utilities, energy, pharmaceutical distribution and
+mega-cap technology— each expressed as a contrast between positively and
+negatively loaded groups. We also observe a difference in the
+distribution of variance explained by each PC: under zero correlation
+the leading component carries most of the explained variance (2.28%
+against 0.55–0.67% for the others), whereas orthogonality spreads it
+more evenly (2.13% down to 1.21%), and total FVE is markedly lower with
+zero-correlation constraints at every sparsity budget.</p>
 </div>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
@@ -466,7 +445,7 @@ Non-Negative and Sparse PCA</em>. <a href="https://CRAN.R-project.org/package=ns
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

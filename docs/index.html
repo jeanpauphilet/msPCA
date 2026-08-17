@@ -10,7 +10,8 @@
 <link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Sparse Principal Component Analysis with Multiple Principal Components">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><link href="extra.css" rel="stylesheet">
+<meta property="og:title" content="Sparse Principal Component Analysis with Multiple Principal Components">
 <meta name="description" content='Implements an algorithm for computing multiple sparse principal components of a dataset. The method is based on Cory-Wright and Pauphilet "Sparse PCA with Multiple Components" (2026) &lt;doi:10.1287/opre.2023.0598&gt;. The algorithm uses an iterative deflation heuristic with a truncated power method applied at each iteration to compute sparse principal components with controlled sparsity.'>
 <meta property="og:description" content='Implements an algorithm for computing multiple sparse principal components of a dataset. The method is based on Cory-Wright and Pauphilet "Sparse PCA with Multiple Components" (2026) &lt;doi:10.1287/opre.2023.0598&gt;. The algorithm uses an iterative deflation heuristic with a truncated power method applied at each iteration to compute sparse principal components with controlled sparsity.'>
 </head>
@@ -77,7 +78,7 @@
 <p>Install development version from GitHub:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"jeanpauphilet/msPCA"</span><span class="op">)</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/install-deprecated.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"jeanpauphilet/msPCA"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://jeanpauphilet.github.io/msPCA/">msPCA</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -138,15 +139,6 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/fraction_variance_explained.html">fraction_variance_explained</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>, <span class="va">res</span><span class="op">$</span><span class="va">x_best</span><span class="op">)</span></span></code></pre></div>
-<p>Optional dense PCA comparison:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pca_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html" class="external-link">prcomp</a></span><span class="op">(</span><span class="fu">datasets</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/datasets/mtcars.html" class="external-link">mtcars</a></span>, scale. <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/fraction_variance_explained.html">fraction_variance_explained</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">pca_res</span><span class="op">$</span><span class="va">rotation</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p>Interpretation:</p>
-<ul>
-<li>Dense PCA usually explains more variance.</li>
-<li>Sparse PCA improves interpretability by restricting each component to a small set of features.</li>
-</ul>
 </div>
 <div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
@@ -171,7 +163,7 @@
 </tr>
 <tr>
 <td><a href="https://jeanpauphilet.github.io/msPCA/articles/algorithm-and-implementation.html">Algorithm and implementation notes</a></td>
-<td>The optimization problem, both algorithms in full, implementation and complexity, and guidance on choosing <code>ks</code>, the constraint type and the iteration budgets.</td>
+<td>The optimization problem, algorithm description in full, implementation and complexity, and guidance on choosing <code>ks</code>, the constraint type and the iteration budgets.</td>
 </tr>
 <tr>
 <td><a href="https://jeanpauphilet.github.io/msPCA/articles/benchmarking.html">Benchmarking against other sparse PCA packages</a></td>
@@ -191,14 +183,14 @@
 <div class="section level2">
 <h2 id="synthetic-benchmark">Synthetic benchmark<a class="anchor" aria-label="anchor" href="#synthetic-benchmark"></a>
 </h2>
-<p>The script <code>notebooks/notebook_synthetic.R</code> compares <code>msPCA</code> with <code>elasticnet::spca()</code> on synthetic data across sample sizes and exports the figures below.</p>
+<p>The script <code>notebooks/notebook_synthetic.R</code> compares <code>msPCA</code> with <code><a href="https://rdrr.io/pkg/elasticnet/man/spca.html" class="external-link">elasticnet::spca()</a></code> on synthetic data across sample sizes and exports the figures below.</p>
 <div class="float">
 <img src="reference/figures/synthetic_orthogonality_violation.png" alt="Orthogonality violation on synthetic data"><div class="figcaption">Orthogonality violation on synthetic data</div>
 </div>
 <div class="float">
 <img src="reference/figures/synthetic_variance_explained.png" alt="Out-of-sample fraction of variance explained on synthetic data"><div class="figcaption">Out-of-sample fraction of variance explained on synthetic data</div>
 </div>
-<p>To regenerate these files, run <code>notebooks/notebook_synthetic.R</code> from the repository root. It writes to <code>notebooks/</code>; copy the two PNGs into <code>man/figures/</code> afterwards, since that is where this README and the website read them from. For a broader comparison — seven competing packages on four real datasets — see the <a href="https://jeanpauphilet.github.io/msPCA/articles/benchmarking.html">benchmarking article</a>; its replication scripts are in <a href="replication"><code>replication/</code></a>.</p>
+<p>To regenerate these files, run <code>notebooks/notebook_synthetic.R</code> from the repository root. It writes to <code>notebooks/</code>; copy the two PNGs into <code>man/figures/</code> afterwards, since that is where this README and the website read them from. For a broader comparison — seven competing packages on four real datasets — see the <a href="https://jeanpauphilet.github.io/msPCA/articles/benchmarking.html">benchmarking article</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="main-functions">Main functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
@@ -260,16 +252,16 @@
 </h2>
 <p>If you use <code>msPCA</code> in academic work, please cite the package and the underlying paper.</p>
 <p>You can retrieve the package citation in R with:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"msPCA"</span><span class="op">)</span></span></code></pre></div>
 <p>Reference paper:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="va">@article</span>{<span class="ot">cory2026sparse</span>,</span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="dt">title</span>   = {Sparse PCA with Multiple Components},</span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="dt">author</span>  = {Cory-Wright, Ryan and Pauphilet, Jean},</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="dt">year</span>    = {2026},</span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="dt">journal</span> = {Operations Research},</span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="dt">doi</span>     = {10.1287/opre.2023.0598}</span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="va">@article</span>{<span class="ot">cory2026sparse</span>,</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="dt">title</span>   = {Sparse PCA with Multiple Components},</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="dt">author</span>  = {Cory-Wright, Ryan and Pauphilet, Jean},</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="dt">year</span>    = {2026},</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="dt">journal</span> = {Operations Research},</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="dt">doi</span>     = {10.1287/opre.2023.0598}</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="development">Development<a class="anchor" aria-label="anchor" href="#development"></a>
@@ -324,7 +316,7 @@
 </ul>
 </li>
 </ul>
-<p>For interface changes, regenerate exports and documentation with <code><a href="https://rdrr.io/pkg/Rcpp/man/compileAttributes.html" class="external-link">Rcpp::compileAttributes()</a></code> and <code>devtools::document()</code>. After editing <code>data-raw/snp500.R</code>, rebuild the dataset with <code>source("data-raw/snp500.R")</code>.</p>
+<p>For interface changes, regenerate exports and documentation with <code><a href="https://rdrr.io/pkg/Rcpp/man/compileAttributes.html" class="external-link">Rcpp::compileAttributes()</a></code> and <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code>. After editing <code>data-raw/snp500.R</code>, rebuild the dataset with <code>source("data-raw/snp500.R")</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
@@ -383,7 +375,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

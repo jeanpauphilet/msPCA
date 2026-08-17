@@ -11,6 +11,7 @@
 ^msPCA_.*\.csv$
 ^doc$
 ^docs$
+^pkgdown$
 ^Meta$
 ^_pkgdown\.yml$
 ^plan_dual_input_api\.md$

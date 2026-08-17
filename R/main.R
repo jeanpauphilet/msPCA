@@ -284,7 +284,7 @@ mspca <- function(M, r, ks, type = c("Sigma", "X"),
 #' @param verbose (optional) A Boolean. Controls console output. Default TRUE.
 #' @param timeLimit (optional) An integer. Maximum time in seconds. Default 10.
 #' @param center (optional, type = "X") A Boolean. Center the columns of `M`. Default TRUE.
-#' @param scale (optional, type = "X") A Boolean. Scale the columns of `M` to unit variance. Default FALSE.
+#' @param scale (optional, type = "X") A Boolean. Scale the columns of `M` to unit variance. Default TRUE.
 #' @param divisor (optional, type = "X") Either "n-1" (default) or "n".
 #' @param checkPSD (optional, type = "Sigma") A Boolean. Verify `M` is PSD. Default TRUE.
 #' @param symTolerance (optional, type = "Sigma") A float. Symmetry-check tolerance. Default 1e-8.
@@ -301,7 +301,7 @@ mspca <- function(M, r, ks, type = c("Sigma", "X"),
 #' tpm(TestMat, 4)
 tpm <- function(M, k, type = c("Sigma", "X"),
                 maxIter = 200, verbose = TRUE, timeLimit = 10,
-                center = TRUE, scale = FALSE, divisor = c("n-1", "n"),
+                center = TRUE, scale = TRUE, divisor = c("n-1", "n"),
                 checkPSD = TRUE, symTolerance = 1e-8, psdTolerance = 1e-8) {
   type <- match.arg(type)
   if (type == "Sigma") {

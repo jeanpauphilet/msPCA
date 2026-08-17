@@ -52,11 +52,9 @@ $$\max_{\boldsymbol{U} \in \mathbb{R}^{p \times r}} \ \sum_{t=1}^r \boldsymbol{u
 \|\boldsymbol{u}_t\|_2 = 1, \ \|\boldsymbol{u}_t\|_0 \leq k_t \ \ \forall t \in [r]. \tag{1}$$
 
 Orthogonality corresponds to $\boldsymbol{C} = \mathbb{I}$ and zero correlation to
-$\boldsymbol{C} = \boldsymbol{\Sigma}$; both reduce to standard PCA when the sparsity constraint is relaxed
-($k_t = p$). In the zero-correlation case the implementation uses $\boldsymbol{\Sigma}$ divided by
+$\boldsymbol{C} = \boldsymbol{\Sigma}$. In the zero-correlation case the implementation uses $\boldsymbol{\Sigma}$ divided by
 the average variance $\mathrm{tr}(\boldsymbol{\Sigma})/p$. This leaves the feasible set unchanged and
-makes both the penalty scale and the violation measure below invariant to a rescaling of the
-data.
+makes both the violation measure invariant to a rescaling of the data.
 
 The objective is the sum of per-component variances. Most approaches for sparse PCA with
 multiple PCs use this objective [@zou2006sparse; @journee2010generalized; @lu2012augmented;
