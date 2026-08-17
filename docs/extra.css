@@ -1,0 +1,18 @@
+/* Narrow the right-hand column: the sidebar on the home page and the
+   table of contents on article and reference pages.
+
+   pkgdown lays these pages out as `main.col-md-9` + `aside.col-md-3`,
+   i.e. 75% / 25%. The two widths below replace that split and must sum
+   to 100%. */
+
+@media (min-width: 768px) {
+  main.col-md-9 {
+    flex: 0 0 auto;
+    width: 80%;
+  }
+
+  aside.col-md-3 {
+    flex: 0 0 auto;
+    width: 20%;
+  }
+}
