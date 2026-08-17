@@ -87,7 +87,7 @@ source("benchmarking/notebook_riboflavin.R")
 cat("\n============================================================\n")
 cat(" [7/7] case_study/case_study_SnP.R\n")
 cat("============================================================\n\n")
-source("case_study/case_study_SnP.R")
+# source("case_study/case_study_SnP.R")
 
 cat("\n============================================================\n")
 cat(" All scripts completed.\n")

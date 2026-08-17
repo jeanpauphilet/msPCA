@@ -187,30 +187,33 @@ below can be inspected and re-plotted without a rerun:</p>
 <span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
 <span>  <span class="va">tab</span>, digits <span class="op">=</span> <span class="fl">4</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"k"</span>, <span class="st">"FVE (orth)"</span>, <span class="st">"viol (orth)"</span>, <span class="st">"FVE (zero-corr)"</span>,</span>
-<span>                <span class="st">"viol (zero-corr)"</span>, <span class="st">"FVE (nsprcomp)"</span>, <span class="st">"viol (nsprcomp)"</span><span class="op">)</span>,</span>
-<span>  caption <span class="op">=</span> <span class="st">"FVE and orthogonality violation across the sparsity grid."</span></span>
+<span>  col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"k"</span>, <span class="st">"FVE (orth)"</span>, <span class="st">"orth viol (orth)"</span>, <span class="st">"FVE (zero-corr)"</span>,</span>
+<span>                <span class="st">"orth viol (zero-corr)"</span>, <span class="st">"FVE (nsprcomp)"</span>, <span class="st">"orth viol (nsprcomp)"</span><span class="op">)</span>,</span>
+<span>  caption <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"FVE and orthogonality violation across the sparsity grid."</span>,</span>
+<span>                  <span class="st">"Every violation column reports the orthogonality violation,"</span>,</span>
+<span>                  <span class="st">"including for the fits run under the zero-correlation constraint."</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <table class="table">
-<caption>FVE and orthogonality violation across the sparsity
-grid.</caption>
+<caption>FVE and orthogonality violation across the sparsity grid. Every
+violation column reports the orthogonality violation, including for the
+fits run under the zero-correlation constraint.</caption>
 <colgroup>
-<col width="3%">
-<col width="12%">
-<col width="13%">
-<col width="17%">
-<col width="18%">
+<col width="2%">
+<col width="10%">
 <col width="16%">
-<col width="17%">
+<col width="15%">
+<col width="20%">
+<col width="14%">
+<col width="20%">
 </colgroup>
 <thead><tr class="header">
 <th align="right">k</th>
 <th align="right">FVE (orth)</th>
-<th align="right">viol (orth)</th>
+<th align="right">orth viol (orth)</th>
 <th align="right">FVE (zero-corr)</th>
-<th align="right">viol (zero-corr)</th>
+<th align="right">orth viol (zero-corr)</th>
 <th align="right">FVE (nsprcomp)</th>
-<th align="right">viol (nsprcomp)</th>
+<th align="right">orth viol (nsprcomp)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -299,10 +302,9 @@ correlation constraints (green, dashed), and
 orthogonal loading vectors for small-to-moderate sparsity budgets
 (<code>k &lt;= 20</code>), reflecting the effectiveness of the deflation
 procedure when component supports are sufficiently disjoint. Beyond that
-the guarantee lapses, and not gradually: the violation is 0.015 at
-<code>k = 25</code>, 0.13 at <code>k = 30</code> and 0.020 at
-<code>k = 35</code>. The behaviour is not monotone in <code>k</code>, so
-it cannot be anticipated from the sparsity budget.</p>
+the guarantee lapses: the violation is 0.015 at <code>k = 25</code>,
+0.13 at <code>k = 30</code> and 0.020 at <code>k = 35</code>, and is not
+monotone in <code>k</code>.</p>
 <p>By contrast, <code>msPCA</code> with orthogonality constraints holds
 the violation at or below 1e-4 — the default feasibility tolerance — at
 every budget from <code>k = 10</code> upward, because the penalty on
@@ -325,7 +327,7 @@ possible only at the expense of a substantially lower FVE.</p>
 <p>The two constraints correspond to different feasibility definitions
 and lead to meaningfully different factor compositions.
 <code>msPCA</code> lets the user choose and enforce whichever is
-relevant to their use case, with predictable behaviour across the full
+relevant to their use case, with predictable behavior across the full
 range of sparsity levels.</p>
 </div>
 <div class="section level2">
@@ -347,9 +349,7 @@ Indices (2023)</span>].</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res_orth</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res_corr</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> on either fit reports the violations under the
-constraint that fit actually enforced, and labels them as such, so the
-two summaries are not silently measuring different solutions with the
-same yardstick:</p>
+constraint that fit enforced, and labels them as such:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_orth</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_corr</span><span class="op">)</span></span></code></pre></div>

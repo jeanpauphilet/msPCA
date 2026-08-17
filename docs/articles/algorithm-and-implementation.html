@@ -70,12 +70,10 @@
 
     
     
-<p>This vignette documents the algorithm behind <code><a href="../reference/mspca.html">mspca()</a></code> in
-full, together with the implementation choices that make it fast, and
-practical guidance on setting its parameters. It is the reference
-companion to the short package description; readers who want the
-theoretical analysis should consult <span class="citation">Cory-Wright
-and Pauphilet (2026)</span>.</p>
+<p>This vignette documents the algorithm behind <code><a href="../reference/mspca.html">mspca()</a></code>,
+the implementation choices that make it fast, and how to set its
+parameters. Readers who want the theoretical analysis should consult
+<span class="citation">Cory-Wright and Pauphilet (2026)</span>.</p>
 <div class="section level2">
 <h2 id="the-problem">The problem<a class="anchor" aria-label="anchor" href="#the-problem"></a>
 </h2>
@@ -136,7 +134,14 @@ problem solved by <code>msPCA</code> is</p>
 and zero correlation to
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝑪</mi><mo>=</mo><mi mathvariant="bold">𝚺</mi></mrow><annotation encoding="application/x-tex">\boldsymbol{C} = \boldsymbol{\Sigma}</annotation></semantics></math>;
 both reduce to standard PCA when the sparsity constraint is relaxed
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>t</mi></msub><mo>=</mo><mi>p</mi></mrow><annotation encoding="application/x-tex">k_t = p</annotation></semantics></math>).</p>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>t</mi></msub><mo>=</mo><mi>p</mi></mrow><annotation encoding="application/x-tex">k_t = p</annotation></semantics></math>).
+In the zero-correlation case the implementation uses
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold">𝚺</mi><annotation encoding="application/x-tex">\boldsymbol{\Sigma}</annotation></semantics></math>
+divided by the average variance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold">𝚺</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>p</mi></mrow><annotation encoding="application/x-tex">\mathrm{tr}(\boldsymbol{\Sigma})/p</annotation></semantics></math>.
+This leaves the feasible set unchanged and makes both the penalty scale
+and the violation measure below invariant to a rescaling of the
+data.</p>
 <p>The objective is the sum of per-component variances. Most approaches
 for sparse PCA with multiple PCs use this objective <span class="citation">(Zou et al. 2006; Journée et al. 2010; Lu and Zhang
 2012; Vu et al. 2013; Benidis et al. 2016; Cory-Wright and Pauphilet
@@ -161,7 +166,7 @@ component-variance score rather than the variance of the orthogonal
 projection onto the span of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝑼</mi><annotation encoding="application/x-tex">\boldsymbol{U}</annotation></semantics></math>.
 Per-component contributions are returned by
-<code><a href="../reference/fraction_variance_explained_perPC.html">fraction_variance_explained_perPC()</a></code> and, unnormalised, by
+<code><a href="../reference/fraction_variance_explained_perPC.html">fraction_variance_explained_perPC()</a></code> and, unnormalized, by
 <code><a href="../reference/variance_explained_perPC.html">variance_explained_perPC()</a></code>.</p>
 <p><strong>Feasibility.</strong> The constraint violation measures how
 far the returned solution is from satisfying the coupling constraints.
@@ -173,14 +178,14 @@ Under orthogonality it is</p>
   \frac{p}{\mathrm{tr}(\boldsymbol{C})}
   \sum_{t &gt; t'} \left| \boldsymbol{u}_t^\top \boldsymbol{C} \boldsymbol{u}_{t'} \right|,</annotation></semantics></math></p>
 <p>both computed by <code><a href="../reference/feasibility_violation_off.html">feasibility_violation_off()</a></code>. The second
-is normalised by the average variance
+is normalized by the average variance
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑪</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>p</mi></mrow><annotation encoding="application/x-tex">\mathrm{tr}(\boldsymbol{C})/p</annotation></semantics></math>:
 the loading vectors are unit-norm, so
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msubsup><mi mathvariant="bold-italic">𝒖</mi><mi>t</mi><mi>⊤</mi></msubsup><mi mathvariant="bold-italic">𝑪</mi><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|\boldsymbol{u}_t^\top \boldsymbol{C} \boldsymbol{u}_{t'}|</annotation></semantics></math>
 is homogeneous of degree one in
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝑪</mi><annotation encoding="application/x-tex">\boldsymbol{C}</annotation></semantics></math>
-and the unnormalised sum would depend on the units of the data. With the
-normalisation, a fixed <code>feasibilityTolerance</code> means the same
+and the unnormalized sum would depend on the units of the data. With the
+normalization, a fixed <code>feasibilityTolerance</code> means the same
 thing for a covariance matrix and for the corresponding correlation
 matrix. The same convention is used inside the solver, and for the
 <code>nonredundancy</code> matrices stored on the fitted object.</p>
@@ -226,12 +231,22 @@ matrix to be positive semidefinite. If
 is not, we add a diagonal shift
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mn>0</mn></msub><mi mathvariant="double-struck">𝕀</mi></mrow><annotation encoding="application/x-tex">\lambda_0 \mathbb{I}</annotation></semantics></math>,
 which does not change the optimal solution because all feasible vectors
-have unit norm. We choose
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mn>0</mn></msub><annotation encoding="application/x-tex">\lambda_0</annotation></semantics></math>
-large enough that
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi mathvariant="bold">𝚺</mi><mo accent="true">̃</mo></mover><mi>t</mi></msub><mo>≽</mo><mn mathvariant="bold">𝟎</mn></mrow><annotation encoding="application/x-tex">\tilde{\boldsymbol{\Sigma}}_t \succeq \boldsymbol{0}</annotation></semantics></math>,
-e.g.
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mn>0</mn></msub><mo>≥</mo><msub><mi>λ</mi><mi mathvariant="normal">max</mi></msub><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑪</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><msub><mo>∑</mo><mrow><msup><mi>t</mi><mo>′</mo></msup><mo>≠</mo><mi>t</mi></mrow></msub><msub><mi>λ</mi><mrow><mi>t</mi><mo>,</mo><msup><mi>t</mi><mo>′</mo></msup></mrow></msub></mrow><annotation encoding="application/x-tex">\lambda_0 \geq \lambda_{\max}(\boldsymbol{C})^2 \sum_{t' \neq t} \lambda_{t,t'}</annotation></semantics></math>.</p>
+have unit norm. The shift used is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mn>0</mn></msub><mo>=</mo><msub><mo>∑</mo><mrow><msup><mi>t</mi><mo>′</mo></msup><mo>≠</mo><mi>t</mi></mrow></msub><msub><mi>λ</mi><mrow><mi>t</mi><mo>,</mo><msup><mi>t</mi><mo>′</mo></msup></mrow></msub><mo stretchy="false" form="postfix">∥</mo><mi mathvariant="bold-italic">𝑪</mi><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub><msubsup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">\lambda_0 = \sum_{t' \neq t} \lambda_{t,t'} \|\boldsymbol{C} \boldsymbol{u}_{t'}\|_2^2</annotation></semantics></math>,
+which bounds the deflation term by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">∥</mo><mi mathvariant="bold-italic">𝜷</mi><msubsup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">\lambda_0 \|\boldsymbol{\beta}\|_2^2</annotation></semantics></math>
+for every
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝜷</mi><annotation encoding="application/x-tex">\boldsymbol{\beta}</annotation></semantics></math>
+and so guarantees
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi mathvariant="bold">𝚺</mi><mo accent="true">̃</mo></mover><mi>t</mi></msub><mo>≽</mo><mn mathvariant="bold">𝟎</mn></mrow><annotation encoding="application/x-tex">\tilde{\boldsymbol{\Sigma}}_t \succeq \boldsymbol{0}</annotation></semantics></math>.
+It is the smallest shift of this form, which preserves the eigengap the
+power method relies on, and it is recomputed at each inner step from the
+current components, so no estimate of the spectrum of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold">𝚺</mi><annotation encoding="application/x-tex">\boldsymbol{\Sigma}</annotation></semantics></math>
+is needed. Under orthogonality
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="postfix">∥</mo><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub><msub><mo stretchy="false" form="postfix">∥</mo><mn>2</mn></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\|\boldsymbol{u}_{t'}\|_2 = 1</annotation></semantics></math>
+and it reduces to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mrow><msup><mi>t</mi><mo>′</mo></msup><mo>≠</mo><mi>t</mi></mrow></msub><msub><mi>λ</mi><mrow><mi>t</mi><mo>,</mo><msup><mi>t</mi><mo>′</mo></msup></mrow></msub></mrow><annotation encoding="application/x-tex">\sum_{t' \neq t} \lambda_{t,t'}</annotation></semantics></math>.</p>
 <p>Iterating over
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>r</mi></mrow><annotation encoding="application/x-tex">t = 1, \ldots, r</annotation></semantics></math>
 and progressively increasing the penalties to drive constraint
@@ -307,10 +322,8 @@ and a truncation step (retaining only the
 largest-magnitude entries). In practice TPM often finds high-quality
 solutions around two orders of magnitude faster than certifiably optimal
 methods <span class="citation">(Berk and Bertsimas 2019; Behdin and
-Mazumder 2026)</span>. Our implementation uses the past iterate as the
-first starting point followed by multiple random restarts, which guard
-against poor local optima — an improvement on the original
-single-initialization proposal.</p>
+Mazumder 2026)</span>. Each call starts from the current iterate and
+then draws random restarts, which guard against poor local optima.</p>
 <blockquote>
 <p><strong>Algorithm 2: truncated power method with random
 restarts</strong> <span class="citation">(Yuan and Zhang
@@ -387,19 +400,21 @@ proportional to the ratio of the current objective to the current
 constraint violation, which produces larger and more decisive increases;
 during the last 25% of iterations the step-size coefficient is further
 increased by a factor of 5 to accelerate final convergence to
-feasibility. The initial scale of
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mrow><mi>t</mi><mo>,</mo><msup><mi>t</mi><mo>′</mo></msup></mrow></msub><annotation encoding="application/x-tex">\lambda_{t,t'}</annotation></semantics></math>
-is set proportionally to the variance explained by component
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
-at the first iteration, so that all penalty terms are on a comparable
-scale regardless of the magnitude of
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold">𝚺</mi><annotation encoding="application/x-tex">\boldsymbol{\Sigma}</annotation></semantics></math>.
-See <span class="citation">Cory-Wright and Pauphilet (2026)</span> for a
-full description and theoretical justification of the update rule.</p>
+feasibility. Under the orthogonality constraint the penalties are
+weighted per component by the variance that component explains at the
+first iteration, so that all penalty terms are on a comparable scale
+regardless of the magnitude of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold">𝚺</mi><annotation encoding="application/x-tex">\boldsymbol{\Sigma}</annotation></semantics></math>;
+under the zero-correlation constraint the weights are 1, the scaling of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝑪</mi><annotation encoding="application/x-tex">\boldsymbol{C}</annotation></semantics></math>
+having already done that. See <span class="citation">Cory-Wright and
+Pauphilet (2026)</span> for a full description and theoretical
+justification of the update rule.</p>
 <p><strong>Termination.</strong> Algorithm 1 stops when the number of
-outer iterations reaches <code>maxIter</code> (default 200), or when the
-improvement in objective value between consecutive feasible solutions
-falls below <code>stallingTolerance</code> (default 1e-8).</p>
+outer iterations reaches <code>maxIter</code> (default 200), or earlier
+at any iteration where the current solution is feasible and the change
+in objective value since the previous iteration falls below
+<code>stallingTolerance</code> (default 1e-8).</p>
 <p><strong>Feasibility tracking.</strong> At each iteration Algorithm 1
 checks whether the current solution satisfies the coupling constraint up
 to <code>feasibilityTolerance</code> (default 1e-4). The best feasible
@@ -452,7 +467,6 @@ and avoids forming the
 covariance matrix entirely. After the first outer iteration the previous
 iterate serves as a warm start for Algorithm 2, substantially reducing
 the number of random restarts required.</p>
-<p>The package is available for Linux, macOS and Windows.</p>
 </div>
 <div class="section level2">
 <h2 id="computational-complexity">Computational complexity<a class="anchor" aria-label="anchor" href="#computational-complexity"></a>
@@ -523,12 +537,8 @@ is close to the identity, but can differ noticeably for strongly
 correlated datasets. See
 <code><a href="../articles/case-study-snp500.html">vignette("case-study-snp500", package = "msPCA")</a></code> for a
 worked comparison.</p>
-<p>The choice is recorded on the fitted object as
-<code>feasibilityConstraintType</code> and becomes the default for every
-diagnostic, so <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> always reports the constraint that
-was actually enforced and names it in its header. Both sets of pairwise
-violations are computed at fit time and stored in
-<code>nonredundancy</code>, so a solution can be scored under the
+<p>Both sets of pairwise violations are computed at fit time and stored
+in <code>nonredundancy</code>, so a solution can be scored under the
 definition that was <em>not</em> enforced without a refit:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mspca.html">mspca</a></span><span class="op">(</span><span class="va">Sigma</span>, r <span class="op">=</span> <span class="fl">3</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">3</span><span class="op">)</span>, feasibilityConstraintType <span class="op">=</span> <span class="fl">1</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>

@@ -125,14 +125,13 @@ variance explained, sparsity, and each component’s largest violation
 against any other component, followed by the full pairwise violation
 matrix so you can see at a glance how well the constraint is satisfied
 between each pair of components. The header names the constraint
-definition being reported and confirms that it is the one used to
-fit.</p>
+definition reported, which is the one used to fit.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; msPCA summary: 2 sparse PC(s)</span></span>
 <span><span class="co">#&gt; Input type   : Sigma </span></span>
-<span><span class="co">#&gt; Runtime (s)  : 0.016 </span></span>
+<span><span class="co">#&gt; Runtime (s)  : 0.009 </span></span>
 <span><span class="co">#&gt; Constraint   : orthogonality (as fitted) </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Per-component statistics:</span></span>
@@ -146,11 +145,6 @@ fit.</p>
 <span><span class="co">#&gt; PC2   .   .</span></span>
 <span><span class="co">#&gt; Total: 0e+00 </span></span>
 <span><span class="co">#&gt; Violations under the other definition are stored in `$nonredundancy$uncorrelatedness`.</span></span></code></pre></div>
-<p>Both methods take an optional <code>C</code> argument, but it is no
-longer needed: <code><a href="../reference/mspca.html">mspca()</a></code> stores the variance figures, the
-loading names, and the pairwise violations in the fitted object.
-<code>C</code> is retained only for objects created by msPCA 0.5.0 or
-earlier.</p>
 </div>
 <div class="section level2">
 <h2 id="working-from-the-raw-data-matrix">Working from the raw data matrix<a class="anchor" aria-label="anchor" href="#working-from-the-raw-data-matrix"></a>
@@ -183,13 +177,7 @@ algorithm operates on the correlation matrix, with
 <code>"n"</code>.</li>
 </ul>
 <p>With <code>scale = TRUE</code> and <code>divisor = "n-1"</code>, the
-raw-data call reproduces the correlation-matrix result above. As with
-<code>type = "Sigma"</code>, everything <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and
-<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> report is stored in the fitted object, so no
-matrix has to be passed back in — which matters here, since the point of
-<code>type = "X"</code> is never to form the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>×</mo><mi>p</mi></mrow><annotation encoding="application/x-tex">p \times p</annotation></semantics></math>
-matrix in the first place.</p>
+raw-data call reproduces the correlation-matrix result above.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span></span>
 <span></span>
@@ -247,7 +235,7 @@ to different solutions when the variables are strongly correlated.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; msPCA summary: 2 sparse PC(s)</span></span>
 <span><span class="co">#&gt; Input type   : Sigma </span></span>
-<span><span class="co">#&gt; Runtime (s)  : 0.415 </span></span>
+<span><span class="co">#&gt; Runtime (s)  : 0.244 </span></span>
 <span><span class="co">#&gt; Constraint   : uncorrelatedness (as fitted) </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Per-component statistics:</span></span>
@@ -261,13 +249,7 @@ to different solutions when the variables are strongly correlated.</p>
 <span><span class="co">#&gt; PC2   .            .</span></span>
 <span><span class="co">#&gt; Total: 9.581682e-05 </span></span>
 <span><span class="co">#&gt; Violations under the other definition are stored in `$nonredundancy$orthogonality`.</span></span></code></pre></div>
-<p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> reports the violations under the constraint
-that was actually enforced: the fitted
-<code>feasibilityConstraintType</code> is stored in the object and
-reused automatically, and the printed output names the definition in
-use. There is no need to repeat the setting, and no risk of reading an
-orthogonality summary for a solution fitted under zero correlation.</p>
-<p>Both sets of scores are computed at fit time and stored, so the
+<p>Both sets of violations are computed at fit time and stored, so the
 solution can be inspected under the other definition without a
 refit:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -308,14 +290,14 @@ no stored diagnostics.</p>
 <span><span class="fu"><a href="../reference/fraction_variance_explained_perPC.html">fraction_variance_explained_perPC</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">res</span><span class="op">$</span><span class="va">x_best</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.3245835 0.2798031</span></span></code></pre></div>
 <p>The zero-correlation violation is normalized by the average variance
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi>C</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>p</mi></mrow><annotation encoding="application/x-tex">\mathrm{tr}(C)/p</annotation></semantics></math>,
-so it is invariant to a rescaling of <code>C</code> and comparable
-between a covariance matrix and the corresponding correlation matrix.
-The orthogonality violation needs no such normalization. Note that
-<code>res$feasibility_violation</code>, the quantity the solver compares
-against <code>feasibilityTolerance</code>, additionally includes the
-diagonal norm terms and so is a slightly larger number than the
-off-diagonal diagnostic above.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="normal">Σ</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>p</mi></mrow><annotation encoding="application/x-tex">\mathrm{tr}(\Sigma)/p</annotation></semantics></math>,
+which makes it comparable between a covariance matrix and the
+corresponding correlation matrix; the orthogonality violation needs no
+such normalization. Note that <code>res$feasibility_violation</code>,
+the quantity the solver compares against
+<code>feasibilityTolerance</code>, also includes the diagonal norm
+terms, and so is slightly larger than the off-diagonal diagnostic
+above.</p>
 </div>
 <div class="section level2">
 <h2 id="comparison-with-dense-pca">Comparison with dense PCA<a class="anchor" aria-label="anchor" href="#comparison-with-dense-pca"></a>

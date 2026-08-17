@@ -143,6 +143,27 @@ SKLEARN_ALPHA <- if (!HAVE_SKLEARN) NA_real_ else tune_parameter(
   target = TARGET_NNZ, C = S, label = "sklearn SparsePCA alpha")
 
 
+## nscumcomp is the ONE competing function with a knob on non-redundancy:
+## `gamma` penalises divergence from orthonormality of the loadings, and its
+## default is 0 -- no penalty at all. Reporting its orthogonality violation
+## while never asking it to be feasible would not be a fair comparison, so we
+## tune gamma to the smallest violation msPCA's own tolerance allows, keeping
+## the best FVE among the values that get there. Sparsity is unaffected:
+## nscumcomp takes its cardinality budget separately.
+##
+## The grid runs to 1e8 deliberately. An earlier ceiling of 1e3 was selected at
+## the boundary on both mtcars and Pitprops without reaching the 1e-4 target,
+## which left it unknown whether nscumcomp plateaus above the tolerance or
+## simply needed a larger penalty. Running well past the point of diminishing
+## returns settles that; the tuning CSV flags `at_grid_edge` if it happens again.
+NSCUM_GAMMA <- tune_for_feasibility(
+  fit   = function(g) nsprcomp::nscumcomp(X_mtcars, ncomp = r, k = k * r, nneg = FALSE,
+                        center = TRUE, scale. = TRUE, gamma = g)$rotation,
+  grid  = c(0, 10^seq(-3, 8, by = 0.5)),
+  C     = S, ctype = 0, tol = 1e-4,
+  label = "nsprcomp::nscumcomp gamma")
+
+
 ## Record the selected values next to the results, so the article's "Tuning:"
 ## lines can be read off a file rather than transcribed by hand. The table
 ## also carries the realised sparsity and FVE at each selected value, so the
@@ -257,11 +278,11 @@ b_nspr <- bench_method(
 
 ## --- nscumcomp (total budget r * k; joint optimisation) ---
 b_nscum <- bench_method(
-  fun = function(X, r, k) {
+  fun = function(X, r, k, gamma) {
     nsprcomp::nscumcomp(X, ncomp = r, k = k * r, nneg = FALSE,
-                        center = TRUE, scale. = TRUE)$rotation
+                        center = TRUE, scale. = TRUE, gamma = gamma)$rotation
   },
-  inputs = list(X = X_mtcars, r = r, k = k),
+  inputs = list(X = X_mtcars, r = r, k = k, gamma = NSCUM_GAMMA),
   packages = "nsprcomp", reps = REPS, label = "nscumcomp")
 
 ## --- Dense PCA ---

@@ -113,9 +113,11 @@ tab <- cbind(k = ks,
 
 knitr::kable(
   tab, digits = 4, row.names = FALSE,
-  col.names = c("k", "FVE (orth)", "viol (orth)", "FVE (zero-corr)",
-                "viol (zero-corr)", "FVE (nsprcomp)", "viol (nsprcomp)"),
-  caption = "FVE and orthogonality violation across the sparsity grid."
+  col.names = c("k", "FVE (orth)", "orth viol (orth)", "FVE (zero-corr)",
+                "orth viol (zero-corr)", "FVE (nsprcomp)", "orth viol (nsprcomp)"),
+  caption = paste("FVE and orthogonality violation across the sparsity grid.",
+                  "Every violation column reports the orthogonality violation,",
+                  "including for the fits run under the zero-correlation constraint.")
 )
 ```
 
@@ -139,9 +141,9 @@ components.*
 
 On this dataset, `nsprcomp::nsprcomp()` returns exactly orthogonal loading vectors for
 small-to-moderate sparsity budgets (`k <= 20`), reflecting the effectiveness of the deflation
-procedure when component supports are sufficiently disjoint. Beyond that the guarantee lapses,
-and not gradually: the violation is 0.015 at `k = 25`, 0.13 at `k = 30` and 0.020 at `k = 35`.
-The behaviour is not monotone in `k`, so it cannot be anticipated from the sparsity budget.
+procedure when component supports are sufficiently disjoint. Beyond that the guarantee lapses:
+the violation is 0.015 at `k = 25`, 0.13 at `k = 30` and 0.020 at `k = 35`, and is not
+monotone in `k`.
 
 By contrast, `msPCA` with orthogonality constraints holds the violation at or below 1e-4 --- the
 default feasibility tolerance --- at every budget from `k = 10` upward, because the penalty on
@@ -159,7 +161,7 @@ expense of a substantially lower FVE.
 
 The two constraints correspond to different feasibility definitions and lead to meaningfully
 different factor compositions. `msPCA` lets the user choose and enforce whichever is relevant
-to their use case, with predictable behaviour across the full range of sparsity levels.
+to their use case, with predictable behavior across the full range of sparsity levels.
 
 ## Interpreting the sparse components
 
@@ -180,8 +182,7 @@ print(res_corr)
 ```
 
 `summary()` on either fit reports the violations under the constraint that fit
-actually enforced, and labels them as such, so the two summaries are not
-silently measuring different solutions with the same yardstick:
+enforced, and labels them as such:
 
 ```{r}
 summary(res_orth)

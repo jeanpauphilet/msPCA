@@ -445,7 +445,8 @@ tune_parameter <- function(fit, grid, target, C = NULL, label = "parameter",
   ## the article's "Tuning:" lines readable off a file instead of transcribed.
   assign(label, list(parameter = label, value = grid[[best]],
                      nnz = nnzs[[best]], deviation = dev[best],
-                     fve = fve[best], n_rejected = n_rejected),
+                     fve = fve[best], violation = NA_real_,
+                     at_grid_edge = FALSE, n_rejected = n_rejected),
          envir = .BENCH_TUNING)
 
   grid[[best]]
@@ -535,9 +536,90 @@ tune_parameter_vector <- function(fit, grid, target, C = NULL,
       if (!is.na(best$fve)) paste0(" | FVE ", round(best$fve, 4)) else "", "\n", sep = "")
 
   assign(label, list(parameter = label, value = cur, nnz = best$nnz,
-                     deviation = best$dev, fve = best$fve, n_rejected = NA_integer_),
+                     deviation = best$dev, fve = best$fve, violation = NA_real_,
+                     at_grid_edge = FALSE, n_rejected = NA_integer_),
          envir = .BENCH_TUNING)
   cur
+}
+
+
+#' Tune a parameter that trades variance explained against FEASIBILITY.
+#'
+#' `nsprcomp::nscumcomp()` is the only competing function with a knob on
+#' non-redundancy: `gamma` penalises divergence from orthonormality of the
+#' loadings. Its default is 0, i.e. no penalty at all -- the worst possible
+#' setting for the orthogonality column, and leaving it there would mean
+#' reporting that `nscumcomp` is infeasible while never having asked it to be
+#' feasible. That is not a comparison worth publishing.
+#'
+#' Sparsity is not at stake here: `nscumcomp` takes its cardinality budget
+#' separately and `gamma` does not change it. What `gamma` buys is feasibility,
+#' at a cost in FVE. The selection rule is therefore: among values that bring
+#' the orthogonality violation within `tol` -- the same tolerance `msPCA`
+#' enforces by default -- keep the one with the highest FVE. This asks "at
+#' equal feasibility, how much variance does each method explain?", which is
+#' the like-for-like question. If no value on the grid reaches `tol`, the one
+#' with the smallest violation is kept and a warning is issued, since the
+#' honest report is then that the method cannot reach the tolerance at all.
+#'
+#' @param fit   Function of one grid value returning a p x r loadings matrix.
+#' @param grid  Values to try.
+#' @param C     Matrix against which FVE and the violation are evaluated.
+#' @param ctype Constraint type passed to feasibility_violation_off().
+#' @param tol   Feasibility target; defaults to msPCA's own 1e-4.
+#' @param label Name used in the console output and the tuning table.
+#'
+#' @return The selected element of `grid`.
+tune_for_feasibility <- function(fit, grid, C, ctype = 0, tol = 1e-4,
+                                 label = "parameter", quiet = FALSE) {
+  n    <- length(grid)
+  viol <- rep(NA_real_, n)
+  fve  <- rep(NA_real_, n)
+  nnzs <- vector("list", n)
+
+  cat("  tuning ", label, " for feasibility (target <= ", format(tol),
+      ") over ", n, " values...\n", sep = "")
+  for (i in seq_len(n)) {
+    L <- tryCatch(fit(grid[[i]]), error = function(e) NULL)
+    if (is.null(L) || !is.matrix(L)) next
+    nnzs[[i]] <- colSums(abs(L) > 0)
+    viol[i]   <- feasibility_violation_off(C, L, ctype)
+    fve[i]    <- fraction_variance_explained(C, L)
+    if (!quiet)
+      cat("    ", format(grid[[i]]), " | violation: ",
+          format(viol[i], scientific = TRUE, digits = 3),
+          " | FVE: ", round(fve[i], 4), "\n", sep = "")
+  }
+
+  if (all(is.na(viol)))
+    stop("tune_for_feasibility(): every value in the grid for ", label,
+         " failed.", call. = FALSE)
+
+  feasible <- which(viol <= tol)
+  if (length(feasible)) {
+    best <- feasible[which.max(fve[feasible])]
+  } else {
+    best <- which.min(viol)
+    warning(label, ": no value on the grid brings the violation within ",
+            format(tol), ". The smallest achievable is ",
+            format(viol[best], scientific = TRUE, digits = 3),
+            " -- report the method as unable to reach the tolerance rather ",
+            "than as merely untuned.", call. = FALSE)
+  }
+
+  cat("  -> ", label, " = ", format(grid[[best]]),
+      " | violation ", format(viol[best], scientific = TRUE, digits = 3),
+      " | FVE ", round(fve[best], 4),
+      if (!length(feasible)) "  (tolerance NOT reached)" else "", "\n", sep = "")
+
+  assign(label, list(parameter = label, value = grid[[best]],
+                     nnz = nnzs[[best]], deviation = NA_real_,
+                     fve = fve[best], violation = viol[best],
+                     at_grid_edge = (best == 1L || best == n) && !length(feasible),
+                     n_rejected = NA_integer_),
+         envir = .BENCH_TUNING)
+
+  grid[[best]]
 }
 
 
@@ -555,6 +637,8 @@ tuning_table <- function() {
     selected_nnz = paste(z$nnz, collapse = " "),
     deviation    = z$deviation,
     fve          = round(z$fve, 4),
+    violation    = z$violation,
+    at_grid_edge = z$at_grid_edge,
     n_rejected   = z$n_rejected,
     stringsAsFactors = FALSE)))
 }

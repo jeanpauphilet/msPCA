@@ -75,9 +75,9 @@
   if (identical(as.integer(ctype), 0L)) "orthogonality" else "uncorrelatedness"
 }
 
-# Average variance tr(Sigma)/p, used to normalise the uncorrelatedness
+# Average variance tr(Sigma)/p, used to normalize the uncorrelatedness
 # violation. Guarded so that a degenerate (zero-trace) input leaves the
-# unnormalised quantity untouched rather than producing Inf/NaN.
+# unnormalized quantity untouched rather than producing Inf/NaN.
 .avg_variance <- function(C) {
   a <- sum(diag(C)) / nrow(C)
   if (is.finite(a) && a > 0) a else 1
@@ -90,7 +90,7 @@
 # need the (possibly very large) covariance matrix again:
 #   orthogonality    : |u_t^T u_s|
 #   uncorrelatedness : |u_t^T Sigma u_s| / (tr(Sigma)/p)
-# The uncorrelatedness entries are normalised by the average variance
+# The uncorrelatedness entries are normalized by the average variance
 # `avgVar` = tr(Sigma)/p: the loadings are unit-norm, so |u_t^T Sigma u_s| is
 # homogeneous of degree one in Sigma and would otherwise depend on the units of
 # the data. This is the same convention the solver uses when comparing the
@@ -259,7 +259,7 @@ mspca <- function(M, r, ks, type = c("Sigma", "X"),
   # covariance, so that no downstream method needs `M` again.
   res$feasibilityConstraintType <- feasibilityConstraintType
   # tr(Sigma)/p, the scale by which the uncorrelatedness violations are
-  # normalised. `total_variance` is tr(Sigma) as computed by the solver, so this
+  # normalized. `total_variance` is tr(Sigma) as computed by the solver, so this
   # holds for both input types without reforming Sigma.
   avgVar <- res$total_variance / nrow(res$x_best)
   res$nonredundancy <- .nonredundancy(res$x_best, Sv, avgVar)
@@ -468,11 +468,10 @@ print.mspca <- function(x, C = NULL, digits = NULL, ...) {
 #'
 #' @param object An object of class `"mspca"`, as returned by [mspca()].
 #' @param C (optional) A numeric matrix (p x p). The covariance or correlation
-#'   matrix used when fitting. No longer required: [mspca()] stores every
-#'   figure this method reports. It is retained only so that objects fitted
-#'   with msPCA 0.5.0 or earlier, which lack the stored diagnostics, can still be
-#'   summarized, and is ignored otherwise. It will be removed in a future
-#'   release.
+#'   matrix used when fitting. [mspca()] stores every figure this method
+#'   reports, so `C` is ignored for objects that carry those stored
+#'   diagnostics; it is needed only to summarize an object that does not. It
+#'   will be removed in a future release.
 #' @param feasibilityConstraintType (optional) An integer or `NULL`. Type of
 #'   constraint used to compute the violations reported in the summary. `0`
 #'   for orthogonality; `1` for zero pairwise correlation. When `NULL` (the
@@ -497,7 +496,7 @@ print.mspca <- function(x, C = NULL, digits = NULL, ...) {
 #'     \item{`feasibilityConstraintType`}{The constraint type the reported
 #'       violations refer to.}
 #'     \item{`fittedConstraintType`}{The constraint type enforced at fit time,
-#'       or `NA` for objects fitted with msPCA 0.5.0 or earlier.}
+#'       or `NA` for objects that do not record it.}
 #'     \item{`runtime`}{Solver runtime in seconds (if stored in the object).}
 #'     \item{`r`}{Number of sparse PCs.}
 #'     \item{`inputType`}{`"Sigma"` or `"X"`.}

@@ -77,7 +77,7 @@
 <p>Install development version from GitHub:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/install-deprecated.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"jeanpauphilet/msPCA"</span><span class="op">)</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"jeanpauphilet/msPCA"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://jeanpauphilet.github.io/msPCA/">msPCA</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -95,7 +95,7 @@
 <li>
 <code>ks</code>: integer vector of length <code>r</code> with sparsity budgets.</li>
 </ul>
-<p>With <code>type = "X"</code>, <code><a href="reference/mspca.html">mspca()</a></code> applies the algorithm to the data directly via the products <code>t(X) %*% (X %*% beta)</code> and never forms the <code>p x p</code> matrix. This is substantially faster and more memory-efficient when <code>n &lt;&lt; p</code>. Pass <code>type = "X"</code> whenever the number of variables greatly exceeds the number of observations; when <code>n &gt; p</code> the dense <code>type = "Sigma"</code> path is cheaper.</p>
+<p>With <code>type = "X"</code>, <code><a href="reference/mspca.html">mspca()</a></code> applies the algorithm to the data directly via the products <code>t(X) %*% (X %*% beta)</code> and never forms the <code>p x p</code> matrix, which reduces each iteration’s matrix–vector product from <code>O(p^2)</code> to <code>O(np)</code>. Pass <code>type = "X"</code> when the number of variables greatly exceeds the number of observations; when <code>n &gt; p</code> the dense <code>type = "Sigma"</code> path is cheaper.</p>
 <p>Output fields:</p>
 <ul>
 <li>
@@ -119,8 +119,8 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mspca.html">mspca</a></span><span class="op">(</span><span class="va">Sigma</span>, r <span class="op">=</span> <span class="fl">2</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>   <span class="co"># type = "Sigma" is the default</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span>      <span class="co"># everything these need is stored in the object;</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span>    <span class="co"># summary() reports the constraint that was actually fitted</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/feasibility_violation_off.html">feasibility_violation_off</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">res</span><span class="op">$</span><span class="va">x_best</span>, feasibilityConstraintType <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/fraction_variance_explained.html">fraction_variance_explained</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">res</span><span class="op">$</span><span class="va">x_best</span><span class="op">)</span></span></code></pre></div>
@@ -134,11 +134,10 @@
 <span><span class="co"># type = "X" treats the first argument as raw data; scale = TRUE operates on the</span></span>
 <span><span class="co"># correlation matrix, matching cor(mtcars) above.</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mspca.html">mspca</a></span><span class="op">(</span><span class="va">X</span>, r <span class="op">=</span> <span class="fl">2</span>, ks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"X"</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span>                            <span class="co"># results carry their own variance summary</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span>                          <span class="co"># ... and their own violation matrices</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/fraction_variance_explained.html">fraction_variance_explained</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>, <span class="va">res</span><span class="op">$</span><span class="va">x_best</span><span class="op">)</span></span></code></pre></div>
-<p>For datasets with <code>n &lt;&lt; p</code>, this raw-data path avoids the <code>O(np^2)</code> cost of forming <code>Sigma</code> and reduces each iteration’s matrix–vector product from <code>O(p^2)</code> to <code>O(np)</code>.</p>
 <p>Optional dense PCA comparison:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pca_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html" class="external-link">prcomp</a></span><span class="op">(</span><span class="fu">datasets</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/datasets/mtcars.html" class="external-link">mtcars</a></span>, scale. <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
@@ -177,7 +176,7 @@
 <tr>
 <td><a href="https://jeanpauphilet.github.io/msPCA/articles/benchmarking.html">Benchmarking against other sparse PCA packages</a></td>
 <td>
-<code>msPCA</code> against seven competing implementations on four real datasets, with the exact configuration used for each. Website only — not shipped with the package.</td>
+<code>msPCA</code> against seven competing packages, eight functions in all, on four real datasets, with the exact configuration used for each. Website only — not shipped with the package.</td>
 </tr>
 </tbody>
 </table>
@@ -210,7 +209,7 @@
 <li>
 <code>tpm(M, k, type = c("Sigma", "X"), ...)</code>: single sparse PC via truncated power method.</li>
 </ul>
-<p><code><a href="reference/mspca.html">mspca()</a></code> returns an object of class <code>mspca</code> with <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> methods. Both read everything they report from the object, so neither needs the covariance matrix passed back in. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> reports the non-redundancy violations under the constraint type that was used to fit, and says so in its header; pass <code>feasibilityConstraintType</code> explicitly only to inspect the solution under the other definition.</p>
+<p><code><a href="reference/mspca.html">mspca()</a></code> returns an object of class <code>mspca</code> with <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> methods. Both read what they report from the fitted object, so neither needs the covariance matrix passed back in. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> reports the non-redundancy violations under the constraint type used to fit; pass <code>feasibilityConstraintType</code> explicitly to inspect the solution under the other definition.</p>
 <p>Useful optional arguments in <code><a href="reference/mspca.html">mspca()</a></code>:</p>
 <ul>
 <li><code>feasibilityConstraintType</code></li>
@@ -285,7 +284,7 @@
 <li>
 <code>data.R</code>: documentation for the bundled <code>snp500</code> dataset.</li>
 <li>
-<code>RcppExports.R</code>: R interface for compiled code (typically generated with <code><a href="https://rdrr.io/pkg/Rcpp/man/compileAttributes.html" class="external-link">Rcpp::compileAttributes()</a></code>).</li>
+<code>RcppExports.R</code>: R interface for compiled code, generated by <code><a href="https://rdrr.io/pkg/Rcpp/man/compileAttributes.html" class="external-link">Rcpp::compileAttributes()</a></code>.</li>
 </ul>
 </li>
 <li>
@@ -325,7 +324,7 @@
 </ul>
 </li>
 </ul>
-<p>For interface changes, regenerate exports and documentation with <code><a href="https://rdrr.io/pkg/Rcpp/man/compileAttributes.html" class="external-link">Rcpp::compileAttributes()</a></code> and <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code>. After editing <code>data-raw/snp500.R</code>, rebuild the dataset with <code>source("data-raw/snp500.R")</code>.</p>
+<p>For interface changes, regenerate exports and documentation with <code><a href="https://rdrr.io/pkg/Rcpp/man/compileAttributes.html" class="external-link">Rcpp::compileAttributes()</a></code> and <code>devtools::document()</code>. After editing <code>data-raw/snp500.R</code>, rebuild the dataset with <code>source("data-raw/snp500.R")</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>

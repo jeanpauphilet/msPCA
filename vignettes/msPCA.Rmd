@@ -54,17 +54,12 @@ print(res)
 sparsity, and each component's largest violation against any other
 component, followed by the full pairwise violation matrix so you can see at
 a glance how well the constraint is satisfied between each pair of
-components. The header names the constraint definition being reported and
-confirms that it is the one used to fit.
+components. The header names the constraint definition reported, which is the
+one used to fit.
 
 ```{r summary}
 summary(res)
 ```
-
-Both methods take an optional `C` argument, but it is no longer needed:
-`mspca()` stores the variance figures, the loading names, and the pairwise
-violations in the fitted object. `C` is retained only for objects created by
-msPCA 0.5.0 or earlier.
 
 ## Working from the raw data matrix
 
@@ -86,10 +81,7 @@ The preprocessing arguments control which matrix is implicitly used:
   or `"n"`.
 
 With `scale = TRUE` and `divisor = "n-1"`, the raw-data call reproduces the
-correlation-matrix result above. As with `type = "Sigma"`, everything
-`print()` and `summary()` report is stored in the fitted object, so no
-matrix has to be passed back in — which matters here, since the point of
-`type = "X"` is never to form the $p \times p$ matrix in the first place.
+correlation-matrix result above.
 
 ```{r fit_X}
 X <- as.matrix(mtcars)
@@ -117,14 +109,8 @@ print(res_corr)
 summary(res_corr)
 ```
 
-`summary()` reports the violations under the constraint that was actually
-enforced: the fitted `feasibilityConstraintType` is stored in the object and
-reused automatically, and the printed output names the definition in use.
-There is no need to repeat the setting, and no risk of reading an
-orthogonality summary for a solution fitted under zero correlation.
-
-Both sets of scores are computed at fit time and stored, so the solution can
-be inspected under the other definition without a refit:
+Both sets of violations are computed at fit time and stored, so the solution
+can be inspected under the other definition without a refit:
 
 ```{r nonredundancy}
 res_corr$nonredundancy$uncorrelatedness   # the constraint that was enforced
@@ -154,12 +140,11 @@ fraction_variance_explained_perPC(Sigma, res$x_best)
 ```
 
 The zero-correlation violation is normalized by the average variance
-$\mathrm{tr}(C)/p$, so it is invariant to a rescaling of `C` and comparable
-between a covariance matrix and the corresponding correlation matrix. The
-orthogonality violation needs no such normalization. Note that
-`res$feasibility_violation`, the quantity the solver compares against
-`feasibilityTolerance`, additionally includes the diagonal norm terms and so
-is a slightly larger number than the off-diagonal diagnostic above.
+$\mathrm{tr}(\Sigma)/p$, which makes it comparable between a covariance matrix
+and the corresponding correlation matrix; the orthogonality violation needs no
+such normalization. Note that `res$feasibility_violation`, the quantity the
+solver compares against `feasibilityTolerance`, also includes the diagonal norm
+terms, and so is slightly larger than the off-diagonal diagnostic above.
 
 ## Comparison with dense PCA
 
