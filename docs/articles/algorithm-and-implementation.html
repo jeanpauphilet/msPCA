@@ -184,10 +184,9 @@ is homogeneous of degree one in
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝑪</mi><annotation encoding="application/x-tex">\boldsymbol{C}</annotation></semantics></math>
 and the unnormalized sum would depend on the units of the data. After
 normalization each pairwise term reads as a fraction of the total
-variance, and a fixed <code>feasibilityTolerance</code> means the same
-thing for a covariance matrix and for the corresponding correlation
-matrix. The same convention is used inside the solver, and for the
-<code>nonredundancy</code> matrices stored on the fitted object.</p>
+variance, hence is scale-invariant. The same convention is used inside
+the solver, and for the <code>nonredundancy</code> matrices stored on
+the fitted object.</p>
 </div>
 <div class="section level2">
 <h2 id="lagrangian-alternating-maximization">Lagrangian alternating maximization<a class="anchor" aria-label="anchor" href="#lagrangian-alternating-maximization"></a>
@@ -308,8 +307,8 @@ as feasible; update best solution if the objective improves</li>
 values (see below)</li>
 <li><strong>end for</strong></li>
 <li>
-<strong>return</strong> best feasible solution found, or the
-least-infeasible solution if none was found</li>
+<strong>return</strong> best feasible solution found, or the last
+iterate if none was found</li>
 </ol>
 </blockquote>
 <p>Each single-component subproblem is solved via the truncated power

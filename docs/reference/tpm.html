@@ -87,7 +87,8 @@ correlation matrix (p x p) when <code>type = "Sigma"</code>, or a raw data matri
 
 
 <dt id="arg-k">k<a class="anchor" aria-label="anchor" href="#arg-k"></a></dt>
-<dd><p>An integer. Target sparsity of the PC.</p></dd>
+<dd><p>An integer. Target sparsity of the PC. Must be a single whole number
+greater than or equal to 1.</p></dd>
 
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
@@ -96,23 +97,28 @@ matrix) or "X" (<code>M</code> is a raw data matrix).</p></dd>
 
 
 <dt id="arg-maxiter">maxIter<a class="anchor" aria-label="anchor" href="#arg-maxiter"></a></dt>
-<dd><p>(optional) An integer. Maximum number of iterations of the algorithm. Default 200.</p></dd>
+<dd><p>(optional) An integer. Maximum number of iterations of the
+algorithm. Must be a whole number greater than or equal to 1. Default 200.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
-<dd><p>(optional) A Boolean. Controls console output. Default TRUE.</p></dd>
+<dd><p>(optional) A Boolean. Controls console output. <code>TRUE</code>/<code>FALSE</code>
+or the numbers 0/1; any other value is an error. Default TRUE.</p></dd>
 
 
 <dt id="arg-timelimit">timeLimit<a class="anchor" aria-label="anchor" href="#arg-timelimit"></a></dt>
-<dd><p>(optional) An integer. Maximum time in seconds. Default 10.</p></dd>
+<dd><p>(optional) An integer. Maximum time in seconds. Must be a
+finite, non-negative whole number; <code>Inf</code> is not accepted. Default 10.</p></dd>
 
 
 <dt id="arg-center">center<a class="anchor" aria-label="anchor" href="#arg-center"></a></dt>
-<dd><p>(optional, type = "X") A Boolean. Center the columns of <code>M</code>. Default TRUE.</p></dd>
+<dd><p>(optional, type = "X") A Boolean. Center the columns of <code>M</code>.
+<code>TRUE</code>/<code>FALSE</code> or the numbers 0/1. Default TRUE.</p></dd>
 
 
 <dt id="arg-scale">scale<a class="anchor" aria-label="anchor" href="#arg-scale"></a></dt>
-<dd><p>(optional, type = "X") A Boolean. Scale the columns of <code>M</code> to unit variance. Default TRUE.</p></dd>
+<dd><p>(optional, type = "X") A Boolean. Scale the columns of <code>M</code> to unit
+variance. <code>TRUE</code>/<code>FALSE</code> or the numbers 0/1. Default TRUE.</p></dd>
 
 
 <dt id="arg-divisor">divisor<a class="anchor" aria-label="anchor" href="#arg-divisor"></a></dt>
@@ -120,15 +126,18 @@ matrix) or "X" (<code>M</code> is a raw data matrix).</p></dd>
 
 
 <dt id="arg-checkpsd">checkPSD<a class="anchor" aria-label="anchor" href="#arg-checkpsd"></a></dt>
-<dd><p>(optional, type = "Sigma") A Boolean. Verify <code>M</code> is PSD. Default TRUE.</p></dd>
+<dd><p>(optional, type = "Sigma") A Boolean. Verify <code>M</code> is PSD.
+<code>TRUE</code>/<code>FALSE</code> or the numbers 0/1; any other value is an error. Default TRUE.</p></dd>
 
 
 <dt id="arg-symtolerance">symTolerance<a class="anchor" aria-label="anchor" href="#arg-symtolerance"></a></dt>
-<dd><p>(optional, type = "Sigma") A float. Symmetry-check tolerance. Default 1e-8.</p></dd>
+<dd><p>(optional, type = "Sigma") A float. Symmetry-check
+tolerance. Must be non-negative. Default 1e-8.</p></dd>
 
 
 <dt id="arg-psdtolerance">psdTolerance<a class="anchor" aria-label="anchor" href="#arg-psdtolerance"></a></dt>
-<dd><p>(optional, type = "Sigma") A float. PSD-check tolerance. Default 1e-8.</p></dd>
+<dd><p>(optional, type = "Sigma") A float. PSD-check tolerance.
+Must be non-negative. Default 1e-8.</p></dd>
 
 </dl></div>
     <div class="section level2">

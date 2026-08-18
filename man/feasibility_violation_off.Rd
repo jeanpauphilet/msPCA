@@ -29,9 +29,7 @@ In the zero-correlation case the pairwise terms are normalized by the
 total variance \eqn{\mathrm{tr}(C)}. Because the PCs are unit-norm,
 \eqn{|u_{t}^\top C u_{s}|} is homogeneous of degree one in \code{C}, so the
 unnormalized quantity depends on the units of the data; dividing by
-\eqn{\mathrm{tr}(C)} makes it invariant to a rescaling of \code{C} and hence
-comparable across covariance and correlation input, each pairwise term
-being read as a fraction of the total variance. This matches the
+\eqn{\mathrm{tr}(C)} makes it invariant to a rescaling of \code{C}. This matches the
 definition used internally by \code{\link[=mspca]{mspca()}} against \code{feasibilityTolerance}.
 }
 \examples{

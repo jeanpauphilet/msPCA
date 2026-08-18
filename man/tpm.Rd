@@ -24,28 +24,37 @@ tpm(
 correlation matrix (p x p) when \code{type = "Sigma"}, or a raw data matrix
 (n x p) when \code{type = "X"}.}
 
-\item{k}{An integer. Target sparsity of the PC.}
+\item{k}{An integer. Target sparsity of the PC. Must be a single whole number
+greater than or equal to 1.}
 
 \item{type}{(optional) Either "Sigma" (default; \code{M} is a covariance/correlation
 matrix) or "X" (\code{M} is a raw data matrix).}
 
-\item{maxIter}{(optional) An integer. Maximum number of iterations of the algorithm. Default 200.}
+\item{maxIter}{(optional) An integer. Maximum number of iterations of the
+algorithm. Must be a whole number greater than or equal to 1. Default 200.}
 
-\item{verbose}{(optional) A Boolean. Controls console output. Default TRUE.}
+\item{verbose}{(optional) A Boolean. Controls console output. \code{TRUE}/\code{FALSE}
+or the numbers 0/1; any other value is an error. Default TRUE.}
 
-\item{timeLimit}{(optional) An integer. Maximum time in seconds. Default 10.}
+\item{timeLimit}{(optional) An integer. Maximum time in seconds. Must be a
+finite, non-negative whole number; \code{Inf} is not accepted. Default 10.}
 
-\item{center}{(optional, type = "X") A Boolean. Center the columns of \code{M}. Default TRUE.}
+\item{center}{(optional, type = "X") A Boolean. Center the columns of \code{M}.
+\code{TRUE}/\code{FALSE} or the numbers 0/1. Default TRUE.}
 
-\item{scale}{(optional, type = "X") A Boolean. Scale the columns of \code{M} to unit variance. Default TRUE.}
+\item{scale}{(optional, type = "X") A Boolean. Scale the columns of \code{M} to unit
+variance. \code{TRUE}/\code{FALSE} or the numbers 0/1. Default TRUE.}
 
 \item{divisor}{(optional, type = "X") Either "n-1" (default) or "n".}
 
-\item{checkPSD}{(optional, type = "Sigma") A Boolean. Verify \code{M} is PSD. Default TRUE.}
+\item{checkPSD}{(optional, type = "Sigma") A Boolean. Verify \code{M} is PSD.
+\code{TRUE}/\code{FALSE} or the numbers 0/1; any other value is an error. Default TRUE.}
 
-\item{symTolerance}{(optional, type = "Sigma") A float. Symmetry-check tolerance. Default 1e-8.}
+\item{symTolerance}{(optional, type = "Sigma") A float. Symmetry-check
+tolerance. Must be non-negative. Default 1e-8.}
 
-\item{psdTolerance}{(optional, type = "Sigma") A float. PSD-check tolerance. Default 1e-8.}
+\item{psdTolerance}{(optional, type = "Sigma") A float. PSD-check tolerance.
+Must be non-negative. Default 1e-8.}
 }
 \value{
 An object of class \code{"tpm"} (a list) with fields: \code{x_best} (p x 1

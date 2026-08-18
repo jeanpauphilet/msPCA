@@ -102,11 +102,16 @@ correlation matrix (p x p) when <code>type = "Sigma"</code>, or a raw data matri
 
 
 <dt id="arg-r">r<a class="anchor" aria-label="anchor" href="#arg-r"></a></dt>
-<dd><p>An integer. Number of principal components (PCs) to be computed.</p></dd>
+<dd><p>An integer. Number of principal components (PCs) to be computed.
+Must be a single whole number greater than or equal to 1.</p></dd>
 
 
 <dt id="arg-ks">ks<a class="anchor" aria-label="anchor" href="#arg-ks"></a></dt>
-<dd><p>An integer vector. Target sparsity of each PC.</p></dd>
+<dd><p>An integer vector. Target sparsity of each PC. Every element must be
+a whole number greater than or equal to 1 (a sparsity level of zero or less
+does not define a component and is rejected). <code>length(ks)</code> must not exceed
+<code>r</code>; if it is shorter than <code>r</code>, a warning is issued and the algorithm is run
+for <code>length(ks)</code> PCs.</p></dd>
 
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
@@ -118,39 +123,52 @@ correlation matrix (p x p) when <code>type = "Sigma"</code>, or a raw data matri
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
-<dd><p>(optional) A Boolean. Controls console output. Default TRUE.</p></dd>
+<dd><p>(optional) A Boolean. Controls console output. <code>TRUE</code>/<code>FALSE</code>
+or the numbers 0/1; any other value is an error. Default TRUE.</p></dd>
 
 
 <dt id="arg-maxiter">maxIter<a class="anchor" aria-label="anchor" href="#arg-maxiter"></a></dt>
-<dd><p>(optional) An integer. Maximum number of iterations of the algorithm. Default 200.</p></dd>
+<dd><p>(optional) An integer. Maximum number of iterations of the
+algorithm. Must be a whole number greater than or equal to 1. Default 200.</p></dd>
 
 
 <dt id="arg-feasibilitytolerance">feasibilityTolerance<a class="anchor" aria-label="anchor" href="#arg-feasibilitytolerance"></a></dt>
-<dd><p>(optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to <code>feasibilityConstraintType</code>). Under uncorrelatedness the violation is normalized by the average variance <code>tr(Sigma)/p</code>, so the tolerance carries the same meaning whether <code>M</code> is a covariance or a correlation matrix. Default 1e-4.</p></dd>
+<dd><p>(optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to <code>feasibilityConstraintType</code>). Under uncorrelatedness the violation is normalized by the total variance <code>tr(Sigma)</code>. Must be non-negative; <code>Inf</code> is allowed and accepts any solution as feasible. Default 1e-4.</p></dd>
 
 
 <dt id="arg-stallingtolerance">stallingTolerance<a class="anchor" aria-label="anchor" href="#arg-stallingtolerance"></a></dt>
-<dd><p>(optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8.</p></dd>
+<dd><p>(optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Must be non-negative; <code>Inf</code> is allowed. Default 1e-8.</p></dd>
 
 
 <dt id="arg-timelimittpm">timeLimitTPM<a class="anchor" aria-label="anchor" href="#arg-timelimittpm"></a></dt>
-<dd><p>(optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.</p></dd>
+<dd><p>(optional) An integer. Maximum time in seconds for the
+truncated power method (inner iteration). Must be a finite, non-negative
+whole number; <code>Inf</code> is not accepted, so use a large finite value to
+effectively disable the limit. Default 20.</p></dd>
 
 
 <dt id="arg-maxrestarttpm">maxRestartTPM<a class="anchor" aria-label="anchor" href="#arg-maxrestarttpm"></a></dt>
-<dd><p>(optional) An integer. Number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 30.</p></dd>
+<dd><p>(optional) An integer. Number of random restarts of the
+truncated power method (inner iteration) for the first outer iteration. Must
+be a whole number greater than or equal to 0; zero means no random restarts.
+Default 30.</p></dd>
 
 
 <dt id="arg-minrestarttpm">minRestartTPM<a class="anchor" aria-label="anchor" href="#arg-minrestarttpm"></a></dt>
-<dd><p>(optional) An integer. Number of random restarts of the truncated power method (inner iteration) for outer iterations &gt;= 2. Default 20.</p></dd>
+<dd><p>(optional) An integer. Number of random restarts of the
+truncated power method (inner iteration) for outer iterations &gt;= 2. Must be a
+whole number greater than or equal to 0. Default 20.</p></dd>
 
 
 <dt id="arg-center">center<a class="anchor" aria-label="anchor" href="#arg-center"></a></dt>
-<dd><p>(optional, type = "X") A Boolean. Center the columns of <code>M</code> before computing the covariance. Default TRUE.</p></dd>
+<dd><p>(optional, type = "X") A Boolean. Center the columns of <code>M</code>
+before computing the covariance. <code>TRUE</code>/<code>FALSE</code> or the numbers 0/1. Default TRUE.</p></dd>
 
 
 <dt id="arg-scale">scale<a class="anchor" aria-label="anchor" href="#arg-scale"></a></dt>
-<dd><p>(optional, type = "X") A Boolean. Scale the columns of <code>M</code> to unit variance, i.e. operate on the correlation matrix. Default TRUE.</p></dd>
+<dd><p>(optional, type = "X") A Boolean. Scale the columns of <code>M</code> to unit
+variance, i.e. operate on the correlation matrix. <code>TRUE</code>/<code>FALSE</code> or the
+numbers 0/1. Default TRUE.</p></dd>
 
 
 <dt id="arg-divisor">divisor<a class="anchor" aria-label="anchor" href="#arg-divisor"></a></dt>
@@ -158,15 +176,19 @@ correlation matrix (p x p) when <code>type = "Sigma"</code>, or a raw data matri
 
 
 <dt id="arg-checkpsd">checkPSD<a class="anchor" aria-label="anchor" href="#arg-checkpsd"></a></dt>
-<dd><p>(optional, type = "Sigma") A Boolean. Verify that <code>M</code> is positive semidefinite. Default TRUE.</p></dd>
+<dd><p>(optional, type = "Sigma") A Boolean. Verify that <code>M</code> is
+positive semidefinite. <code>TRUE</code>/<code>FALSE</code> or the numbers 0/1; any other value is
+an error. Default TRUE.</p></dd>
 
 
 <dt id="arg-symtolerance">symTolerance<a class="anchor" aria-label="anchor" href="#arg-symtolerance"></a></dt>
-<dd><p>(optional, type = "Sigma") A float. Tolerance for the symmetry  check on <code>M</code>. Default 1e-8.</p></dd>
+<dd><p>(optional, type = "Sigma") A float. Tolerance for the
+symmetry check on <code>M</code>. Must be non-negative. Default 1e-8.</p></dd>
 
 
 <dt id="arg-psdtolerance">psdTolerance<a class="anchor" aria-label="anchor" href="#arg-psdtolerance"></a></dt>
-<dd><p>(optional, type = "Sigma") A float. Tolerance (on the smallest eigenvalue) for the PSD check on <code>M</code>. Default 1e-8.</p></dd>
+<dd><p>(optional, type = "Sigma") A float. Tolerance (on the
+smallest eigenvalue) for the PSD check on <code>M</code>. Must be non-negative. Default 1e-8.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -182,28 +204,18 @@ and <code>p</code>. Use <code><a href="https://rdrr.io/r/base/print.html" class=
 a full per-PC breakdown.</p>
 <p><code>nonredundancy</code> is a list of two r x r matrices, <code>orthogonality</code>
 (\(|u_t^\top u_s|\)) and <code>uncorrelatedness</code>
-(\(|u_t^\top \Sigma u_s| / (\mathrm{tr}(\Sigma)/p)\)), computed once at
+(\(|u_t^\top \Sigma u_s| / \mathrm{tr}(\Sigma)\)), computed once at
 fit time from the sorted loadings. Only the strict upper triangle is
 populated; the diagonal and lower triangle are <code>NA</code>. Both are stored
 regardless of which constraint was enforced, so a summary under either
 definition is available without the covariance matrix and without
 refitting.</p>
-<p>The uncorrelatedness terms are normalized by the average variance
-\(\mathrm{tr}(\Sigma)/p\). The loadings being unit-norm,
-\(|u_t^\top \Sigma u_s|\) scales linearly with \(\Sigma\), so the raw
-quantity - and hence its comparison against <code>feasibilityTolerance</code> -
-would otherwise depend on the units of the data. After normalization the
-measure is invariant to a rescaling of \(\Sigma\), and a covariance and
-a correlation input are on the same footing.</p>
-<p>Note that <code>feasibility_violation</code> (returned by the solver) and the
-violation reported by <code><a href="summary.mspca.html">summary.mspca()</a></code> are <em>different statistics</em>:
-the former sums over all pairs \(t \ge s\) and so includes the
-normalization terms \(|u_t^\top u_t - 1|\) on the diagonal (under both
-constraint types, the diagonal terms are the unit-norm residuals),
-whereas the latter is the strictly off-diagonal sum returned by
-<code><a href="feasibility_violation_off.html">feasibility_violation_off()</a></code>. The solver value is the quantity compared
-against <code>feasibilityTolerance</code> during the fit; the off-diagonal value is
-the redundancy diagnostic.</p>
+<p>The uncorrelatedness terms are normalized by the total variance
+\(\mathrm{tr}(\Sigma)\). The loadings being unit-norm,
+\(|u_t^\top \Sigma u_s|\) scales linearly with \(\Sigma\), so normalization
+makes the uncorrelatedness terms scale invariant.</p>
+<p>Note that <code>feasibility_violation</code> (returned by the solver) is the quantity compared
+against <code>feasibilityTolerance</code> during the fit.</p>
     </div>
 
     <div class="section level2">
@@ -231,7 +243,7 @@ the redundancy diagnostic.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> msPCA summary: 2 sparse PC(s)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Input type   : Sigma </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Runtime (s)  : 0.024 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Runtime (s)  : 0.045 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Constraint   : orthogonality (as fitted) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Per-component statistics:</span>

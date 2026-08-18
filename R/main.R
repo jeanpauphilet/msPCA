@@ -8,9 +8,201 @@
 
 ## 0 - Internal helpers (not exported) ------------------------------------------
 
+## 0.1 - Scalar/vector argument validators --------------------------------------
+#
+# `r`, `ks`/`k`, the iteration and restart budgets and the time limits are passed
+# straight to the C++ layer, which takes them as `int`. That conversion is silent
+# and lossy: a fractional value is truncated toward zero, and NA/NaN becomes
+# NA_INTEGER (i.e. INT_MIN). Downstream, `truncateVector()` forms the iterator
+# `idx.begin() + k`, so a cardinality that is zero, negative or NA is at best a
+# degenerate all-zero loading vector and at worst undefined behaviour. Rejecting
+# these values here, in R, is the only place the user gets a message they can act
+# on, so the checks below are deliberately strict about type and range.
+#
+# Doubles that happen to be whole numbers are accepted throughout: `r = 2` and
+# `ks = c(4, 4)` are doubles in R, and are the form used in the documentation and
+# examples, so requiring an integer type would reject the package's own usage.
+
+# Is `x` a whole number, up to floating-point slack? Vectorized; NA/NaN/Inf give
+# NA, so callers must screen for finiteness first.
+.is_whole <- function(x, tol = .Machine$double.eps^0.5) {
+  abs(x - round(x)) < tol
+}
+
+# A single count: numeric, length 1, finite, whole, >= `min`, and representable
+# as an int (the C++ layer's parameter type). Returns the value as an integer.
+.validate_count <- function(x, name, min = 1L) {
+  if (!is.numeric(x) || length(x) != 1L) {
+    stop(sprintf("`%s` must be a single number.", name), call. = FALSE)
+  }
+  if (!is.finite(x)) {
+    stop(sprintf("`%s` must be a finite number (got %s).", name, format(x)), call. = FALSE)
+  }
+  if (!.is_whole(x)) {
+    stop(sprintf("`%s` must be a whole number (got %s).", name, format(x)), call. = FALSE)
+  }
+  if (x < min) {
+    stop(sprintf("`%s` must be >= %d (got %s).", name, as.integer(min), format(x)), call. = FALSE)
+  }
+  if (x > .Machine$integer.max) {
+    stop(sprintf("`%s` must be <= %d (got %s).", name, .Machine$integer.max, format(x)),
+         call. = FALSE)
+  }
+  invisible(as.integer(round(x)))
+}
+
+# A vector of target sparsity levels: numeric, non-empty, all finite, all whole,
+# all >= 1, all representable as int. `len`, when given, fixes the required
+# length. Returns the values as integers.
+.validate_cardinality <- function(x, name, len = NULL) {
+  if (!is.numeric(x) || length(x) == 0L) {
+    stop(sprintf("`%s` must be a numeric vector with at least one element.", name),
+         call. = FALSE)
+  }
+  if (!is.null(len) && length(x) != len) {
+    stop(sprintf("`%s` must be a single number (got a vector of length %d).",
+                 name, length(x)), call. = FALSE)
+  }
+  bad <- which(!is.finite(x))
+  if (length(bad) > 0L) {
+    stop(sprintf("`%s` must not contain NA, NaN or Inf (element(s) %s).",
+                 name, paste(bad, collapse = ", ")), call. = FALSE)
+  }
+  bad <- which(!.is_whole(x))
+  if (length(bad) > 0L) {
+    stop(sprintf("`%s` must contain whole numbers; element(s) %s are fractional (%s).",
+                 name, paste(bad, collapse = ", "),
+                 paste(format(x[bad]), collapse = ", ")), call. = FALSE)
+  }
+  bad <- which(x < 1)
+  if (length(bad) > 0L) {
+    stop(sprintf(paste0("`%s` must be >= 1; element(s) %s are %s. A sparsity level of zero ",
+                        "or less does not define a principal component."),
+                 name, paste(bad, collapse = ", "),
+                 paste(format(x[bad]), collapse = ", ")), call. = FALSE)
+  }
+  if (any(x > .Machine$integer.max)) {
+    stop(sprintf("`%s` must be <= %d.", name, .Machine$integer.max), call. = FALSE)
+  }
+  invisible(as.integer(round(x)))
+}
+
+# A tolerance: numeric, length 1, not NA, non-negative. `Inf` is accepted and
+# meaningful -- `feasibilityTolerance = Inf` accepts any solution as feasible,
+# `stallingTolerance = Inf` stops after the first outer iteration -- because both
+# reach C++ as a `double`.
+.validate_tolerance <- function(x, name) {
+  if (!is.numeric(x) || length(x) != 1L) {
+    stop(sprintf("`%s` must be a single number.", name), call. = FALSE)
+  }
+  if (is.na(x)) {
+    stop(sprintf("`%s` must not be NA or NaN.", name), call. = FALSE)
+  }
+  if (x < 0) {
+    stop(sprintf("`%s` must be >= 0 (got %s).", name, format(x)), call. = FALSE)
+  }
+  invisible(as.numeric(x))
+}
+
+# A time limit in seconds: numeric, length 1, finite, non-negative, representable
+# as an int. Unlike the tolerances, `Inf` is NOT accepted: the C++ parameter is an
+# `int`, so `Inf` would arrive as NA_INTEGER (INT_MIN) and silently disable the
+# random restarts entirely -- the opposite of "no time limit". Use a large finite
+# value instead. Fractional seconds are rejected for the same reason: they would
+# be truncated toward zero without notice.
+.validate_time_limit <- function(x, name) {
+  if (!is.numeric(x) || length(x) != 1L) {
+    stop(sprintf("`%s` must be a single number.", name), call. = FALSE)
+  }
+  if (!is.finite(x)) {
+    stop(sprintf(paste0("`%s` must be a finite number of seconds (got %s). The solver takes ",
+                        "the time limit as an integer, so `Inf` and `NA` cannot be passed ",
+                        "through; use a large finite value to effectively disable it."),
+                 name, format(x)), call. = FALSE)
+  }
+  if (!.is_whole(x)) {
+    stop(sprintf("`%s` must be a whole number of seconds (got %s).", name, format(x)),
+         call. = FALSE)
+  }
+  if (x < 0) {
+    stop(sprintf("`%s` must be >= 0 (got %s).", name, format(x)), call. = FALSE)
+  }
+  if (x > .Machine$integer.max) {
+    stop(sprintf("`%s` must be <= %d seconds.", name, .Machine$integer.max), call. = FALSE)
+  }
+  invisible(as.integer(round(x)))
+}
+
+# An on/off switch: a single, non-NA TRUE/FALSE, or the numeric 0/1 that users
+# reasonably expect to work. Returns a real logical, so callers can branch on the
+# result directly.
+#
+# This exists because `isTRUE()` is the wrong tool for a user-supplied switch. It
+# is deliberately strict -- `isTRUE(1)` and `isTRUE(1L)` are both FALSE -- so
+# `if (isTRUE(checkPSD))` silently *skips* the check when the user writes
+# `checkPSD = 1`, i.e. it fails in the unsafe direction with no message. Anything
+# that is neither a logical nor an unambiguous 0/1 (a string, a longer vector, NA,
+# 2) is rejected outright rather than being quietly read as FALSE.
+.validate_flag <- function(x, name) {
+  if (is.logical(x) && length(x) == 1L && !is.na(x)) {
+    return(x)
+  }
+  if (is.numeric(x) && length(x) == 1L && !is.na(x) && (x == 0 || x == 1)) {
+    return(x == 1)
+  }
+  stop(sprintf(paste0("`%s` must be a single TRUE or FALSE (the numbers 0 and 1 are also ",
+                      "accepted). Got: %s."),
+               name,
+               if (length(x) != 1L) sprintf("%s of length %d", class(x)[1L], length(x))
+               else paste0(class(x)[1L], " ", format(x))),
+       call. = FALSE)
+}
+
+# Centralized validation of the solver arguments, shared by mspca() and tpm().
+#
+# `nPC` is the requested number of components, or NULL for tpm(), which fits a
+# single one. `restarts` and `tolerances` are named lists so that the message
+# names the argument the user actually typed (`timeLimitTPM` in mspca(),
+# `timeLimit` in tpm()) rather than an internal one.
+#
+# Note on lengths: `length(ks) < r` is deliberately left to the solver, which
+# warns and runs for `length(ks)` components. Only `length(ks) > r` is rejected
+# here, because those entries are currently dropped without any message.
+.validate_solver_args <- function(cardinality, cardinalityName, nPC = NULL,
+                                  maxIter, timeLimit, timeLimitName,
+                                  restarts = list(), tolerances = list()) {
+  if (is.null(nPC)) {
+    .validate_cardinality(cardinality, cardinalityName, len = 1L)
+  } else {
+    r_int  <- .validate_count(nPC, "r", min = 1L)
+    ks_int <- .validate_cardinality(cardinality, cardinalityName)
+    if (length(ks_int) > r_int) {
+      stop(sprintf(paste0("`%s` has %d elements but only %d principal component(s) were ",
+                          "requested via `r`. Supply one sparsity level per component, or ",
+                          "increase `r`."),
+                   cardinalityName, length(ks_int), r_int), call. = FALSE)
+    }
+  }
+  .validate_count(maxIter, "maxIter", min = 1L)
+  .validate_time_limit(timeLimit, timeLimitName)
+  # A restart budget of zero is legitimate: it means "no random restarts, use the
+  # seeded run only", which the solver handles correctly.
+  for (nm in names(restarts))   .validate_count(restarts[[nm]], nm, min = 0L)
+  for (nm in names(tolerances)) .validate_tolerance(tolerances[[nm]], nm)
+  invisible(TRUE)
+}
+
+
+## 0.2 - Matrix validators ------------------------------------------------------
+
 # Validate a covariance/correlation matrix (type = "Sigma"): square, finite,
 # symmetric, (optionally) PSD.
 .validate_sigma_matrix <- function(M, symTolerance = 1e-8, psdTolerance = 1e-8, checkPSD = TRUE) {
+  # Coerced here as well as at the entry points, so the helper is safe to call
+  # directly. .validate_flag() is idempotent on a proper logical.
+  checkPSD     <- .validate_flag(checkPSD, "checkPSD")
+  symTolerance <- .validate_tolerance(symTolerance, "symTolerance")
+  psdTolerance <- .validate_tolerance(psdTolerance, "psdTolerance")
   if (!is.matrix(M) || !is.numeric(M)) {
     stop("With `type = \"Sigma\"`, `M` must be a numeric matrix.", call. = FALSE)
   }
@@ -23,7 +215,7 @@
   if (max(abs(M - t(M))) > symTolerance) {
     stop("With `type = \"Sigma\"`, `M` is not symmetric within `symTolerance`.", call. = FALSE)
   }
-  if (isTRUE(checkPSD)) {
+  if (checkPSD) {
     smallest <- min(eigen(M, symmetric = TRUE, only.values = TRUE)$values)
     if (smallest < -psdTolerance) {
       stop(sprintf(paste0("With `type = \"Sigma\"`, `M` is not positive semidefinite (smallest eigenvalue %.3e < -psdTolerance). ",
@@ -36,6 +228,7 @@
 
 # Validate a raw data matrix (type = "X"): n observations x p variables.
 .validate_x_matrix <- function(M, scale = FALSE) {
+  scale <- .validate_flag(scale, "scale")
   if (!is.matrix(M) || !is.numeric(M)) {
     stop("With `type = \"X\"`, `M` must be a numeric matrix (rows = observations, columns = variables).", call. = FALSE)
   }
@@ -45,7 +238,7 @@
   if (nrow(M) < 2L) {
     stop("With `type = \"X\"`, `M` must have at least 2 rows (observations).", call. = FALSE)
   }
-  if (isTRUE(scale)) {
+  if (scale) {
     col_var <- apply(M, 2, stats::var)
     if (any(col_var == 0)) {
       stop("`M` has zero-variance column(s); cannot scale to a correlation matrix. Set `scale = FALSE` or drop these columns.", call. = FALSE)
@@ -60,6 +253,11 @@
 # implicit covariance invDivisor * Xproc^T Xproc equals cov(M); with scale = TRUE
 # it equals cor(M).
 .preprocess_x <- function(M, center = TRUE, scale = FALSE, divisor = c("n-1", "n")) {
+  # base::scale() reads a numeric `center`/`scale` as a per-column vector, so an
+  # uncoerced 0/1 would either error about column counts or silently divide by 1
+  # instead of standardizing. Coerce to logical first.
+  center  <- .validate_flag(center, "center")
+  scale   <- .validate_flag(scale,  "scale")
   divisor <- match.arg(divisor)
   nObs <- nrow(M)
   Xproc <- base::scale(M, center = center, scale = scale)
@@ -150,22 +348,44 @@
 #'   correlation matrix (p x p) when `type = "Sigma"`, or a raw data matrix
 #'   (n x p) when `type = "X"`.
 #' @param r An integer. Number of principal components (PCs) to be computed.
-#' @param ks An integer vector. Target sparsity of each PC.
+#'   Must be a single whole number greater than or equal to 1.
+#' @param ks An integer vector. Target sparsity of each PC. Every element must be
+#'   a whole number greater than or equal to 1 (a sparsity level of zero or less
+#'   does not define a component and is rejected). `length(ks)` must not exceed
+#'   `r`; if it is shorter than `r`, a warning is issued and the algorithm is run
+#'   for `length(ks)` PCs.
 #' @param type (optional) Either "Sigma" (default; `M` is a covariance/correlation matrix) or "X" (`M` is a raw data matrix).
 #' @param feasibilityConstraintType (optional) An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. Default 0.
-#' @param verbose (optional) A Boolean. Controls console output. Default TRUE.
-#' @param maxIter (optional) An integer. Maximum number of iterations of the algorithm. Default 200.
-#' @param feasibilityTolerance (optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to `feasibilityConstraintType`). Under uncorrelatedness the violation is normalized by the total variance `tr(Sigma)`. Default 1e-4.
-#' @param stallingTolerance (optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8.
-#' @param timeLimitTPM (optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.
-#' @param maxRestartTPM (optional) An integer. Number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 30.
-#' @param minRestartTPM (optional) An integer. Number of random restarts of the truncated power method (inner iteration) for outer iterations >= 2. Default 20.
-#' @param center (optional, type = "X") A Boolean. Center the columns of `M` before computing the covariance. Default TRUE.
-#' @param scale (optional, type = "X") A Boolean. Scale the columns of `M` to unit variance, i.e. operate on the correlation matrix. Default TRUE.
+#' @param verbose (optional) A Boolean. Controls console output. `TRUE`/`FALSE`
+#'   or the numbers 0/1; any other value is an error. Default TRUE.
+#' @param maxIter (optional) An integer. Maximum number of iterations of the
+#'   algorithm. Must be a whole number greater than or equal to 1. Default 200.
+#' @param feasibilityTolerance (optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to `feasibilityConstraintType`). Under uncorrelatedness the violation is normalized by the total variance `tr(Sigma)`. Must be non-negative; `Inf` is allowed and accepts any solution as feasible. Default 1e-4.
+#' @param stallingTolerance (optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Must be non-negative; `Inf` is allowed. Default 1e-8.
+#' @param timeLimitTPM (optional) An integer. Maximum time in seconds for the
+#'   truncated power method (inner iteration). Must be a finite, non-negative
+#'   whole number; `Inf` is not accepted, so use a large finite value to
+#'   effectively disable the limit. Default 20.
+#' @param maxRestartTPM (optional) An integer. Number of random restarts of the
+#'   truncated power method (inner iteration) for the first outer iteration. Must
+#'   be a whole number greater than or equal to 0; zero means no random restarts.
+#'   Default 30.
+#' @param minRestartTPM (optional) An integer. Number of random restarts of the
+#'   truncated power method (inner iteration) for outer iterations >= 2. Must be a
+#'   whole number greater than or equal to 0. Default 20.
+#' @param center (optional, type = "X") A Boolean. Center the columns of `M`
+#'   before computing the covariance. `TRUE`/`FALSE` or the numbers 0/1. Default TRUE.
+#' @param scale (optional, type = "X") A Boolean. Scale the columns of `M` to unit
+#'   variance, i.e. operate on the correlation matrix. `TRUE`/`FALSE` or the
+#'   numbers 0/1. Default TRUE.
 #' @param divisor (optional, type = "X") Either "n-1" (default, sample covariance, matches `cov`/`cor`) or "n" (population covariance). Default "n-1".
-#' @param checkPSD (optional, type = "Sigma") A Boolean. Verify that `M` is positive semidefinite. Default TRUE.
-#' @param symTolerance (optional, type = "Sigma") A float. Tolerance for the symmetry  check on `M`. Default 1e-8.
-#' @param psdTolerance (optional, type = "Sigma") A float. Tolerance (on the smallest eigenvalue) for the PSD check on `M`. Default 1e-8.
+#' @param checkPSD (optional, type = "Sigma") A Boolean. Verify that `M` is
+#'   positive semidefinite. `TRUE`/`FALSE` or the numbers 0/1; any other value is
+#'   an error. Default TRUE.
+#' @param symTolerance (optional, type = "Sigma") A float. Tolerance for the
+#'   symmetry check on `M`. Must be non-negative. Default 1e-8.
+#' @param psdTolerance (optional, type = "Sigma") A float. Tolerance (on the
+#'   smallest eigenvalue) for the PSD check on `M`. Must be non-negative. Default 1e-8.
 #' @return An object of class `"mspca"` (a list) with fields: `x_best` (p x r
 #'   matrix of sparse PC loadings), `objective_value`, `feasibility_violation`,
 #'   `runtime`, `variance_explained` (per-PC explained variance),
@@ -208,11 +428,30 @@ mspca <- function(M, r, ks, type = c("Sigma", "X"),
                   center = TRUE, scale = TRUE, divisor = c("n-1", "n"),
                   checkPSD = TRUE, symTolerance = 1e-8, psdTolerance = 1e-8) {
   type <- match.arg(type)
+  if (!is.numeric(feasibilityConstraintType) || length(feasibilityConstraintType) != 1L ||
+      !is.finite(feasibilityConstraintType)) {
+    stop("`feasibilityConstraintType` must be 0 (orthogonality) or 1 (uncorrelatedness).",
+         call. = FALSE)
+  }
   feasibilityConstraintType <- as.integer(feasibilityConstraintType)
   if (!feasibilityConstraintType %in% c(0L, 1L)) {
     stop("`feasibilityConstraintType` must be 0 (orthogonality) or 1 (uncorrelatedness).",
          call. = FALSE)
   }
+  .validate_solver_args(
+    cardinality = ks, cardinalityName = "ks", nPC = r,
+    maxIter = maxIter, timeLimit = timeLimitTPM, timeLimitName = "timeLimitTPM",
+    restarts   = list(maxRestartTPM = maxRestartTPM, minRestartTPM = minRestartTPM),
+    tolerances = list(feasibilityTolerance = feasibilityTolerance,
+                      stallingTolerance    = stallingTolerance)
+  )
+  # Coerce the on/off switches once, here, so that every downstream use -- the
+  # `bool` parameters of the solver, base::scale(), and the values recorded on the
+  # fitted object -- sees a real logical rather than whatever the user passed.
+  verbose  <- .validate_flag(verbose,  "verbose")
+  center   <- .validate_flag(center,   "center")
+  scale    <- .validate_flag(scale,    "scale")
+  checkPSD <- .validate_flag(checkPSD, "checkPSD")
   if (type == "Sigma") {
     .validate_sigma_matrix(M, symTolerance, psdTolerance, checkPSD)
     res <- iterativeDeflationHeuristic(M, r, ks, feasibilityConstraintType,
@@ -263,18 +502,27 @@ mspca <- function(M, r, ks, type = c("Sigma", "X"),
 #' @param M A matrix. The data, interpreted according to `type`: a covariance/
 #'   correlation matrix (p x p) when `type = "Sigma"`, or a raw data matrix
 #'   (n x p) when `type = "X"`.
-#' @param k An integer. Target sparsity of the PC.
+#' @param k An integer. Target sparsity of the PC. Must be a single whole number
+#'   greater than or equal to 1.
 #' @param type (optional) Either "Sigma" (default; `M` is a covariance/correlation
 #'   matrix) or "X" (`M` is a raw data matrix).
-#' @param maxIter (optional) An integer. Maximum number of iterations of the algorithm. Default 200.
-#' @param verbose (optional) A Boolean. Controls console output. Default TRUE.
-#' @param timeLimit (optional) An integer. Maximum time in seconds. Default 10.
-#' @param center (optional, type = "X") A Boolean. Center the columns of `M`. Default TRUE.
-#' @param scale (optional, type = "X") A Boolean. Scale the columns of `M` to unit variance. Default TRUE.
+#' @param maxIter (optional) An integer. Maximum number of iterations of the
+#'   algorithm. Must be a whole number greater than or equal to 1. Default 200.
+#' @param verbose (optional) A Boolean. Controls console output. `TRUE`/`FALSE`
+#'   or the numbers 0/1; any other value is an error. Default TRUE.
+#' @param timeLimit (optional) An integer. Maximum time in seconds. Must be a
+#'   finite, non-negative whole number; `Inf` is not accepted. Default 10.
+#' @param center (optional, type = "X") A Boolean. Center the columns of `M`.
+#'   `TRUE`/`FALSE` or the numbers 0/1. Default TRUE.
+#' @param scale (optional, type = "X") A Boolean. Scale the columns of `M` to unit
+#'   variance. `TRUE`/`FALSE` or the numbers 0/1. Default TRUE.
 #' @param divisor (optional, type = "X") Either "n-1" (default) or "n".
-#' @param checkPSD (optional, type = "Sigma") A Boolean. Verify `M` is PSD. Default TRUE.
-#' @param symTolerance (optional, type = "Sigma") A float. Symmetry-check tolerance. Default 1e-8.
-#' @param psdTolerance (optional, type = "Sigma") A float. PSD-check tolerance. Default 1e-8.
+#' @param checkPSD (optional, type = "Sigma") A Boolean. Verify `M` is PSD.
+#'   `TRUE`/`FALSE` or the numbers 0/1; any other value is an error. Default TRUE.
+#' @param symTolerance (optional, type = "Sigma") A float. Symmetry-check
+#'   tolerance. Must be non-negative. Default 1e-8.
+#' @param psdTolerance (optional, type = "Sigma") A float. PSD-check tolerance.
+#'   Must be non-negative. Default 1e-8.
 #' @return An object of class `"tpm"` (a list) with fields: `x_best` (p x 1
 #'   matrix containing the sparse PC loading), `objective_value`, and `runtime`.
 #'   With `type = "X"` it additionally records `inputType`, `center`, `scale`,
@@ -290,6 +538,14 @@ tpm <- function(M, k, type = c("Sigma", "X"),
                 center = TRUE, scale = TRUE, divisor = c("n-1", "n"),
                 checkPSD = TRUE, symTolerance = 1e-8, psdTolerance = 1e-8) {
   type <- match.arg(type)
+  .validate_solver_args(
+    cardinality = k, cardinalityName = "k", nPC = NULL,
+    maxIter = maxIter, timeLimit = timeLimit, timeLimitName = "timeLimit"
+  )
+  verbose  <- .validate_flag(verbose,  "verbose")
+  center   <- .validate_flag(center,   "center")
+  scale    <- .validate_flag(scale,    "scale")
+  checkPSD <- .validate_flag(checkPSD, "checkPSD")
   if (type == "Sigma") {
     .validate_sigma_matrix(M, symTolerance, psdTolerance, checkPSD)
     res <- truncatedPowerMethod(M, k, maxIter, verbose, timeLimit)

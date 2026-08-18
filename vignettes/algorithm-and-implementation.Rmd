@@ -91,9 +91,8 @@ both computed by `feasibility_violation_off()`. The second is normalized by the 
 variance $\mathrm{tr}(\boldsymbol{C})$: the loading vectors are unit-norm, so
 $|\boldsymbol{u}_t^\top \boldsymbol{C} \boldsymbol{u}_{t'}|$ is homogeneous of degree one in
 $\boldsymbol{C}$ and the unnormalized sum would depend on the units of the data. After
-normalization each pairwise term reads as a fraction of the total variance, and a fixed
-`feasibilityTolerance` means the same thing for a covariance matrix and for the corresponding
-correlation matrix. The same convention is used inside the solver, and for the
+normalization each pairwise term reads as a fraction of the total variance, hence is scale-invariant. 
+The same convention is used inside the solver, and for the
 `nonredundancy` matrices stored on the fitted object.
 
 ## Lagrangian alternating maximization

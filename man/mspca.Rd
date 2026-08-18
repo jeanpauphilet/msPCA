@@ -30,39 +30,61 @@ mspca(
 correlation matrix (p x p) when \code{type = "Sigma"}, or a raw data matrix
 (n x p) when \code{type = "X"}.}
 
-\item{r}{An integer. Number of principal components (PCs) to be computed.}
+\item{r}{An integer. Number of principal components (PCs) to be computed.
+Must be a single whole number greater than or equal to 1.}
 
-\item{ks}{An integer vector. Target sparsity of each PC.}
+\item{ks}{An integer vector. Target sparsity of each PC. Every element must be
+a whole number greater than or equal to 1 (a sparsity level of zero or less
+does not define a component and is rejected). \code{length(ks)} must not exceed
+\code{r}; if it is shorter than \code{r}, a warning is issued and the algorithm is run
+for \code{length(ks)} PCs.}
 
 \item{type}{(optional) Either "Sigma" (default; \code{M} is a covariance/correlation matrix) or "X" (\code{M} is a raw data matrix).}
 
 \item{feasibilityConstraintType}{(optional) An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. Default 0.}
 
-\item{verbose}{(optional) A Boolean. Controls console output. Default TRUE.}
+\item{verbose}{(optional) A Boolean. Controls console output. \code{TRUE}/\code{FALSE}
+or the numbers 0/1; any other value is an error. Default TRUE.}
 
-\item{maxIter}{(optional) An integer. Maximum number of iterations of the algorithm. Default 200.}
+\item{maxIter}{(optional) An integer. Maximum number of iterations of the
+algorithm. Must be a whole number greater than or equal to 1. Default 200.}
 
-\item{feasibilityTolerance}{(optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to \code{feasibilityConstraintType}). Under uncorrelatedness the violation is normalized by the total variance \code{tr(Sigma)}, so the tolerance carries the same meaning whether \code{M} is a covariance or a correlation matrix. Default 1e-4.}
+\item{feasibilityTolerance}{(optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to \code{feasibilityConstraintType}). Under uncorrelatedness the violation is normalized by the total variance \code{tr(Sigma)}. Must be non-negative; \code{Inf} is allowed and accepts any solution as feasible. Default 1e-4.}
 
-\item{stallingTolerance}{(optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8.}
+\item{stallingTolerance}{(optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Must be non-negative; \code{Inf} is allowed. Default 1e-8.}
 
-\item{timeLimitTPM}{(optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.}
+\item{timeLimitTPM}{(optional) An integer. Maximum time in seconds for the
+truncated power method (inner iteration). Must be a finite, non-negative
+whole number; \code{Inf} is not accepted, so use a large finite value to
+effectively disable the limit. Default 20.}
 
-\item{maxRestartTPM}{(optional) An integer. Number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 30.}
+\item{maxRestartTPM}{(optional) An integer. Number of random restarts of the
+truncated power method (inner iteration) for the first outer iteration. Must
+be a whole number greater than or equal to 0; zero means no random restarts.
+Default 30.}
 
-\item{minRestartTPM}{(optional) An integer. Number of random restarts of the truncated power method (inner iteration) for outer iterations >= 2. Default 20.}
+\item{minRestartTPM}{(optional) An integer. Number of random restarts of the
+truncated power method (inner iteration) for outer iterations >= 2. Must be a
+whole number greater than or equal to 0. Default 20.}
 
-\item{center}{(optional, type = "X") A Boolean. Center the columns of \code{M} before computing the covariance. Default TRUE.}
+\item{center}{(optional, type = "X") A Boolean. Center the columns of \code{M}
+before computing the covariance. \code{TRUE}/\code{FALSE} or the numbers 0/1. Default TRUE.}
 
-\item{scale}{(optional, type = "X") A Boolean. Scale the columns of \code{M} to unit variance, i.e. operate on the correlation matrix. Default TRUE.}
+\item{scale}{(optional, type = "X") A Boolean. Scale the columns of \code{M} to unit
+variance, i.e. operate on the correlation matrix. \code{TRUE}/\code{FALSE} or the
+numbers 0/1. Default TRUE.}
 
 \item{divisor}{(optional, type = "X") Either "n-1" (default, sample covariance, matches \code{cov}/\code{cor}) or "n" (population covariance). Default "n-1".}
 
-\item{checkPSD}{(optional, type = "Sigma") A Boolean. Verify that \code{M} is positive semidefinite. Default TRUE.}
+\item{checkPSD}{(optional, type = "Sigma") A Boolean. Verify that \code{M} is
+positive semidefinite. \code{TRUE}/\code{FALSE} or the numbers 0/1; any other value is
+an error. Default TRUE.}
 
-\item{symTolerance}{(optional, type = "Sigma") A float. Tolerance for the symmetry  check on \code{M}. Default 1e-8.}
+\item{symTolerance}{(optional, type = "Sigma") A float. Tolerance for the
+symmetry check on \code{M}. Must be non-negative. Default 1e-8.}
 
-\item{psdTolerance}{(optional, type = "Sigma") A float. Tolerance (on the smallest eigenvalue) for the PSD check on \code{M}. Default 1e-8.}
+\item{psdTolerance}{(optional, type = "Sigma") A float. Tolerance (on the
+smallest eigenvalue) for the PSD check on \code{M}. Must be non-negative. Default 1e-8.}
 }
 \value{
 An object of class \code{"mspca"} (a list) with fields: \code{x_best} (p x r
@@ -86,22 +108,11 @@ refitting.
 
 The uncorrelatedness terms are normalized by the total variance
 \eqn{\mathrm{tr}(\Sigma)}. The loadings being unit-norm,
-\eqn{|u_t^\top \Sigma u_s|} scales linearly with \eqn{\Sigma}, so the raw
-quantity - and hence its comparison against \code{feasibilityTolerance} -
-would otherwise depend on the units of the data. After normalization the
-measure is invariant to a rescaling of \eqn{\Sigma} - each pairwise term
-is expressed as a fraction of the total variance - and a covariance and
-a correlation input are on the same footing.
+\eqn{|u_t^\top \Sigma u_s|} scales linearly with \eqn{\Sigma}, so normalization
+makes the uncorrelatedness terms scale invariant.
 
-Note that \code{feasibility_violation} (returned by the solver) and the
-violation reported by \code{\link[=summary.mspca]{summary.mspca()}} are \emph{different statistics}:
-the former sums over all pairs \eqn{t \ge s} and so includes the
-normalization terms \eqn{|u_t^\top u_t - 1|} on the diagonal (under both
-constraint types, the diagonal terms are the unit-norm residuals),
-whereas the latter is the strictly off-diagonal sum returned by
-\code{\link[=feasibility_violation_off]{feasibility_violation_off()}}. The solver value is the quantity compared
-against \code{feasibilityTolerance} during the fit; the off-diagonal value is
-the redundancy diagnostic.
+Note that \code{feasibility_violation} (returned by the solver) is the quantity compared
+against \code{feasibilityTolerance} during the fit.
 }
 \description{
 Returns multiple sparse principal components of a dataset using an iterative

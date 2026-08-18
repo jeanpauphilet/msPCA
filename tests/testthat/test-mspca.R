@@ -118,6 +118,39 @@ test_that("mspca warns when no feasible solution is found", {
   expect_true(is.finite(res$objective_value))
 })
 
+test_that("infeasibility warning reports numeric values, not truncated integers", {
+  # Regression guard: Rcpp::warning() routes through tinyformat, which silently
+  # truncates a double to int for %i/%d instead of erroring or warning at compile
+  # time. A tolerance below 1 therefore renders as "0" under the buggy format and
+  # only round-trips correctly under %g / %.3e. Nothing in the toolchain catches
+  # this, so the message text is the only place it can be detected.
+  tol <- 1e-12
+  msgs <- character(0)
+  withCallingHandlers(
+    mspca(Sigma, r = 2L, ks = c(1L, 1L), maxIter = 1L,
+          feasibilityConstraintType = 1L, feasibilityTolerance = tol,
+          verbose = FALSE),
+    warning = function(w) {
+      msgs <<- c(msgs, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  hit <- grep("terminated without finding a feasible solution", msgs, value = TRUE)
+  expect_length(hit, 1L)
+  msg <- hit[[1L]]
+
+  # The requested tolerance is an input we control, so pin it exactly.
+  expect_match(msg, "within 1\\.000e-12 tolerance")
+
+  # The achieved violation is algorithm- and BLAS-dependent, so assert only that
+  # it parses as a finite number above the tolerance -- never its digits.
+  expect_match(msg, "feasibility violation of [0-9.]+e[+-][0-9]+")
+  v <- as.numeric(sub(".*feasibility violation of ([0-9.eE+-]+)\\..*", "\\1", msg))
+  expect_true(is.finite(v))
+  expect_gt(v, tol)
+})
+
 # ---------- X path -----------------------------------------------------------
 
 test_that("mspca (X) returns an object of class 'mspca'", {

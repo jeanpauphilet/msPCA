@@ -104,7 +104,7 @@ of that PC against any other PC).</p></dd>
 <dt><code>feasibility_mat</code></dt>
 <dd><p>r x r matrix of pairwise violations
 (\(|u_i^\top u_j|\) or
-\(|u_i^\top \Sigma u_j| \big/ (\mathrm{tr}(\Sigma)/p)\)).
+\(|u_i^\top \Sigma u_j| \big/ \mathrm{tr}(\Sigma)\)).
 Diagonal and lower triangle are <code>NA</code>.</p></dd>
 
 <dt><code>feasibility</code></dt>
@@ -157,7 +157,7 @@ resulting figure does not describe a constraint the solver enforced.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> msPCA summary: 2 sparse PC(s)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Input type   : Sigma </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Runtime (s)  : 0.009 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Runtime (s)  : 0.017 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Constraint   : orthogonality (as fitted) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Per-component statistics:</span>
@@ -179,7 +179,7 @@ resulting figure does not describe a constraint the solver enforced.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> msPCA summary: 2 sparse PC(s)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Input type   : Sigma </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Runtime (s)  : 0.205 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Runtime (s)  : 0.619 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Constraint   : uncorrelatedness (as fitted) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Per-component statistics:</span>
