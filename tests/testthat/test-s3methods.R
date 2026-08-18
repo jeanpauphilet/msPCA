@@ -128,7 +128,7 @@ test_that("mspca stores both non-redundancy matrices, correctly oriented", {
 # full so the tests do not simply mirror the internal helpers.
 ref_ortho <- function(v, i, j) abs(sum(v[, i] * v[, j]))
 ref_uncor <- function(v, C, i, j) {
-  abs(sum(v[, i] * (C %*% v[, j]))) / (sum(diag(C)) / nrow(C))
+  abs(sum(v[, i] * (C %*% v[, j]))) / sum(diag(C))
 }
 
 test_that("stored matrices match a direct recomputation from C", {
@@ -151,9 +151,9 @@ test_that("the X path reproduces the Sigma-path non-redundancy values", {
 
 # ---------- normalization of the uncorrelatedness measure --------------------
 
-test_that("uncorrelatedness violations are normalized by tr(Sigma)/p", {
-  Sc <- stats::cov(as.matrix(datasets::mtcars))   # tr(Sc)/p is far from 1
-  expect_false(isTRUE(all.equal(sum(diag(Sc)) / nrow(Sc), 1)))
+test_that("uncorrelatedness violations are normalized by tr(Sigma)", {
+  Sc <- stats::cov(as.matrix(datasets::mtcars))   # tr(Sc) is far from 1
+  expect_false(isTRUE(all.equal(sum(diag(Sc)), 1)))
   resS <- mspca(Sc, r = 2L, ks = c(4L, 4L), verbose = FALSE)
   v    <- resS$x_best
   expect_equal(resS$nonredundancy$uncorrelatedness[1L, 2L],
@@ -171,9 +171,12 @@ test_that("the uncorrelatedness measure is invariant to a rescaling of Sigma", {
   v  <- mspca(Sc, r = 2L, ks = c(4L, 4L), verbose = FALSE)$x_best
   expect_equal(feasibility_violation_off(Sc,       v, 1L),
                feasibility_violation_off(1000 * Sc, v, 1L))
-  # On a correlation matrix tr(C)/p = 1, so the measure is unchanged from
-  # earlier versions of the package.
-  expect_equal(sum(diag(Cm)) / nrow(Cm), 1)
+  # The normalization is by tr(C), not by the average variance tr(C)/p: on a
+  # correlation matrix tr(C) = p, so the two conventions differ by a factor p.
+  expect_equal(sum(diag(Cm)), ncol(Cm))
+  vc <- mspca(Cm, r = 2L, ks = c(4L, 4L), verbose = FALSE)$x_best
+  expect_equal(feasibility_violation_off(Cm, vc, 1L),
+               abs(crossprod(vc, Cm %*% vc)[1L, 2L]) / sum(diag(Cm)))
 })
 
 test_that("a degenerate zero-trace input does not produce NaN", {
@@ -199,13 +202,13 @@ test_that("summary() defaults to the fitted constraint type, not to orthogonalit
 test_that("summary() reports the uncorrelatedness figure, not the orthogonality one", {
   # Deterministic fixture with hand-computable values, so the assertion cannot
   # pass by accident. With C = diag(4, 1, 1), u1 = (1, 0, 0), u2 = (0.6, 0.8, 0):
-  #   orthogonality    |u1'u2|                  = 0.6
-  #   uncorrelatedness |u1'C u2| / (tr(C)/p)    = 2.4 / 2 = 1.2
+  #   orthogonality    |u1'u2|              = 0.6
+  #   uncorrelatedness |u1'C u2| / tr(C)    = 2.4 / 6 = 0.4
   # Under the old default, summary() of an uncorrelatedness fit reported 0.6.
   C  <- diag(c(4, 1, 1))
   v  <- cbind(c(1, 0, 0), c(0.6, 0.8, 0))
   expect_equal(feasibility_violation_off(C, v, 0L), 0.6)
-  expect_equal(feasibility_violation_off(C, v, 1L), 1.2)
+  expect_equal(feasibility_violation_off(C, v, 1L), 0.4)
 
   obj <- structure(
     list(x_best = v,
@@ -214,7 +217,7 @@ test_that("summary() reports the uncorrelatedness figure, not the orthogonality 
          inputType = "Sigma",
          runtime = 0,
          feasibilityConstraintType = 1L,
-         nonredundancy = .nonredundancy(v, C %*% v, .avg_variance(C))),
+         nonredundancy = .nonredundancy(v, C %*% v, .total_variance(C))),
     class = "mspca")
 
   s <- summary(obj)

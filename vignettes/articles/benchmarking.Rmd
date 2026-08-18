@@ -1,7 +1,7 @@
 ---
 title: "Benchmarking against other sparse PCA packages"
 output: rmarkdown::html_vignette
-bibliography: thebib.bib
+bibliography: ../thebib.bib
 ---
 
 <!--
@@ -15,12 +15,13 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 ```
 
 This vignette gives the benchmarking protocol and results behind the summary in the package
-description. It compares `msPCA` against seven competing implementations on four real datasets,
-and records how each competitor was configured. That configuration matters more than usual here,
-because the packages parameterise sparsity in mutually incompatible ways.
+description. It compares `msPCA` against eight competing implementations, drawn from seven
+packages, on four datasets, and records how each competitor was configured. That configuration
+matters more than usual here, because the packages parameterize sparsity in mutually incompatible
+ways.
 
 Reproducing the comparison requires eight additional R
-packages, `callr`, and a Python installation, and the memory measurements require macOS or Linux.
+packages, plus `callr` and a Python installation, and the memory measurements require macOS or Linux.
 The scripts are in the package repository under
 [`replication/benchmarking/`](https://github.com/jeanpauphilet/msPCA/tree/main/replication/benchmarking).
 
@@ -58,9 +59,9 @@ X_ribo <- as.matrix(riboflavin$x)      # n = 71, p = 4088
 
 ## Methods compared
 
-We compare `msPCA::mspca()` against seven competing packages/eight competing functions. Each entry below names the exact
-function called, not merely the package, since some packages expose more than one sparse PCA
-routine.
+We compare `msPCA::mspca()` against eight functions drawn from seven competing packages. Each
+entry below names the exact function called, not merely the package, since some packages expose
+more than one sparse PCA routine.
 
 | Function | Reference | Language | Approach |
 |---|---|---|---|
@@ -71,7 +72,7 @@ routine.
 | `nsprcomp::nsprcomp()` | @sigg2019nsprcomp | R | expectation-maximization [@sigg2008expectation] + deflation |
 | `nsprcomp::nscumcomp()` | @sigg2019nsprcomp | R | cumulative variant, all components jointly |
 | `amanpg::spca.amanpg()` | @chen2020proximal | R | alternating manifold proximal gradient |
-| `sklearn.decomposition.SparsePCA()` | @pedregosa2011scikit | Python | dictionary learning |
+| `sklearn.decomposition.SparsePCA()` | @pedregosa2011scikit | Python | dictionary learning [@mairal2009online] |
 
 `scikit-learn` is called from R via the `reticulate` package [@ushey2023reticulate]. Together
 these cover the main methodological approaches to sparse PCA: elastic-net regularization,
@@ -82,9 +83,8 @@ Riemannian proximal gradient, and dictionary learning.
 
 The comparison turns on two things that are easy to conflate: how a method gets from one sparse
 component to $r$ of them, and what the parameter the user actually turns is doing. The second
-column below states the mechanism; the last two classify the parameter we tune as controlling
-**sparsity**, **optimization convergence**, an **orthogonality penalty**, or a **feasibility
-tolerance**.
+column below states the mechanism; the last two name the parameter we tune and classify it as
+controlling **sparsity** or as an **orthogonality penalty**.
 
 | Function | Multiple-component mechanism | Parameter tuned | What it controls |
 |---|---|---|---|
@@ -100,18 +100,19 @@ tolerance**.
 
 Compared with `msPCA::mspca()`:
 
-**Only `nsprcomp::nscumcomp()` offers any control over non-redundancy (orthogonality)**, through the soft penalty
-`gamma`, whose default of 0 applies no penalty at all. For a fair comparison, we manually tune `gamma` along a grid: 
-among values bringing the orthogonality violation within 1e-4 (our default tolerance in `msPCA`), we keep the
-one with the highest FVE.
+**Among the competitors, only `nsprcomp::nscumcomp()` offers any control over non-redundancy
+(orthogonality)**, through the soft penalty `gamma`, whose default of 0 applies no penalty at all.
+For a fair comparison, we tune `gamma` along a grid: among the values that bring the orthogonality
+violation within 1e-4 (our default tolerance in `msPCA`), we keep the one with the highest FVE.
 
-**Not all methods control sparsity in the same way.** Counting `msPCA::mspca()`, four methods
-(`elasticnet::spca()`, `mixOmics::spca()`, `nsprcomp::nsprcomp()` and `msPCA::mspca()`) accept an
-exact cardinality per component. The others either expose a penalty parameter that indirectly controls sparsity
+**Not all methods control sparsity in the same way.** Four functions --- `msPCA::mspca()`,
+`elasticnet::spca()`, `mixOmics::spca()` and `nsprcomp::nsprcomp()` --- accept an exact cardinality
+per component. The others expose either a penalty parameter that controls sparsity only indirectly
 (`sparsepca::spca()`, `amanpg::spca.amanpg()`, `sklearn...SparsePCA()`), an $\ell_1$ bound
-(`PMA::SPC()`), or a single cumulative sparisty budget for all the components together (`nsprcomp::nscumcomp()`). 
-For these methods, we manually tune the hyperparameter in order to (i) generate the same number of non-zero components, $r$, 
-and (ii) get as close as possible to the requested total sparsity, $\sum_t \| \boldsymbol{u}_t \|_0$. 
+(`PMA::SPC()`), or a single cumulative sparsity budget covering all components together
+(`nsprcomp::nscumcomp()`). For these methods, we tune the hyperparameter so as to (i) return the
+requested number of non-empty components, $r$, and (ii) come as close as possible to the requested
+total sparsity, $\sum_t k_t$.
 
 ## Environment
 
@@ -134,8 +135,8 @@ require the data matrix, and some take either.
   `sparse = "varnum"`, and applies interchangeably to $\boldsymbol{\Sigma}$ (`type = "Gram"`) or
   $\boldsymbol{X}$ (`type = "predictor"`). We report both input modes on mtcars, Pitprops and breast
   cancer.
-- **`PMA::SPC()`** --- applied to the **data matrix** on all three datasets, as documented
-  (`x` is "a data matrix of dimension $n \times p$", and `SPC()` centres its columns itself). On
+- **`PMA::SPC()`** --- applied to the **data matrix** on mtcars, Pitprops and breast cancer, as
+  documented (`x` is "a data matrix of dimension $n \times p$", and `SPC()` centers its columns itself). On
   Pitprops that means the pseudo-data, since no real data matrix exists. `sumabsv` bounds the
   $\ell_1$ norm of each loading vector (subject to unit $\ell_2$ norm) and must lie between 1
   and $\sqrt{p}$; we tune it per dataset to bring per-component sparsity as close to the target
@@ -173,7 +174,7 @@ violation are always evaluated against the published Pitprops correlation matrix
 the covariance of the pseudo-data.
 
 Every tuning parameter is selected by the scripts rather than fixed by hand: each is swept over a
-grid and the value whose realised sparsity comes closest to the target is kept, with ties broken
+grid and the value whose realized sparsity comes closest to the target is kept, with ties broken
 on FVE and candidates that leave a component empty discarded. The selected values appear beneath
 each table. Tuning is excluded from all reported runtimes and memory figures.
 
@@ -191,13 +192,10 @@ which R's garbage collector observes, so an R-level metric would under-report me
 methods. The **Memory** column below reports the
 working set, defined as the size of the matrix handed to the method plus the additional peak
 RSS the method allocates on top of it. 
-<!-- It does include whatever a package allocates on its first call --- lazy loading of namespaces, compiled code, S4 method tables --- which is on the order of 4 MB. -->
-
 
 Each method is repeated five times with a different seed. All four measured quantities are
-reported as medians. FVE, runtime and memory carry a bracketed min--max range wherever the spread
-is visible at the printed precision; the orthogonality violation carries its worst repetition
-instead, since a feasibility claim stands or falls on the worst case rather than the best.
+reported as medians. For FVE, runtime, and memory, we also report a bracketed min--max range wherever the spread
+is visible at the printed precision; for the orthogonality violation, we report the worst (i.e., largest) value.
 
 ```{r}
 # Representative call pattern; see replication/benchmarking/ for the full scripts.
@@ -234,18 +232,18 @@ reproducible baseline. We extract $r = 3$ sparse PCs targeting $k = 4$ per compo
 Tuning: `sumabsv = 1.85`, `alpha = 0.0045` (`sparsepca`), `lambda1 = c(4.5, 5.4, 0.1)`,
 `alpha = 3.2` (`sklearn`), `gamma = 1e6`.
 
-`nscumcomp` does well here, second only to `nsprcomp` on FVE and comfortably inside the
-feasibility tolerance. However, it achieves a sparsity pattern of (5,5,2) rather than the requested (4,4,4) and 
-it is the only method whose FVE varies across seeds, over 0.798--0.825 in FVE.
+`nscumcomp` does well here: it is within 0.01 FVE of the best sparse method and comfortably inside
+the feasibility tolerance. However, it returns a sparsity pattern of (5,5,2) rather than the
+requested (4,4,4), and it is the only method whose FVE varies across seeds, spanning 0.798--0.825.
 
 Because $p = 11$, every method's numerical working set is a few kilobytes, so the memory column measures
-fixed overheads: most methods sit below 1.6 MB, while `elasticnet`, `sparsepca` and `nscumcomp`
+fixed overheads: most methods sit at or below 1.6 MB, while `elasticnet`, `sparsepca` and `nscumcomp`
 carry a floor of 17--30 MB that is already present at this size.
 
 ### Pitprops
 
 The Pitprops dataset [@jeffers1967two] ($p = 13$ physical measurements on $n = 180$ timber
-specimens) is a classic sparse PCA benchmark [e.g. @zou2006sparse]. We extract $r = 6$ sparse
+specimens) is a classic sparse PCA benchmark [e.g., @zou2006sparse]. We extract $r = 6$ sparse
 PCs targeting $k = 4$ nonzero loadings per component, as in @zou2006sparse.
 
 | Method | $(k_1, \ldots, k_6)$ | FVE | Orth. violation | Runtime (s) | Memory (MB) |
@@ -261,23 +259,23 @@ PCs targeting $k = 4$ nonzero loadings per component, as in @zou2006sparse.
 | `nsprcomp::nscumcomp` | (5,6,5,2,4,2) | 0.819 [0.814, 0.830] | 5.1e-05 (max 1.0e-04) | 1.086 | 65 [64, 129] |
 | `amanpg::spca.amanpg` | (3,3,4,3,4,6) | 0.863 | 1.654 | 0.011 | 4.5 [4.5, 7.2] |
 | `sklearn...SparsePCA` | (7,3,4,3,5,4) | 0.907 | 0.815 | 0.061 | 0.1 [0.1, 0.4] |
-| PCA (dense) | (13,13,13,...) | 0.877 | < 1e-15 | 0.001 | 0.4 |
+| PCA (dense) | (13, ..., 13) | 0.877 | < 1e-15 | 0.001 | 0.4 |
 
 Tuning: `sumabsv = 1.55`, `alpha = 0.005` (`sparsepca`),
 `lambda1 = c(4.80, 4.40, 1.95, 5.50, 0.20, 0.05)`, `alpha = 2.6` (`sklearn`), `gamma = 1e7`.
 
-This dataset is the one where the feasibility differences are starkest. With $p = 13$ and 24 nonzeros coordinates in total,
-disjoint-support solutions do not exist, so methods (like deflation-based methods) that do not explicitly enforce
-orthogonality struggle:
+This dataset is the one where the feasibility differences are starkest. With $p = 13$ and 24
+nonzero coordinates in total, disjoint-support solutions do not exist, so methods that do not
+explicitly enforce orthogonality --- the deflation-based ones in particular --- struggle:
 at the requested cardinality `elasticnet`, `mixOmics` and `nsprcomp` return violations of
 0.215--0.563 against 9.7e-05 for `msPCA`. `nscumcomp` also reaches the tolerance (with
-$\gamma = 10^7$ against a default of 0), but experiences a fortyfold slowdown and fails
-to achieve the desired sparsity.
+$\gamma = 10^7$ against a default of 0), but at a fortyfold slowdown relative to `nsprcomp`
+(1.086 s against 0.025 s) and without achieving the requested sparsity.
 
 Pitprops is also the one case where `type = "X"` is the wrong choice: with $n = 500$
 pseudo-observations and $p = 13$ the data matrix is larger than the correlation matrix, and
-runtime is roughly six times worse. Across seeds `msPCA` ranges over 0.786--0.822 in FVE, the one
-dataset where its random restarts are visible; the orthogonality violation stays below 1e-04
+runtime is roughly six times worse. Across seeds `msPCA` ranges over 0.786--0.822 in FVE, the
+widest spread it shows on any of the four datasets; the orthogonality violation stays below 1e-04
 throughout.
 
 ### Breast cancer gene expression
@@ -305,17 +303,20 @@ $k = 20$ nonzero loadings per component.
 Tuning: `sumabsv = 3.3`, `alpha = 0.0035` (`sparsepca`), `lambda1 = c(4.5, 1.8, 3.3)`,
 `alpha = 15` (`sklearn`), `gamma = 316`.
 
-This is where the penalty-parameterized methods break down most clearly in terms of achieved sparisty. Against a request of
-(20,20,20), `amanpg` returns (68,1,2), `sklearn` (22,3,1) and `sparsepca` (43,14,22); no value on
-their grids does better. Only the four functions taking a per-component cardinality budget return the
-desired sparisty levels. Feasibility, by contrast, is uninformative here: with 60 nonzeros over $p = 500$
-disjoint supports are easy to find, and most methods retunrs solutions that are trivially orthogonal.
+This is where the penalty-parameterized methods break down most clearly in terms of achieved
+sparsity. Against a request of (20,20,20), `amanpg` returns (68,1,2), `sklearn` (22,3,1) and
+`sparsepca` (43,14,22); no value on their grids does better. Only the four functions taking a
+per-component cardinality budget return the desired sparsity levels. Feasibility, by contrast, is
+uninformative here: with 60 nonzeros over $p = 500$ disjoint supports are easy to find, and most
+methods return solutions that are trivially orthogonal. `msPCA` is the exception, at 7.5e-05: it
+stops once the violation is inside its 1e-4 tolerance rather than driving it to zero.
 
 This is the smallest dataset at which the memory column measures the algorithms rather than fixed
-overheads, and `msPCA` is the lightest method that meets the budget: 3.1 MB on the data matrix and
-7.1 MB on the correlation matrix, against 79 and 209 MB for `elasticnet`, 92 MB for `sparsepca`,
-and 48--57 MB for `nsprcomp` and `nscumcomp`. The `type = "X"` saving is modest because
-$\boldsymbol{\Sigma}$ is only about 2 MB at this size.
+overheads, and `msPCA` is the lightest of the methods that meet the budget: 3.1 MB on the data
+matrix and 7.1 MB on the correlation matrix, against 7.0 MB for `mixOmics`, 48 MB for `nsprcomp`,
+and 79 and 209 MB for `elasticnet`. (`sparsepca` at 92 MB and `nscumcomp` at 57 MB do not meet the
+budget.) The `type = "X"` saving is modest because $\boldsymbol{\Sigma}$ is only about 2 MB at this
+size.
 
 ### Riboflavin
 
@@ -341,14 +342,14 @@ takes the data matrix.
 This dataset isolates the benefit of `type = "X"`. Passing the raw data matrix replaces the
 $O(p^2)$ product $\boldsymbol{\Sigma}\boldsymbol{\beta}$ with the $O(np)$ two-pass product
 $\boldsymbol{X}^\top(\boldsymbol{X}\boldsymbol{\beta})/(n-1)$ and never forms the covariance matrix: the working set
-falls from 641 MB to 45 MB and median runtime from 59.5 seconds to 1.8, at identical FVE and
+falls from 641 MB to 45 MB and median runtime from 59.5 seconds to 1.8 seconds, at identical FVE and
 feasibility. The correlation matrix accounts for 128 MB of the difference, the rest being the
 `Eigen` copy of it and the dense intermediates the $O(p^2)$ path requires. Both rows vary by a
 factor of two or more in runtime across seeds, so those ratios are good to one significant figure
 at most.
 
 The memory figures are far steadier: `msPCA` $(\boldsymbol{\Sigma})$ spans 639--642 MB over the same
-repetitions, whereas `elasticnet`'s median has landed anywhere between 309 and 570 MB on repeated
+repetitions, whereas `elasticnet`'s five repetitions span 307--426 MB and its median moves between
 runs of the identical script. `msPCA` allocates in `Eigen`, where the footprint follows from the
 algorithm; the pure-R methods allocate on R's heap, where the peak depends on garbage-collector
 timing. Together with the Pitprops result the rule is just the relative size of the two inputs:
@@ -358,7 +359,8 @@ timing. Together with the Pitprops result the rule is just the relative size of 
 
 **Sparsity control.** `PMA::SPC()`, `sparsepca::spca()`, `nsprcomp::nscumcomp()`,
 `amanpg::spca.amanpg()` and `sklearn.decomposition.SparsePCA()` give no direct control over the
-sparsity of each loading vector. `PMA::SPC()` and `sklearn` expose only a global $\ell_1$ bound;
+sparsity of each loading vector. `PMA::SPC()` exposes only a global $\ell_1$ bound and `sklearn`
+only a global $\ell_1$ penalty;
 `sparsepca::spca()`, `nscumcomp()` and `amanpg` tend to return unbalanced components, with one PC
 carrying most of the budget. None can be calibrated to an exact per-component target, which is
 what makes an apples-to-apples comparison awkward. Where the discussion below needs methods that
@@ -373,22 +375,23 @@ simply because their supports do not overlap. On mtcars ($p = 11$, 12 nonzeros) 
 
 There, `msPCA::mspca()` reaches 1e-4 while returning the requested cardinality exactly, and does
 so at every repetition: the largest violation it produced anywhere in the benchmark is 9.9e-05.
-Two other methods reach the tolerance on one dataset each, both with qualifications.
-`nsprcomp::nscumcomp()` reaches it on both, but only with `gamma` driven to 10^6--10^7, returning
+Two other methods reach the tolerance, both with qualifications.
+`nsprcomp::nscumcomp()` reaches it on both datasets, but only with `gamma` driven to $10^6$--$10^7$, returning
 (5,5,2) and (5,6,5,2,4,2) against budgets of (4,4,4) and (4,4,4,4,4,4), and its worst Pitprops
 repetition is 1.03e-04. `sklearn...SparsePCA()` reaches it on mtcars by returning 11 nonzeros in
 total rather than the requested 12, which at $p = 11$ admits a disjoint solution and so makes
 orthogonality free. Every other method, at the requested cardinality, returns violations between
 0.08 and 0.56 on these two datasets.
 
-The claim supported by this is narrower than "only `msPCA` can be feasible", and more useful: it
-is the only method that delivers feasibility and the requested sparsity together, without a search
-over a penalty parameter to get there.
+The claim supported by this is narrower than "only `msPCA` can be feasible", and more useful: on
+the two datasets where feasibility actually binds, it is the only method that delivers feasibility
+and the requested sparsity together, without a search over a penalty parameter to get there.
 
 **Variance explained.** Among the methods that meet the requested cardinality,
 `msPCA::mspca()` and `nsprcomp::nsprcomp()` are generally the best performers, followed by
-`mixOmics::spca()` and `elasticnet::spca()`. `msPCA` does not appear to sacrifice variance
-explained in order to achieve feasibility.
+`mixOmics::spca()` and `elasticnet::spca()`. The FVE cost of enforcing feasibility therefore looks
+small: the largest gap between `msPCA` and the best budget-respecting competitor is about 0.025
+FVE, on Pitprops, where `nsprcomp` reaches 0.816 at an orthogonality violation of 0.563.
 
 Several methods post higher FVE while missing the budget, and those figures should be read in
 that light: `sklearn...SparsePCA()` reaches 0.907 on Pitprops at (7,3,4,3,5,4) with a violation of
@@ -396,26 +399,24 @@ that light: `sklearn...SparsePCA()` reaches 0.907 on Pitprops at (7,3,4,3,5,4) w
 0.824 on mtcars with (5,5,2), which is both high and feasible, and is the most substantive
 competition in the comparison.
 
-**Reproducibility.** Repeating each method under several seeds separates the deterministic
-implementations (`elasticnet`, `PMA`, `sparsepca`, `mixOmics`, `amanpg`, dense PCA) from the rest.
-`nsprcomp` and `nscumcomp` use random initialisation and move between runs; `nsprcomp`'s
-orthogonality violation on Pitprops spans 0.56--1.10. `msPCA` uses random restarts and is likewise
-not bit-reproducible across seeds, but its variation is confined to the objective. The feasibility
-guarantee holds at every seed on every dataset, the largest violation observed anywhere being
-9.9e-05.
+**Reproducibility.** Repeating each method under several seeds separates the implementations that
+returned identical results at every seed (`elasticnet`, `PMA`, `sparsepca`, `mixOmics`, `amanpg`,
+dense PCA) from the rest. `nsprcomp` and `nscumcomp` use random initialization and move between
+runs; `nsprcomp`'s orthogonality violation on Pitprops spans 0.56--1.10.
+`sklearn...SparsePCA()`, seeded from the repetition's seed, also moves (0.020--0.032 FVE on breast
+cancer). `msPCA` uses random restarts and is likewise not bit-reproducible across seeds, but its
+variation is confined to the objective: the feasibility target was met at every seed on every
+dataset, the largest violation observed anywhere being 9.9e-05.
 
 **Memory.** On the two high-dimensional datasets, where the memory column reflects the
-algorithms rather than fixed overheads, `msPCA` is the lightest of the sparse methods that
+algorithms rather than fixed overheads, `msPCA` is among the lightest of the sparse methods that
 respect an exact cardinality budget. On breast cancer it uses 3.1 MB on the data matrix against
-79 MB for `elasticnet` on the same input and 209 MB in Gram mode, with `sparsepca` at 92 MB and
-`nsprcomp` and `nscumcomp` at 48--57 MB. On riboflavin it uses 45 MB against 309 MB for
-`elasticnet`. Within `msPCA`, the $\boldsymbol{\Sigma}$-versus-$\boldsymbol{X}$ choice matters more than the
-choice of package does between packages: the same function spans 641 MB to 45 MB on riboflavin
-depending on the interface.
-
-Those figures are also more stable than the competitors', for the reason given in the riboflavin
-section. For anyone sizing a job, a predictable memory requirement is worth as much as a small
-one, and the competing figures quoted here should be read as order-of-magnitude.
+79 MB for `elasticnet` on the same input and 209 MB in Gram mode, 7.0 MB for `mixOmics` and 48 MB
+for `nsprcomp` (with `sparsepca` at 92 MB and `nscumcomp` at 57 MB, neither meeting the budget).
+On riboflavin it uses 45 MB against 309 MB for `elasticnet` and 59 MB for `nsprcomp`, though
+`mixOmics` is lighter still at 24 MB. Within `msPCA`, the
+$\boldsymbol{\Sigma}$-versus-$\boldsymbol{X}$ choice matters more than the choice of package: the
+same function spans 641 MB to 45 MB on riboflavin depending on the interface.
 
 **Scalability.** `msPCA::mspca()` scales to datasets with $p$ in the thousands in reasonable
 time, and the `type = "X"` interface yields substantial runtime and memory gains when

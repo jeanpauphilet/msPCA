@@ -53,8 +53,8 @@ $$\max_{\boldsymbol{U} \in \mathbb{R}^{p \times r}} \ \sum_{t=1}^r \boldsymbol{u
 
 Orthogonality corresponds to $\boldsymbol{C} = \mathbb{I}$ and zero correlation to
 $\boldsymbol{C} = \boldsymbol{\Sigma}$. In the zero-correlation case the implementation uses $\boldsymbol{\Sigma}$ divided by
-the average variance $\mathrm{tr}(\boldsymbol{\Sigma})/p$. This leaves the feasible set unchanged and
-makes both the violation measure invariant to a rescaling of the data.
+the total variance $\mathrm{tr}(\boldsymbol{\Sigma})$. This leaves the feasible set unchanged and
+makes the violation measure invariant to a rescaling of the data.
 
 The objective is the sum of per-component variances. Most approaches for sparse PCA with
 multiple PCs use this objective [@zou2006sparse; @journee2010generalized; @lu2012augmented;
@@ -84,16 +84,17 @@ $$\mathrm{viol}_{\mathrm{off}}(\boldsymbol{U}) =
 and under zero pairwise correlation
 
 $$\mathrm{viol}_{\mathrm{off}}(\boldsymbol{C}, \boldsymbol{U}) =
-  \frac{p}{\mathrm{tr}(\boldsymbol{C})}
+  \frac{1}{\mathrm{tr}(\boldsymbol{C})}
   \sum_{t > t'} \left| \boldsymbol{u}_t^\top \boldsymbol{C} \boldsymbol{u}_{t'} \right|,$$
 
-both computed by `feasibility_violation_off()`. The second is normalized by the average
-variance $\mathrm{tr}(\boldsymbol{C})/p$: the loading vectors are unit-norm, so
+both computed by `feasibility_violation_off()`. The second is normalized by the total
+variance $\mathrm{tr}(\boldsymbol{C})$: the loading vectors are unit-norm, so
 $|\boldsymbol{u}_t^\top \boldsymbol{C} \boldsymbol{u}_{t'}|$ is homogeneous of degree one in
-$\boldsymbol{C}$ and the unnormalized sum would depend on the units of the data. With the
-normalization, a fixed `feasibilityTolerance` means the same thing for a covariance matrix and
-for the corresponding correlation matrix. The same convention is used inside the solver, and
-for the `nonredundancy` matrices stored on the fitted object.
+$\boldsymbol{C}$ and the unnormalized sum would depend on the units of the data. After
+normalization each pairwise term reads as a fraction of the total variance, and a fixed
+`feasibilityTolerance` means the same thing for a covariance matrix and for the corresponding
+correlation matrix. The same convention is used inside the solver, and for the
+`nonredundancy` matrices stored on the fitted object.
 
 ## Lagrangian alternating maximization
 
@@ -202,12 +203,30 @@ $\sum_{t > t'} |\boldsymbol{u}_t^\top \boldsymbol{C} \boldsymbol{u}_{t'}|$; for 
 a ratio-based update proportional to the ratio of the current objective to the current
 constraint violation, which produces larger and more decisive increases; during the last 25%
 of iterations the step-size coefficient is further increased by a factor of 5 to accelerate
-final convergence to feasibility. Under the orthogonality constraint the penalties are
-weighted per component by the variance that component explains at the first iteration, so that
-all penalty terms are on a comparable scale regardless of the magnitude of
-$\boldsymbol{\Sigma}$; under the zero-correlation constraint the weights are 1, the scaling of
-$\boldsymbol{C}$ having already done that. See @cory2022sparse
-for a full description and theoretical justification of the update rule.
+final convergence to feasibility. See @cory2022sparse for a full description and theoretical
+justification of the update rule.
+
+**Penalty weights.** We write $\lambda_{t,t'} = \lambda \, w_{t'}$, with a single scalar
+$\lambda$ carrying the schedule above and a per-component weight $w_{t'}$ fixed at the first
+iteration. The weight is
+
+$$w_{t} = \frac{\boldsymbol{u}_t^\top \boldsymbol{\Sigma} \boldsymbol{u}_t}
+               {\|\boldsymbol{C} \boldsymbol{u}_t\|_2^2},$$
+
+the same expression for both constraint types. Its effect is that the penalty a component can
+contribute is bounded by
+$\lambda \, w_{t'} \|\boldsymbol{C} \boldsymbol{u}_{t'}\|_2^2 = \lambda \, \boldsymbol{u}_{t'}^\top \boldsymbol{\Sigma} \boldsymbol{u}_{t'}$,
+i.e. $\lambda$ times the variance that component explains, whichever $\boldsymbol{C}$ is in
+force. The scalar $\lambda$ is thus a dimensionless penalty-to-objective ratio and the schedule
+behaves the same way under both constraints. Under orthogonality $\boldsymbol{C} = \mathbb{I}$ and
+$\|\boldsymbol{u}_t\|_2 = 1$, so $w_t$ is simply the variance explained by component $t$; under
+zero correlation $\boldsymbol{C} = \boldsymbol{\Sigma}/\mathrm{tr}(\boldsymbol{\Sigma})$ and the
+$1/\|\boldsymbol{C} \boldsymbol{u}_t\|_2^2$ factor offsets the shrinkage that normalizing
+$\boldsymbol{\Sigma}$ by its trace would otherwise apply to the penalty. Numerator and
+denominator are homogeneous of the same degree in $\boldsymbol{\Sigma}$, so the weights are
+invariant to a rescaling of the data. With this weight the PSD shift of the previous section
+also takes the common form
+$\lambda_0 = \lambda \sum_{t' \neq t} \boldsymbol{u}_{t'}^\top \boldsymbol{\Sigma} \boldsymbol{u}_{t'}$.
 
 **Termination.** Algorithm 1 stops when the number of outer iterations reaches `maxIter`
 (default 200), or earlier at any iteration where the current solution is feasible and the
@@ -229,7 +248,8 @@ implicitly: each product $\tilde{\boldsymbol{\Sigma}}_t \boldsymbol{\beta}$ is e
 $$\boldsymbol{\Sigma}\boldsymbol{\beta} - \boldsymbol{W}(\boldsymbol{d} \odot \boldsymbol{W}^\top \boldsymbol{\beta}) + \lambda_0 \boldsymbol{\beta},$$
 
 where $\boldsymbol{W}$ collects the previously computed components ($\boldsymbol{u}_{t'}$, $t' \neq t$ for
-orthogonal loadings; $\boldsymbol{\Sigma} \boldsymbol{u}_{t'}$, $t' \neq t$ for uncorrelated PCs) and
+orthogonal loadings; $\boldsymbol{C} \boldsymbol{u}_{t'} = \boldsymbol{\Sigma} \boldsymbol{u}_{t'} / \mathrm{tr}(\boldsymbol{\Sigma})$,
+$t' \neq t$, for uncorrelated PCs) and
 $\boldsymbol{d}$ contains the corresponding scaled penalty coefficients. This eliminates the
 $O(r p^2)$ matrix-build cost per component update while keeping the per-step cost at $O(p^2)$.
 

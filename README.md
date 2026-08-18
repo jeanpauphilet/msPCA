@@ -172,8 +172,8 @@ Covariance-matrix validation arguments (`type = "Sigma"`):
 - `variance_explained_perPC(Sigma, U)`
 - `feasibility_violation_off(Sigma, U, feasibilityConstraintType)`, for scoring
   loadings that did not come from `mspca()`. Under
-  `feasibilityConstraintType = 1` the violation is normalized by the average
-  variance `tr(Sigma)/p`, making it invariant to a rescaling of `Sigma`.
+  `feasibilityConstraintType = 1` the violation is normalized by the total
+  variance `tr(Sigma)`, making it invariant to a rescaling of `Sigma`.
 - `print(sol_object, digits = 3)` / `summary(sol_object)`
 
 ## Included data

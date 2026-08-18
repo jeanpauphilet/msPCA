@@ -75,11 +75,11 @@
   if (identical(as.integer(ctype), 0L)) "orthogonality" else "uncorrelatedness"
 }
 
-# Average variance tr(Sigma)/p, used to normalize the uncorrelatedness
-# violation. Guarded so that a degenerate (zero-trace) input leaves the
-# unnormalized quantity untouched rather than producing Inf/NaN.
-.avg_variance <- function(C) {
-  a <- sum(diag(C)) / nrow(C)
+# Total variance tr(Sigma), used to normalize the uncorrelatedness violation.
+# Guarded so that a degenerate (zero-trace) input leaves the unnormalized
+# quantity untouched rather than producing Inf/NaN.
+.total_variance <- function(C) {
+  a <- sum(diag(C))
   if (is.finite(a) && a > 0) a else 1
 }
 
@@ -89,9 +89,9 @@
 # Two matrices are returned, one per constraint type, so that diagnostics never
 # need the (possibly very large) covariance matrix again:
 #   orthogonality    : |u_t^T u_s|
-#   uncorrelatedness : |u_t^T Sigma u_s| / (tr(Sigma)/p)
-# The uncorrelatedness entries are normalized by the average variance
-# `avgVar` = tr(Sigma)/p: the loadings are unit-norm, so |u_t^T Sigma u_s| is
+#   uncorrelatedness : |u_t^T Sigma u_s| / tr(Sigma)
+# The uncorrelatedness entries are normalized by the total variance
+# `traceSigma` = tr(Sigma): the loadings are unit-norm, so |u_t^T Sigma u_s| is
 # homogeneous of degree one in Sigma and would otherwise depend on the units of
 # the data. This is the same convention the solver uses when comparing the
 # violation against `feasibilityTolerance`.
@@ -99,7 +99,7 @@
 # are set to NA. Both matrices are computed here, after the columns of `v` have
 # been sorted by explained variance, so row/column indices always match the PC
 # order reported by print() and summary().
-.nonredundancy <- function(v, Sv, avgVar = 1) {
+.nonredundancy <- function(v, Sv, traceSigma = 1) {
   r    <- ncol(v)
   labs <- paste0("PC", seq_len(r))
   mask <- function(G) {
@@ -109,9 +109,9 @@
     dimnames(M) <- list(labs, labs)
     M
   }
-  if (!is.finite(avgVar) || avgVar <= 0) avgVar <- 1
+  if (!is.finite(traceSigma) || traceSigma <= 0) traceSigma <- 1
   list(orthogonality    = mask(crossprod(v)),
-       uncorrelatedness = mask(crossprod(v, Sv) / avgVar))
+       uncorrelatedness = mask(crossprod(v, Sv) / traceSigma))
 }
 
 # Total non-redundancy violation: sum of the strict upper triangle.
@@ -158,7 +158,7 @@
 #' @param feasibilityConstraintType (optional) An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. Default 0.
 #' @param verbose (optional) A Boolean. Controls console output. Default TRUE.
 #' @param maxIter (optional) An integer. Maximum number of iterations of the algorithm. Default 200.
-#' @param feasibilityTolerance (optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to `feasibilityConstraintType`). Under uncorrelatedness the violation is normalized by the average variance `tr(Sigma)/p`, so the tolerance carries the same meaning whether `M` is a covariance or a correlation matrix. Default 1e-4.
+#' @param feasibilityTolerance (optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to `feasibilityConstraintType`). Under uncorrelatedness the violation is normalized by the total variance `tr(Sigma)`, so the tolerance carries the same meaning whether `M` is a covariance or a correlation matrix. Default 1e-4.
 #' @param stallingTolerance (optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8.
 #' @param timeLimitTPM (optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.
 #' @param maxRestartTPM (optional) An integer. Number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 30.
@@ -181,19 +181,20 @@
 #'
 #'   `nonredundancy` is a list of two r x r matrices, `orthogonality`
 #'   (\eqn{|u_t^\top u_s|}) and `uncorrelatedness`
-#'   (\eqn{|u_t^\top \Sigma u_s| / (\mathrm{tr}(\Sigma)/p)}), computed once at
+#'   (\eqn{|u_t^\top \Sigma u_s| / \mathrm{tr}(\Sigma)}), computed once at
 #'   fit time from the sorted loadings. Only the strict upper triangle is
 #'   populated; the diagonal and lower triangle are `NA`. Both are stored
 #'   regardless of which constraint was enforced, so a summary under either
 #'   definition is available without the covariance matrix and without
 #'   refitting.
 #'
-#'   The uncorrelatedness terms are normalized by the average variance
-#'   \eqn{\mathrm{tr}(\Sigma)/p}. The loadings being unit-norm,
+#'   The uncorrelatedness terms are normalized by the total variance
+#'   \eqn{\mathrm{tr}(\Sigma)}. The loadings being unit-norm,
 #'   \eqn{|u_t^\top \Sigma u_s|} scales linearly with \eqn{\Sigma}, so the raw
 #'   quantity - and hence its comparison against `feasibilityTolerance` -
 #'   would otherwise depend on the units of the data. After normalization the
-#'   measure is invariant to a rescaling of \eqn{\Sigma}, and a covariance and
+#'   measure is invariant to a rescaling of \eqn{\Sigma} - each pairwise term
+#'   is expressed as a fraction of the total variance - and a covariance and
 #'   a correlation input are on the same footing.
 #'
 #'   Note that `feasibility_violation` (returned by the solver) and the
@@ -258,11 +259,10 @@ mspca <- function(M, r, ks, type = c("Sigma", "X"),
   # Record how the model was fitted, and the diagnostics that depend on the
   # covariance, so that no downstream method needs `M` again.
   res$feasibilityConstraintType <- feasibilityConstraintType
-  # tr(Sigma)/p, the scale by which the uncorrelatedness violations are
+  # tr(Sigma), the scale by which the uncorrelatedness violations are
   # normalized. `total_variance` is tr(Sigma) as computed by the solver, so this
   # holds for both input types without reforming Sigma.
-  avgVar <- res$total_variance / nrow(res$x_best)
-  res$nonredundancy <- .nonredundancy(res$x_best, Sv, avgVar)
+  res$nonredundancy <- .nonredundancy(res$x_best, Sv, res$total_variance)
   class(res) <- "mspca"
   res
 }
@@ -350,7 +350,8 @@ fraction_variance_explained_perPC <- function(C, U){
 
 #' Fraction of Variance Explained
 #'
-#' Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by a set of PCs.
+#' Computes the sum of marginal component variances divided by tr(Σ). 
+#' This equals the variance explained by projection onto the span of U when the columns of U are orthonormal; otherwise it is the normalized sparse-PCA objective.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. The matrix containing the r PCs (p x r).
 #' @return A float.
@@ -367,16 +368,17 @@ fraction_variance_explained <- function(C, U){
 #' Computes the feasibility violation defined as
 #' \eqn{\sum_{t > s} |u_{t}^\top u_{s}|} if orthogonality constraints are
 #' enforced (`feasibilityConstraintType = 0`) and
-#' \eqn{\sum_{t > s} |u_{t}^\top C u_{s}| \big/ (\mathrm{tr}(C)/p)} if
+#' \eqn{\sum_{t > s} |u_{t}^\top C u_{s}| \big/ \mathrm{tr}(C)} if
 #' zero-correlation constraints are enforced
 #' (`feasibilityConstraintType = 1`).
 #'
 #' In the zero-correlation case the pairwise terms are normalized by the
-#' average variance \eqn{\mathrm{tr}(C)/p}. Because the PCs are unit-norm,
+#' total variance \eqn{\mathrm{tr}(C)}. Because the PCs are unit-norm,
 #' \eqn{|u_{t}^\top C u_{s}|} is homogeneous of degree one in `C`, so the
 #' unnormalized quantity depends on the units of the data; dividing by
-#' \eqn{\mathrm{tr}(C)/p} makes it invariant to a rescaling of `C` and hence
-#' comparable across covariance and correlation input. This matches the
+#' \eqn{\mathrm{tr}(C)} makes it invariant to a rescaling of `C` and hence
+#' comparable across covariance and correlation input, each pairwise term
+#' being read as a fraction of the total variance. This matches the
 #' definition used internally by [mspca()] against `feasibilityTolerance`.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. Each column corresponds to a p-dimensional PC.
@@ -390,7 +392,7 @@ feasibility_violation_off <- function(C, U, feasibilityConstraintType){
   M = if (feasibilityConstraintType == 0) {
     crossprod(U)
   } else {
-   crossprod(U, C %*% U) / .avg_variance(C)
+   crossprod(U, C %*% U) / .total_variance(C)
   }
   sum(abs(M[upper.tri(M, diag=FALSE)]))
 }
@@ -487,7 +489,7 @@ print.mspca <- function(x, C = NULL, digits = NULL, ...) {
 #'       of that PC against any other PC).}
 #'     \item{`feasibility_mat`}{r x r matrix of pairwise violations
 #'       (\eqn{|u_i^\top u_j|} or
-#'       \eqn{|u_i^\top \Sigma u_j| \big/ (\mathrm{tr}(\Sigma)/p)}).
+#'       \eqn{|u_i^\top \Sigma u_j| \big/ \mathrm{tr}(\Sigma)}).
 #'       Diagonal and lower triangle are `NA`.}
 #'     \item{`feasibility`}{Scalar total violation (sum of the upper triangle
 #'       of `feasibility_mat`). Strictly off-diagonal, and therefore not
@@ -573,9 +575,9 @@ summary.mspca <- function(object, C = NULL,
                  "be computed without the covariance/correlation matrix `C`.",
                  "Pass `C`, or refit with the current version."), call. = FALSE)
     }
-    Sv     <- if (ctype == 0L) v else C %*% v
-    avgVar <- if (ctype == 0L) 1 else .avg_variance(C)
-    feas_mat <- .nonredundancy(v, Sv, avgVar)[[if (ctype == 0L) 1L else 2L]]
+    Sv         <- if (ctype == 0L) v else C %*% v
+    traceSigma <- if (ctype == 0L) 1 else .total_variance(C)
+    feas_mat <- .nonredundancy(v, Sv, traceSigma)[[if (ctype == 0L) 1L else 2L]]
   }
 
   pc_labels  <- colnames(feas_mat)

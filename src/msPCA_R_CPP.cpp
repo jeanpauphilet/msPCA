@@ -120,18 +120,19 @@ double fnviolation(const Eigen::MatrixXd& x,
     }
   } else {
     // Uncorrelatedness: sum of |x_i^T Sigma x_j| for i != j, plus ||x_i||^2 - 1 on diagonal.
-    // The off-diagonal terms are normalised by the average variance tr(Sigma)/p. Since the
+    // The off-diagonal terms are normalised by the total variance tr(Sigma). Since the
     // columns of x are unit-norm, |x_i^T Sigma x_j| is homogeneous of degree 1 in Sigma, so
     // without this normalisation the measure - and hence its comparison against
-    // feasibilityTolerance - would depend on the units of the data. Dividing by tr(Sigma)/p
-    // makes the off-diagonal part invariant to a rescaling of Sigma and puts it on the same
-    // scale as the (already scale-free) norm terms.
-    const double avgVar = op.trace() / static_cast<double>(x.rows());
-    const double invAvgVar = (avgVar > 0.0 ? 1.0 / avgVar : 1.0);
+    // feasibilityTolerance - would depend on the units of the data. Dividing by tr(Sigma)
+    // makes the off-diagonal part invariant to a rescaling of Sigma and expresses each
+    // pairwise covariance as a fraction of the total variance, which is the same footing as
+    // the (already scale-free) norm terms on the diagonal.
+    const double traceSigma = op.trace();
+    const double invTraceSigma = (traceSigma > 0.0 ? 1.0 / traceSigma : 1.0);
     Eigen::MatrixXd C = op.gram(x); // x^T Sigma x  (r x r), computed without materialising Sigma
     for (int i = 0; i < r; ++i) {
       for (int j = i; j < r; ++j) {
-        v += (i == j ? std::fabs(y(i, j) - 1.0) : invAvgVar * std::fabs(C(i, j)));
+        v += (i == j ? std::fabs(y(i, j) - 1.0) : invTraceSigma * std::fabs(C(i, j)));
       }
     }
   }
@@ -164,12 +165,11 @@ List iterativeDeflationHeuristic_impl(
 
   const double traceSigma = op.trace(); // Total variance tr(Sigma); precomputed once for normalised display
 
-  // Average variance tr(Sigma)/p. Under uncorrelatedness the constraint is enforced on the
-  // normalised matrix C = Sigma / avgVar = p * Sigma / tr(Sigma), which has tr(C) = p; this
-  // makes the constraint, and hence feasibilityTolerance, invariant to a rescaling of Sigma.
-  // Equals 1 for a correlation matrix, so nothing changes on correlation input. Guarded
-  // against a degenerate zero-trace input.
-  const double avgVar = (traceSigma > 0 ? traceSigma / static_cast<double>(p) : 1.0);
+  // Under uncorrelatedness the constraint is enforced on the normalised matrix
+  // C = Sigma / tr(Sigma), which has tr(C) = 1; this makes the constraint, and hence
+  // feasibilityTolerance, invariant to a rescaling of Sigma and expresses the violation as a
+  // fraction of the total variance. Guarded against a degenerate zero-trace input.
+  const double invTraceSigma = (traceSigma > 0 ? 1.0 / traceSigma : 1.0);
 
   double ofv_best = -1e10; // Objective value of the best solution found (solution = set of r PCs)
   double violation_best = p; // Feasibility violation of the best solution found
@@ -238,7 +238,7 @@ List iterativeDeflationHeuristic_impl(
       // Build deflation functor — avoids materialising sigma_current (saves O(p^2) allocation + symmetrisation).
       // applyM(beta) = Sigma*beta - W * diag(d) * W^T * beta, where s-th column of W is w_s and d_s = lambda * weight_s.
       // w_s is the gradient direction of the constraint being penalised: u_s under orthogonality
-      // (u_t^T u_s = 0), C u_s under uncorrelatedness (u_t^T C u_s = 0, C = Sigma / avgVar).
+      // (u_t^T u_s = 0), C u_s under uncorrelatedness (u_t^T C u_s = 0, C = Sigma / tr(Sigma)).
       int nOther = r - 1;
       Eigen::MatrixXd W(p, nOther);
       Eigen::VectorXd d(nOther);
@@ -251,9 +251,9 @@ List iterativeDeflationHeuristic_impl(
             if (feasibilityConstraintType == 0) {
               W.col(col) = x_current.col(s);
             } else {
-              // C * u_s = Sigma * u_s / avgVar, via operator (no explicit Sigma). The penalty
+              // C * u_s = Sigma * u_s / tr(Sigma), via operator (no explicit Sigma). The penalty
               // sum_s lambda_s (beta^T C u_s)^2 has matrix sum_s lambda_s (C u_s)(C u_s)^T
-              W.col(col) = op.apply(x_current.col(s)) / avgVar;
+              W.col(col) = op.apply(x_current.col(s)) * invTraceSigma;
             }
             d(col) = theLambda * weights[s];
             col++;
@@ -300,14 +300,27 @@ List iterativeDeflationHeuristic_impl(
 
       if (theIter == 1) // Initialize the weights on each PC at the first iteration
       {
-        // No spectral bound is needed here any more: the PSD shift is now computed exactly from
+        // Single rule for both constraint types: weight_t = (u_t^T Sigma u_t) / ||C u_t||^2.
+        // The penalty contributed by pair (t, s) is bounded by theLambda * weight_s * ||C u_s||^2
+        // = theLambda * (u_s^T Sigma u_s), i.e. theLambda times the variance that PC s explains,
+        // whatever C is. theLambda is therefore a dimensionless penalty-to-objective ratio under
+        // both constraints, and the dual step-size schedule sees the same dynamics in both cases.
+        // Under orthogonality C = I and ||u_t|| = 1, so this reduces to the previous
+        // weight_t = lambda_partial. Under uncorrelatedness C = Sigma / tr(Sigma), and the
+        // 1/||C u_t||^2 factor undoes the shrinkage that the tr(Sigma) normalisation of C would
+        // otherwise impose on the penalty. Both numerator and denominator are homogeneous of the
+        // same degree in Sigma, so the weights remain invariant to a rescaling of the data.
+        // No spectral bound is needed here any more: the PSD shift is computed exactly from
         // the columns of W at each inner step (see psdShift above), so it adapts to the current
         // solution instead of being frozen at an iteration-1 estimate.
-        if (feasibilityConstraintType == 0) {
-              weights[t] = lambda_partial;
-        } else {
-          weights[t] = 1.0;
+        Eigen::VectorXd Cu = x_output;                          // C u_t with C = I
+        if (feasibilityConstraintType != 0) {
+          Cu = op.apply(x_output) * invTraceSigma;              // C u_t with C = Sigma / tr(Sigma)
         }
+        const double normCu2 = Cu.squaredNorm();
+        // normCu2 == 0 means C u_t = 0, so PC t contributes no penalty at all; the weight is
+        // irrelevant and 0 keeps it finite.
+        weights[t] = (normCu2 > 0.0 ? lambda_partial / normCu2 : 0.0);
       }
     }
 
