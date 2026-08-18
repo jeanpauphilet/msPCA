@@ -395,7 +395,7 @@ List iterativeDeflationHeuristic_impl(
   violation_best = fnviolation(x_best, op, feasibilityConstraintType);
   if (violation_best > feasibilityTolerance) // Warning if the best solution found is not feasible (within tolerance)
   {
-    warning("Warning: Algorithm terminated without finding a feasible solution (within %i tolerance). Best solution found is %i feasible. You may want to rerun the algorithm with more iterations (maxIter)", feasibilityTolerance, violation_best);
+    warning("Warning: Algorithm terminated without finding a feasible solution (within %i tolerance). Last iterate is %i feasible. You may want to rerun the algorithm with more iterations (maxIter)", feasibilityTolerance, violation_best);
   }
   ofv_best = op.quadForm(x_best);
 

@@ -91,10 +91,7 @@
 #   orthogonality    : |u_t^T u_s|
 #   uncorrelatedness : |u_t^T Sigma u_s| / tr(Sigma)
 # The uncorrelatedness entries are normalized by the total variance
-# `traceSigma` = tr(Sigma): the loadings are unit-norm, so |u_t^T Sigma u_s| is
-# homogeneous of degree one in Sigma and would otherwise depend on the units of
-# the data. This is the same convention the solver uses when comparing the
-# violation against `feasibilityTolerance`.
+# `traceSigma` = tr(Sigma).
 # Only the strict upper triangle is meaningful; the diagonal and lower triangle
 # are set to NA. Both matrices are computed here, after the columns of `v` have
 # been sorted by explained variance, so row/column indices always match the PC
@@ -158,7 +155,7 @@
 #' @param feasibilityConstraintType (optional) An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. Default 0.
 #' @param verbose (optional) A Boolean. Controls console output. Default TRUE.
 #' @param maxIter (optional) An integer. Maximum number of iterations of the algorithm. Default 200.
-#' @param feasibilityTolerance (optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to `feasibilityConstraintType`). Under uncorrelatedness the violation is normalized by the total variance `tr(Sigma)`, so the tolerance carries the same meaning whether `M` is a covariance or a correlation matrix. Default 1e-4.
+#' @param feasibilityTolerance (optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to `feasibilityConstraintType`). Under uncorrelatedness the violation is normalized by the total variance `tr(Sigma)`. Default 1e-4.
 #' @param stallingTolerance (optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8.
 #' @param timeLimitTPM (optional) An integer. Maximum time in seconds for the truncated power method (inner iteration). Default 20.
 #' @param maxRestartTPM (optional) An integer. Number of random restarts of the truncated power method (inner iteration) for the first outer iteration. Default 30.
@@ -190,22 +187,11 @@
 #'
 #'   The uncorrelatedness terms are normalized by the total variance
 #'   \eqn{\mathrm{tr}(\Sigma)}. The loadings being unit-norm,
-#'   \eqn{|u_t^\top \Sigma u_s|} scales linearly with \eqn{\Sigma}, so the raw
-#'   quantity - and hence its comparison against `feasibilityTolerance` -
-#'   would otherwise depend on the units of the data. After normalization the
-#'   measure is invariant to a rescaling of \eqn{\Sigma} - each pairwise term
-#'   is expressed as a fraction of the total variance - and a covariance and
-#'   a correlation input are on the same footing.
+#'   \eqn{|u_t^\top \Sigma u_s|} scales linearly with \eqn{\Sigma}, so normalization 
+#'   makes the uncorrelatedness terms scale invariant. 
 #'
-#'   Note that `feasibility_violation` (returned by the solver) and the
-#'   violation reported by [summary.mspca()] are *different statistics*:
-#'   the former sums over all pairs \eqn{t \ge s} and so includes the
-#'   normalization terms \eqn{|u_t^\top u_t - 1|} on the diagonal (under both
-#'   constraint types, the diagonal terms are the unit-norm residuals),
-#'   whereas the latter is the strictly off-diagonal sum returned by
-#'   [feasibility_violation_off()]. The solver value is the quantity compared
-#'   against `feasibilityTolerance` during the fit; the off-diagonal value is
-#'   the redundancy diagnostic.
+#'   Note that `feasibility_violation` (returned by the solver) is the quantity compared
+#'   against `feasibilityTolerance` during the fit.
 #' @examples
 #' # From a covariance/correlation matrix (the default type):
 #' TestMat <- cor(mtcars)
@@ -376,9 +362,7 @@ fraction_variance_explained <- function(C, U){
 #' total variance \eqn{\mathrm{tr}(C)}. Because the PCs are unit-norm,
 #' \eqn{|u_{t}^\top C u_{s}|} is homogeneous of degree one in `C`, so the
 #' unnormalized quantity depends on the units of the data; dividing by
-#' \eqn{\mathrm{tr}(C)} makes it invariant to a rescaling of `C` and hence
-#' comparable across covariance and correlation input, each pairwise term
-#' being read as a fraction of the total variance. This matches the
+#' \eqn{\mathrm{tr}(C)} makes it invariant to a rescaling of `C`. This matches the
 #' definition used internally by [mspca()] against `feasibilityTolerance`.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. Each column corresponds to a p-dimensional PC.

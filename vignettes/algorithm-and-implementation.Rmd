@@ -158,7 +158,7 @@ constraint violations toward zero yields the following scheme.
 > 9. &nbsp;&nbsp; **end if**
 > 10. &nbsp;&nbsp; Increase the $\lambda_{t,t'}$ values (see below)
 > 11. **end for**
-> 12. **return** best feasible solution found, or the least-infeasible solution if none was found
+> 12. **return** best feasible solution found, or the last iterate if none was found
 
 Each single-component subproblem is solved via the truncated power method
 [TPM, @yuan2013truncated], which alternates between a power step (multiplying by
