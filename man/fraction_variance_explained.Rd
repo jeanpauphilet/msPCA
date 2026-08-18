@@ -15,7 +15,8 @@ fraction_variance_explained(C, U)
 A float.
 }
 \description{
-Computes the fraction of variance explained (variance explained normalized by the trace of the covariance/correlation matrix) by a set of PCs.
+Computes the sum of marginal component variances divided by tr(Σ).
+This equals the variance explained by projection onto the span of U when the columns of U are orthonormal; otherwise it is the normalized sparse-PCA objective.
 }
 \examples{
 TestMat <- cor(mtcars)

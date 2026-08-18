@@ -71,11 +71,10 @@ non-redundancy (feasibility) violation matrix and the total solver runtime.</p>
 
 <dt id="arg-c">C<a class="anchor" aria-label="anchor" href="#arg-c"></a></dt>
 <dd><p>(optional) A numeric matrix (p x p). The covariance or correlation
-matrix used when fitting. No longer required: <code><a href="mspca.html">mspca()</a></code> stores every
-figure this method reports. It is retained only so that objects fitted
-with msPCA 0.5.0 or earlier, which lack the stored diagnostics, can still be
-summarized, and is ignored otherwise. It will be removed in a future
-release.</p></dd>
+matrix used when fitting. <code><a href="mspca.html">mspca()</a></code> stores every figure this method
+reports, so <code>C</code> is ignored for objects that carry those stored
+diagnostics; it is needed only to summarize an object that does not. It
+will be removed in a future release.</p></dd>
 
 
 <dt id="arg-feasibilityconstrainttype">feasibilityConstraintType<a class="anchor" aria-label="anchor" href="#arg-feasibilityconstrainttype"></a></dt>
@@ -122,7 +121,7 @@ violations refer to.</p></dd>
 
 <dt><code>fittedConstraintType</code></dt>
 <dd><p>The constraint type enforced at fit time,
-or <code>NA</code> for objects fitted with msPCA 0.5.0 or earlier.</p></dd>
+or <code>NA</code> for objects that do not record it.</p></dd>
 
 <dt><code>runtime</code></dt>
 <dd><p>Solver runtime in seconds (if stored in the object).</p></dd>
@@ -158,7 +157,7 @@ resulting figure does not describe a constraint the solver enforced.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> msPCA summary: 2 sparse PC(s)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Input type   : Sigma </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Runtime (s)  : 0.018 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Runtime (s)  : 0.009 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Constraint   : orthogonality (as fitted) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Per-component statistics:</span>
@@ -180,19 +179,19 @@ resulting figure does not describe a constraint the solver enforced.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> msPCA summary: 2 sparse PC(s)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Input type   : Sigma </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Runtime (s)  : 0.417 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Runtime (s)  : 0.205 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Constraint   : uncorrelatedness (as fitted) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Per-component statistics:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   PC nonzero variance       fve cumulative_fve max_violation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  PC1       4 2.719272 0.2472066      0.2472066  9.603012e-05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  PC2       4 2.510016 0.2281833      0.4753898  9.603012e-05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  PC1       4 2.705895 0.2459905      0.2459905  9.559822e-05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  PC2       4 2.525243 0.2295676      0.4755581  9.559822e-05</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Pairwise uncorrelatedness violations (upper triangle):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     PC1          PC2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> PC1   . 9.603012e-05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> PC1   . 9.559822e-05</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> PC2   .            .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Total: 9.603012e-05 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Total: 9.559822e-05 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Violations under the other definition are stored in `$nonredundancy$orthogonality`.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The other set of scores is stored too, and needs no refit:</span></span></span>

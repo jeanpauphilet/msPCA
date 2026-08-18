@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Worked Example: msPCA on mtcars • msPCA</title>
+<title>Worked example: msPCA on mtcars • msPCA</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
-<meta property="og:title" content="Worked Example: msPCA on mtcars">
+<meta property="og:title" content="Worked example: msPCA on mtcars">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -62,7 +62,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Worked Example: msPCA on mtcars</h1>
+      <h1>Worked example: msPCA on mtcars</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/jeanpauphilet/msPCA/blob/HEAD/vignettes/msPCA.Rmd" class="external-link"><code>vignettes/msPCA.Rmd</code></a></small>
@@ -124,15 +124,15 @@ component.</p>
 <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> gives a fuller breakdown: a per-PC table of
 variance explained, sparsity, and each component’s largest violation
 against any other component, followed by the full pairwise violation
-matrix so you can see at a glance how well the constraint is satisfied
-between each pair of components. The header names the constraint
-definition reported, which is the one used to fit.</p>
+matrix, which shows how well the constraint is satisfied for each pair
+of components. The header states which constraint definition is
+reported: the one used to fit.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; msPCA summary: 2 sparse PC(s)</span></span>
 <span><span class="co">#&gt; Input type   : Sigma </span></span>
-<span><span class="co">#&gt; Runtime (s)  : 0.015 </span></span>
+<span><span class="co">#&gt; Runtime (s)  : 0.009 </span></span>
 <span><span class="co">#&gt; Constraint   : orthogonality (as fitted) </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Per-component statistics:</span></span>
@@ -155,7 +155,7 @@ covariance/correlation matrix. Set <code>type = "X"</code> to pass the
 raw data matrix instead (rows are observations, columns are variables).
 With <code>type = "X"</code>, msPCA applies the algorithm to the data
 directly: each matrix–vector product
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Σ</mi><mi>β</mi><mo>=</mo><msup><mi>X</mi><mi>⊤</mi></msup><mo stretchy="false" form="prefix">(</mo><mi>X</mi><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\Sigma \beta = X^\top (X \beta) / (n - 1)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold">𝚺</mi><mi mathvariant="bold-italic">𝜷</mi><mo>=</mo><msup><mi mathvariant="bold-italic">𝑿</mi><mi>⊤</mi></msup><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑿</mi><mi mathvariant="bold-italic">𝜷</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\boldsymbol{\Sigma}\boldsymbol{\beta} = \boldsymbol{X}^\top(\boldsymbol{X}\boldsymbol{\beta})/(n - 1)</annotation></semantics></math>
 is computed without ever forming the
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>×</mo><mi>p</mi></mrow><annotation encoding="application/x-tex">p \times p</annotation></semantics></math>
 matrix. This is mathematically equivalent but more scalable when
@@ -177,7 +177,8 @@ the covariance matrix.</li>
 <code>"n"</code>.</li>
 </ul>
 <p>With <code>scale = TRUE</code> and <code>divisor = "n-1"</code>, the
-raw-data call reproduces the correlation-matrix result above.</p>
+raw-data call targets exactly the same problem as the correlation-matrix
+call above, and returns the same solution here.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span></span>
 <span></span>
@@ -205,9 +206,10 @@ raw-data call reproduces the correlation-matrix result above.</p>
 <div class="section level2">
 <h2 id="orthogonality-versus-zero-correlation">Orthogonality versus zero correlation<a class="anchor" aria-label="anchor" href="#orthogonality-versus-zero-correlation"></a>
 </h2>
-<p>Sparse PCA requires a constraint to prevent redundancy between
-components. The default (<code>feasibilityConstraintType = 0</code>)
-enforces orthogonality of the loading vectors. Setting
+<p>Sparse loading vectors are not automatically non-redundant, so
+<code><a href="../reference/mspca.html">mspca()</a></code> imposes an explicit constraint between components.
+The default (<code>feasibilityConstraintType = 0</code>) enforces
+orthogonality of the loading vectors. Setting
 <code>feasibilityConstraintType = 1</code> instead enforces zero
 pairwise correlation between the resulting scores. The choice can lead
 to different solutions when the variables are strongly correlated.</p>
@@ -218,36 +220,36 @@ to different solutions when the variables are strongly correlated.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res_corr</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; msPCA solution: 2 sparse PCs</span></span>
-<span><span class="co">#&gt; Pct. variance explained: 25.13144 22.41424 </span></span>
+<span><span class="co">#&gt; Pct. variance explained: 24.59905 22.95676 </span></span>
 <span><span class="co">#&gt; Non-zero loadings per PC: 4 4 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Sparse PCs</span></span>
-<span><span class="co">#&gt;            [,1]        [,2]</span></span>
-<span><span class="co">#&gt; hp    0.3276298  0.00000000</span></span>
-<span><span class="co">#&gt; drat  0.0000000 -0.32793230</span></span>
-<span><span class="co">#&gt; wt    0.0000000  0.06957877</span></span>
-<span><span class="co">#&gt; qsec -0.6643015  0.00000000</span></span>
-<span><span class="co">#&gt; vs   -0.2941638  0.00000000</span></span>
-<span><span class="co">#&gt; am    0.0000000 -0.62571537</span></span>
-<span><span class="co">#&gt; gear  0.0000000 -0.70434330</span></span>
-<span><span class="co">#&gt; carb  0.6040114  0.00000000</span></span>
+<span><span class="co">#&gt;            [,1]       [,2]</span></span>
+<span><span class="co">#&gt; hp   -0.3070017  0.0000000</span></span>
+<span><span class="co">#&gt; drat  0.0000000  0.3396703</span></span>
+<span><span class="co">#&gt; wt    0.0000000 -0.0926711</span></span>
+<span><span class="co">#&gt; qsec  0.6767011  0.0000000</span></span>
+<span><span class="co">#&gt; vs    0.2739785  0.0000000</span></span>
+<span><span class="co">#&gt; am    0.0000000  0.6236279</span></span>
+<span><span class="co">#&gt; gear  0.0000000  0.6979430</span></span>
+<span><span class="co">#&gt; carb -0.6105418  0.0000000</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_corr</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; msPCA summary: 2 sparse PC(s)</span></span>
 <span><span class="co">#&gt; Input type   : Sigma </span></span>
-<span><span class="co">#&gt; Runtime (s)  : 0.414 </span></span>
+<span><span class="co">#&gt; Runtime (s)  : 0.2 </span></span>
 <span><span class="co">#&gt; Constraint   : uncorrelatedness (as fitted) </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Per-component statistics:</span></span>
 <span><span class="co">#&gt;   PC nonzero variance       fve cumulative_fve max_violation</span></span>
-<span><span class="co">#&gt;  PC1       4 2.764459 0.2513144      0.2513144  9.581682e-05</span></span>
-<span><span class="co">#&gt;  PC2       4 2.465566 0.2241424      0.4754568  9.581682e-05</span></span>
+<span><span class="co">#&gt;  PC1       4 2.705895 0.2459905      0.2459905  9.559826e-05</span></span>
+<span><span class="co">#&gt;  PC2       4 2.525243 0.2295676      0.4755581  9.559826e-05</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Pairwise uncorrelatedness violations (upper triangle):</span></span>
 <span><span class="co">#&gt;     PC1          PC2</span></span>
-<span><span class="co">#&gt; PC1   . 9.581682e-05</span></span>
+<span><span class="co">#&gt; PC1   . 9.559826e-05</span></span>
 <span><span class="co">#&gt; PC2   .            .</span></span>
-<span><span class="co">#&gt; Total: 9.581682e-05 </span></span>
+<span><span class="co">#&gt; Total: 9.559826e-05 </span></span>
 <span><span class="co">#&gt; Violations under the other definition are stored in `$nonredundancy$orthogonality`.</span></span></code></pre></div>
 <p>Both sets of violations are computed at fit time and stored, so the
 solution can be inspected under the other definition without a
@@ -255,7 +257,7 @@ refit:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res_corr</span><span class="op">$</span><span class="va">nonredundancy</span><span class="op">$</span><span class="va">uncorrelatedness</span>   <span class="co"># the constraint that was enforced</span></span>
 <span><span class="co">#&gt;     PC1          PC2</span></span>
-<span><span class="co">#&gt; PC1  NA 9.581682e-05</span></span>
+<span><span class="co">#&gt; PC1  NA 9.559826e-05</span></span>
 <span><span class="co">#&gt; PC2  NA           NA</span></span>
 <span><span class="va">res_corr</span><span class="op">$</span><span class="va">nonredundancy</span><span class="op">$</span><span class="va">orthogonality</span>      <span class="co"># the one that was not</span></span>
 <span><span class="co">#&gt;     PC1 PC2</span></span>
@@ -276,28 +278,29 @@ no stored diagnostics.</p>
 <span><span class="fu"><a href="../reference/feasibility_violation_off.html">feasibility_violation_off</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">res</span><span class="op">$</span><span class="va">x_best</span>, feasibilityConstraintType <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0</span></span>
 <span><span class="fu"><a href="../reference/feasibility_violation_off.html">feasibility_violation_off</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">res</span><span class="op">$</span><span class="va">x_best</span>, feasibilityConstraintType <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 2.335601</span></span>
+<span><span class="co">#&gt; [1] 0.2123274</span></span>
 <span></span>
 <span><span class="co"># The same two numbers, already stored on the fitted object</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">nonredundancy</span><span class="op">$</span><span class="va">orthogonality</span>,    na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">nonredundancy</span><span class="op">$</span><span class="va">uncorrelatedness</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 2.335601</span></span>
+<span><span class="co">#&gt; [1] 0.2123274</span></span>
 <span></span>
 <span><span class="co"># Total and per-PC fraction of variance explained</span></span>
 <span><span class="fu"><a href="../reference/fraction_variance_explained.html">fraction_variance_explained</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">res</span><span class="op">$</span><span class="va">x_best</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.6043866</span></span>
 <span><span class="fu"><a href="../reference/fraction_variance_explained_perPC.html">fraction_variance_explained_perPC</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">res</span><span class="op">$</span><span class="va">x_best</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.3245835 0.2798031</span></span></code></pre></div>
-<p>The zero-correlation violation is normalized by the average variance
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="normal">Σ</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>p</mi></mrow><annotation encoding="application/x-tex">\mathrm{tr}(\Sigma)/p</annotation></semantics></math>,
-which makes it comparable between a covariance matrix and the
-corresponding correlation matrix; the orthogonality violation needs no
-such normalization. Note that <code>res$feasibility_violation</code>,
-the quantity the solver compares against
-<code>feasibilityTolerance</code>, also includes the diagonal norm
-terms, and so is slightly larger than the off-diagonal diagnostic
-above.</p>
+<p>The zero-correlation violation is normalized by the total variance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="normal">Σ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mathrm{tr}(\Sigma)</annotation></semantics></math>,
+so that each pairwise term is a fraction of the total variance and the
+measure is comparable between a covariance matrix and the corresponding
+correlation matrix; the orthogonality violation needs no such
+normalization. Note that <code>res$feasibility_violation</code>, the
+quantity the solver compares against <code>feasibilityTolerance</code>,
+also includes the diagonal norm terms
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">|</mo><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><msub><mi mathvariant="bold-italic">𝒖</mi><mi>t</mi></msub><msubsup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn><mn>2</mn></msubsup><mo>−</mo><mn>1</mn><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">\bigl|\,\|\boldsymbol{u}_t\|_2^2 - 1\bigr|</annotation></semantics></math>,
+and so is at least as large as the off-diagonal diagnostic above.</p>
 </div>
 <div class="section level2">
 <h2 id="comparison-with-dense-pca">Comparison with dense PCA<a class="anchor" aria-label="anchor" href="#comparison-with-dense-pca"></a>
@@ -308,8 +311,8 @@ all variables receive non-zero loadings.</p>
 <code class="sourceCode R"><span><span class="va">pca_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html" class="external-link">prcomp</a></span><span class="op">(</span><span class="va">mtcars</span>, scale. <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/fraction_variance_explained.html">fraction_variance_explained</a></span><span class="op">(</span><span class="va">Sigma</span>, <span class="va">pca_res</span><span class="op">$</span><span class="va">rotation</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.8417153</span></span></code></pre></div>
-<p>Sparse PCA trades a reduction in explained variance for a more
-interpretable loading pattern.</p>
+<p>Sparse PCA trades explained variance for a more interpretable loading
+pattern.</p>
 </div>
 <div class="section level2">
 <h2 id="where-to-go-next">Where to go next<a class="anchor" aria-label="anchor" href="#where-to-go-next"></a>
@@ -318,15 +321,15 @@ interpretable loading pattern.</p>
 <li>
 <code><a href="../articles/case-study-snp500.html">vignette("case-study-snp500", package = "msPCA")</a></code>
 applies the same workflow to a 423-stock correlation matrix shipped with
-the package, and shows how the two constraint types recover materially
+the package, and shows how the two constraint types can yield noticeably
 different factor structures.</li>
 <li>
 <code><a href="../articles/algorithm-and-implementation.html">vignette("algorithm-and-implementation", package = "msPCA")</a></code>
 documents the optimization problem, both algorithms, the implementation,
 and how to set <code>ks</code>, <code>feasibilityConstraintType</code>
 and the iteration budgets.</li>
-<li>A comparison against seven other sparse PCA packages on four real
-datasets is available on the package website, under <a href="https://jeanpauphilet.github.io/msPCA/articles/benchmarking.html">Benchmarking
+<li>A comparison against eight competing functions, drawn from seven
+packages, on four datasets is available on the package website, under <a href="https://jeanpauphilet.github.io/msPCA/articles/benchmarking.html">Benchmarking
 against other sparse PCA packages</a>.</li>
 </ul>
 </div>

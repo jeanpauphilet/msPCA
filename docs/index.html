@@ -233,7 +233,7 @@
 <li><code>fraction_variance_explained_perPC(Sigma, U)</code></li>
 <li><code>variance_explained_perPC(Sigma, U)</code></li>
 <li>
-<code>feasibility_violation_off(Sigma, U, feasibilityConstraintType)</code>, for scoring loadings that did not come from <code><a href="reference/mspca.html">mspca()</a></code>. Under <code>feasibilityConstraintType = 1</code> the violation is normalized by the average variance <code>tr(Sigma)/p</code>, making it invariant to a rescaling of <code>Sigma</code>.</li>
+<code>feasibility_violation_off(Sigma, U, feasibilityConstraintType)</code>, for scoring loadings that did not come from <code><a href="reference/mspca.html">mspca()</a></code>. Under <code>feasibilityConstraintType = 1</code> the violation is normalized by the total variance <code>tr(Sigma)</code>, making it invariant to a rescaling of <code>Sigma</code>.</li>
 <li>
 <code>print(sol_object, digits = 3)</code> / <code>summary(sol_object)</code>
 </li>

@@ -2,25 +2,16 @@
 ^\.Rproj\.user$
 ^cran-comments\.md$
 ^\.vscode$
-^\.github$
-^CONTRIBUTING\.md$
-^notebooks$
+^test$
 ^XXX --- data$
 ^msPCA_.*\.tar\.gz$
 ^msPCA_.*\.pdf$
 ^msPCA_.*\.csv$
 ^doc$
 ^docs$
-^pkgdown$
 ^Meta$
 ^_pkgdown\.yml$
 ^plan_dual_input_api\.md$
 ^msPCA\.worktrees$
 ^check_output\.log$
 ^SUBMISSION_CHECKLIST\.md$
-^data-raw$
-^replication$
-^vignettes/articles$
-^new-vignette$
-^BUILD-STEPS\.md$
-^.*\.Rcheck$

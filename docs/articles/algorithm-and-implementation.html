@@ -136,10 +136,10 @@ and zero correlation to
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝑪</mi><mo>=</mo><mi mathvariant="bold">𝚺</mi></mrow><annotation encoding="application/x-tex">\boldsymbol{C} = \boldsymbol{\Sigma}</annotation></semantics></math>.
 In the zero-correlation case the implementation uses
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold">𝚺</mi><annotation encoding="application/x-tex">\boldsymbol{\Sigma}</annotation></semantics></math>
-divided by the average variance
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold">𝚺</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>p</mi></mrow><annotation encoding="application/x-tex">\mathrm{tr}(\boldsymbol{\Sigma})/p</annotation></semantics></math>.
-This leaves the feasible set unchanged and makes both the violation
-measure invariant to a rescaling of the data.</p>
+divided by the total variance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold">𝚺</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mathrm{tr}(\boldsymbol{\Sigma})</annotation></semantics></math>.
+This leaves the feasible set unchanged and makes the violation measure
+invariant to a rescaling of the data.</p>
 <p>The objective is the sum of per-component variances. Most approaches
 for sparse PCA with multiple PCs use this objective <span class="citation">(Zou et al. 2006; Journée et al. 2010; Lu and Zhang
 2012; Vu et al. 2013; Benidis et al. 2016; Cory-Wright and Pauphilet
@@ -172,18 +172,19 @@ Under orthogonality it is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">v</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi></mrow><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">f</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑼</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∑</mo><mrow><mi>t</mi><mo>&gt;</mo><msup><mi>t</mi><mo>′</mo></msup></mrow></munder><mrow><mo stretchy="true" form="prefix">|</mo><msubsup><mi mathvariant="bold-italic">𝒖</mi><mi>t</mi><mi>⊤</mi></msubsup><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub><mo stretchy="true" form="postfix">|</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathrm{viol}_{\mathrm{off}}(\boldsymbol{U}) =
   \sum_{t &gt; t'} \left| \boldsymbol{u}_t^\top \boldsymbol{u}_{t'} \right|,</annotation></semantics></math></p>
 <p>and under zero pairwise correlation</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">v</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi></mrow><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">f</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑪</mi><mo>,</mo><mi mathvariant="bold-italic">𝑼</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mi>p</mi><mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑪</mi><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><munder><mo>∑</mo><mrow><mi>t</mi><mo>&gt;</mo><msup><mi>t</mi><mo>′</mo></msup></mrow></munder><mrow><mo stretchy="true" form="prefix">|</mo><msubsup><mi mathvariant="bold-italic">𝒖</mi><mi>t</mi><mi>⊤</mi></msubsup><mi mathvariant="bold-italic">𝑪</mi><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub><mo stretchy="true" form="postfix">|</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathrm{viol}_{\mathrm{off}}(\boldsymbol{C}, \boldsymbol{U}) =
-  \frac{p}{\mathrm{tr}(\boldsymbol{C})}
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">v</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi></mrow><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">f</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑪</mi><mo>,</mo><mi mathvariant="bold-italic">𝑼</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑪</mi><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><munder><mo>∑</mo><mrow><mi>t</mi><mo>&gt;</mo><msup><mi>t</mi><mo>′</mo></msup></mrow></munder><mrow><mo stretchy="true" form="prefix">|</mo><msubsup><mi mathvariant="bold-italic">𝒖</mi><mi>t</mi><mi>⊤</mi></msubsup><mi mathvariant="bold-italic">𝑪</mi><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub><mo stretchy="true" form="postfix">|</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathrm{viol}_{\mathrm{off}}(\boldsymbol{C}, \boldsymbol{U}) =
+  \frac{1}{\mathrm{tr}(\boldsymbol{C})}
   \sum_{t &gt; t'} \left| \boldsymbol{u}_t^\top \boldsymbol{C} \boldsymbol{u}_{t'} \right|,</annotation></semantics></math></p>
 <p>both computed by <code><a href="../reference/feasibility_violation_off.html">feasibility_violation_off()</a></code>. The second
-is normalized by the average variance
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑪</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>p</mi></mrow><annotation encoding="application/x-tex">\mathrm{tr}(\boldsymbol{C})/p</annotation></semantics></math>:
+is normalized by the total variance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑪</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mathrm{tr}(\boldsymbol{C})</annotation></semantics></math>:
 the loading vectors are unit-norm, so
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msubsup><mi mathvariant="bold-italic">𝒖</mi><mi>t</mi><mi>⊤</mi></msubsup><mi mathvariant="bold-italic">𝑪</mi><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|\boldsymbol{u}_t^\top \boldsymbol{C} \boldsymbol{u}_{t'}|</annotation></semantics></math>
 is homogeneous of degree one in
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝑪</mi><annotation encoding="application/x-tex">\boldsymbol{C}</annotation></semantics></math>
-and the unnormalized sum would depend on the units of the data. With the
-normalization, a fixed <code>feasibilityTolerance</code> means the same
+and the unnormalized sum would depend on the units of the data. After
+normalization each pairwise term reads as a fraction of the total
+variance, and a fixed <code>feasibilityTolerance</code> means the same
 thing for a covariance matrix and for the corresponding correlation
 matrix. The same convention is used inside the solver, and for the
 <code>nonredundancy</code> matrices stored on the fitted object.</p>
@@ -398,16 +399,47 @@ proportional to the ratio of the current objective to the current
 constraint violation, which produces larger and more decisive increases;
 during the last 25% of iterations the step-size coefficient is further
 increased by a factor of 5 to accelerate final convergence to
-feasibility. Under the orthogonality constraint the penalties are
-weighted per component by the variance that component explains at the
-first iteration, so that all penalty terms are on a comparable scale
-regardless of the magnitude of
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold">𝚺</mi><annotation encoding="application/x-tex">\boldsymbol{\Sigma}</annotation></semantics></math>;
-under the zero-correlation constraint the weights are 1, the scaling of
+feasibility. See <span class="citation">Cory-Wright and Pauphilet
+(2026)</span> for a full description and theoretical justification of
+the update rule.</p>
+<p><strong>Penalty weights.</strong> We write
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mrow><mi>t</mi><mo>,</mo><msup><mi>t</mi><mo>′</mo></msup></mrow></msub><mo>=</mo><mi>λ</mi><mspace width="0.167em"></mspace><msub><mi>w</mi><msup><mi>t</mi><mo>′</mo></msup></msub></mrow><annotation encoding="application/x-tex">\lambda_{t,t'} = \lambda \, w_{t'}</annotation></semantics></math>,
+with a single scalar
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
+carrying the schedule above and a per-component weight
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><msup><mi>t</mi><mo>′</mo></msup></msub><annotation encoding="application/x-tex">w_{t'}</annotation></semantics></math>
+fixed at the first iteration. The weight is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>w</mi><mi>t</mi></msub><mo>=</mo><mfrac><mrow><msubsup><mi mathvariant="bold-italic">𝒖</mi><mi>t</mi><mi>⊤</mi></msubsup><mi mathvariant="bold">𝚺</mi><msub><mi mathvariant="bold-italic">𝒖</mi><mi>t</mi></msub></mrow><mrow><mo stretchy="false" form="postfix">∥</mo><mi mathvariant="bold-italic">𝑪</mi><msub><mi mathvariant="bold-italic">𝒖</mi><mi>t</mi></msub><msubsup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn><mn>2</mn></msubsup></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">w_{t} = \frac{\boldsymbol{u}_t^\top \boldsymbol{\Sigma} \boldsymbol{u}_t}
+               {\|\boldsymbol{C} \boldsymbol{u}_t\|_2^2},</annotation></semantics></math></p>
+<p>the same expression for both constraint types. Its effect is that the
+penalty a component can contribute is bounded by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mspace width="0.167em"></mspace><msub><mi>w</mi><msup><mi>t</mi><mo>′</mo></msup></msub><mo stretchy="false" form="postfix">∥</mo><mi mathvariant="bold-italic">𝑪</mi><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub><msubsup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn><mn>2</mn></msubsup><mo>=</mo><mi>λ</mi><mspace width="0.167em"></mspace><msubsup><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup><mi>⊤</mi></msubsup><mi mathvariant="bold">𝚺</mi><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub></mrow><annotation encoding="application/x-tex">\lambda \, w_{t'} \|\boldsymbol{C} \boldsymbol{u}_{t'}\|_2^2 = \lambda \, \boldsymbol{u}_{t'}^\top \boldsymbol{\Sigma} \boldsymbol{u}_{t'}</annotation></semantics></math>,
+i.e. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
+times the variance that component explains, whichever
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝑪</mi><annotation encoding="application/x-tex">\boldsymbol{C}</annotation></semantics></math>
-having already done that. See <span class="citation">Cory-Wright and
-Pauphilet (2026)</span> for a full description and theoretical
-justification of the update rule.</p>
+is in force. The scalar
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
+is thus a dimensionless penalty-to-objective ratio and the schedule
+behaves the same way under both constraints. Under orthogonality
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝑪</mi><mo>=</mo><mi mathvariant="double-struck">𝕀</mi></mrow><annotation encoding="application/x-tex">\boldsymbol{C} = \mathbb{I}</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="postfix">∥</mo><msub><mi mathvariant="bold-italic">𝒖</mi><mi>t</mi></msub><msub><mo stretchy="false" form="postfix">∥</mo><mn>2</mn></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\|\boldsymbol{u}_t\|_2 = 1</annotation></semantics></math>,
+so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>t</mi></msub><annotation encoding="application/x-tex">w_t</annotation></semantics></math>
+is simply the variance explained by component
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>;
+under zero correlation
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝑪</mi><mo>=</mo><mi mathvariant="bold">𝚺</mi><mi>/</mi><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold">𝚺</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\boldsymbol{C} = \boldsymbol{\Sigma}/\mathrm{tr}(\boldsymbol{\Sigma})</annotation></semantics></math>
+and the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mo stretchy="false" form="postfix">∥</mo><mi mathvariant="bold-italic">𝑪</mi><msub><mi mathvariant="bold-italic">𝒖</mi><mi>t</mi></msub><msubsup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">1/\|\boldsymbol{C} \boldsymbol{u}_t\|_2^2</annotation></semantics></math>
+factor offsets the shrinkage that normalizing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold">𝚺</mi><annotation encoding="application/x-tex">\boldsymbol{\Sigma}</annotation></semantics></math>
+by its trace would otherwise apply to the penalty. Numerator and
+denominator are homogeneous of the same degree in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold">𝚺</mi><annotation encoding="application/x-tex">\boldsymbol{\Sigma}</annotation></semantics></math>,
+so the weights are invariant to a rescaling of the data. With this
+weight the PSD shift of the previous section also takes the common form
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mn>0</mn></msub><mo>=</mo><mi>λ</mi><msub><mo>∑</mo><mrow><msup><mi>t</mi><mo>′</mo></msup><mo>≠</mo><mi>t</mi></mrow></msub><msubsup><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup><mi>⊤</mi></msubsup><mi mathvariant="bold">𝚺</mi><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub></mrow><annotation encoding="application/x-tex">\lambda_0 = \lambda \sum_{t' \neq t} \boldsymbol{u}_{t'}^\top \boldsymbol{\Sigma} \boldsymbol{u}_{t'}</annotation></semantics></math>.</p>
 <p><strong>Termination.</strong> Algorithm 1 stops when the number of
 outer iterations reaches <code>maxIter</code> (default 200), or earlier
 at any iteration where the current solution is feasible and the change
@@ -438,8 +470,8 @@ collects the previously computed components
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub><annotation encoding="application/x-tex">\boldsymbol{u}_{t'}</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>t</mi><mo>′</mo></msup><mo>≠</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">t' \neq t</annotation></semantics></math>
 for orthogonal loadings;
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold">𝚺</mi><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub></mrow><annotation encoding="application/x-tex">\boldsymbol{\Sigma} \boldsymbol{u}_{t'}</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>t</mi><mo>′</mo></msup><mo>≠</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">t' \neq t</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝑪</mi><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub><mo>=</mo><mi mathvariant="bold">𝚺</mi><msub><mi mathvariant="bold-italic">𝒖</mi><msup><mi>t</mi><mo>′</mo></msup></msub><mi>/</mi><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold">𝚺</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\boldsymbol{C} \boldsymbol{u}_{t'} = \boldsymbol{\Sigma} \boldsymbol{u}_{t'} / \mathrm{tr}(\boldsymbol{\Sigma})</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>t</mi><mo>′</mo></msup><mo>≠</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">t' \neq t</annotation></semantics></math>,
 for uncorrelated PCs) and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒅</mi><annotation encoding="application/x-tex">\boldsymbol{d}</annotation></semantics></math>
 contains the corresponding scaled penalty coefficients. This eliminates
@@ -563,19 +595,19 @@ against poor local optima.</p>
 <div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-bates2013fast" class="csl-entry">
 Bates, Douglas, and Dirk Eddelbuettel. 2013. <span>“Fast and Elegant
-Numerical Linear Algebra Using the RcppEigen Package.”</span>
-<em>Journal of Statistical Software</em> 52: 1–24.
+Numerical Linear Algebra Using the <span>RcppEigen</span>
+Package.”</span> <em>Journal of Statistical Software</em> 52 (5): 1–24.
 </div>
 <div id="ref-behdin2021sparse" class="csl-entry">
-Behdin, Kayhan, and Rahul Mazumder. 2026. <span>“Sparse PCA: A New
-Scalable Estimator Based on Integer Programming.”</span> <em>Annals of
-Statistics (to Appear)</em>.
+Behdin, Kayhan, and Rahul Mazumder. 2026. <span>“Sparse
+<span>PCA</span>: A New Scalable Estimator Based on Integer
+Programming.”</span> <em>Annals of Statistics</em>.
 </div>
 <div id="ref-benidis2016orthogonal" class="csl-entry">
-Benidis, Konstantinos, Ying Sun, Prabhu Babu, and Daniel P Palomar.
+Benidis, Konstantinos, Ying Sun, Prabhu Babu, and Daniel P. Palomar.
 2016. <span>“Orthogonal Sparse <span>PCA</span> and Covariance
-Estimation via Procrustes Reformulation.”</span> <em>IEEE Transactions
-on Signal Processing</em> 64 (23): 6211–26.
+Estimation via <span>P</span>rocrustes Reformulation.”</span> <em>IEEE
+Transactions on Signal Processing</em> 64 (23): 6211–26.
 </div>
 <div id="ref-berk2017" class="csl-entry">
 Berk, Lauren, and Dimitris Bertsimas. 2019. <span>“Certifiably Optimal
@@ -584,42 +616,44 @@ Programming Computation</em> 11 (3): 381–420.
 </div>
 <div id="ref-bertsimas2022solving" class="csl-entry">
 Bertsimas, Dimitris, Ryan Cory-Wright, and Jean Pauphilet. 2022.
-<span>“Solving Large-Scale Sparse PCA to Certifiable (Near)
+<span>“Solving Large-Scale Sparse <span>PCA</span> to Certifiable (Near)
 Optimality.”</span> <em>Journal of Machine Learning Research</em> 23
 (13): 1–35.
 </div>
 <div id="ref-cory2022sparse" class="csl-entry">
-Cory-Wright, Ryan, and Jean Pauphilet. 2026. <span>“Sparse PCA with
-Multiple Components.”</span> <em>Operations Research</em>. <a href="https://doi.org/10.1287/opre.2023.0598" class="external-link">https://doi.org/10.1287/opre.2023.0598</a>.
+Cory-Wright, Ryan, and Jean Pauphilet. 2026. <span>“Sparse
+<span>PCA</span> with Multiple Components.”</span> <em>Operations
+Research</em>. <a href="https://doi.org/10.1287/opre.2023.0598" class="external-link">https://doi.org/10.1287/opre.2023.0598</a>.
 </div>
 <div id="ref-d2007direct" class="csl-entry">
 <span class="nocase">d’Aspremont, Alexandre, Laurent El Ghaoui, Michael
-I Jordan, and Gert RG Lanckriet</span>. 2007. <span>“A Direct
+I. Jordan, and Gert R. G. Lanckriet</span>. 2007. <span>“A Direct
 Formulation for Sparse <span>PCA</span> Using Semidefinite
 Programming.”</span> <em>SIAM Review</em> 49 (3): 434–48.
 </div>
 <div id="ref-eddelbuettel2011rcpp" class="csl-entry">
-Eddelbuettel, Dirk, and Romain François. 2011. <span>“Rcpp: Seamless r
-and c++ Integration.”</span> <em>Journal of Statistical Software</em> 40
-(8): 1–18.
+Eddelbuettel, Dirk, and Romain François. 2011. <span>“<span>Rcpp</span>:
+Seamless <span>R</span> and <span>C</span>++ Integration.”</span>
+<em>Journal of Statistical Software</em> 40 (8): 1–18.
 </div>
 <div id="ref-journee2010generalized" class="csl-entry">
 Journée, Michel, Yurii Nesterov, Peter Richtárik, and Rodolphe
 Sepulchre. 2010. <span>“Generalized Power Method for Sparse Principal
 Component Analysis.”</span> <em>Journal of Machine Learning
-Research</em> 11 (2).
+Research</em> 11 (2): 517–53.
 </div>
 <div id="ref-lu2012augmented" class="csl-entry">
-Lu, Zhaosong, and Yong Zhang. 2012. <span>“An Augmented Lagrangian
-Approach for Sparse Principal Component Analysis.”</span>
-<em>Mathematical Programming</em> 135: 149–93.
+Lu, Zhaosong, and Yong Zhang. 2012. <span>“An Augmented
+<span>L</span>agrangian Approach for Sparse Principal Component
+Analysis.”</span> <em>Mathematical Programming</em> 135: 149–93.
 </div>
 <div id="ref-mackey2008deflation" class="csl-entry">
-Mackey, Lester. 2008. <span>“Deflation Methods for Sparse PCA.”</span>
-<em>Advances in Neural Information Processing Systems</em> 21.
+Mackey, Lester. 2008. <span>“Deflation Methods for Sparse
+<span>PCA</span>.”</span> <em>Advances in Neural Information Processing
+Systems</em> 21.
 </div>
 <div id="ref-vu2013fantope" class="csl-entry">
-Vu, Vincent Q, Juhee Cho, Jing Lei, and Karl Rohe. 2013. <span>“Fantope
+Vu, Vincent Q., Juhee Cho, Jing Lei, and Karl Rohe. 2013. <span>“Fantope
 Projection and Selection: A Near-Optimal Convex Relaxation of Sparse
 <span>PCA</span>.”</span> <em>Advances in Neural Information Processing
 Systems</em> 26.

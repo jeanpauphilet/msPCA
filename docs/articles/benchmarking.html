@@ -78,12 +78,12 @@
 -->
 <p>This vignette gives the benchmarking protocol and results behind the
 summary in the package description. It compares <code>msPCA</code>
-against seven competing implementations on four real datasets, and
-records how each competitor was configured. That configuration matters
-more than usual here, because the packages parameterise sparsity in
-mutually incompatible ways.</p>
-<p>Reproducing the comparison requires eight additional R packages,
-<code>callr</code>, and a Python installation, and the memory
+against eight competing implementations, drawn from seven packages, on
+four datasets, and records how each competitor was configured. That
+configuration matters more than usual here, because the packages
+parameterize sparsity in mutually incompatible ways.</p>
+<p>Reproducing the comparison requires eight additional R packages, plus
+<code>callr</code> and a Python installation, and the memory
 measurements require macOS or Linux. The scripts are in the package
 repository under <a href="https://github.com/jeanpauphilet/msPCA/tree/main/replication/benchmarking" class="external-link"><code>replication/benchmarking/</code></a>.</p>
 <div class="section level2">
@@ -120,10 +120,10 @@ accounts, so the comparison is reproducible end to end:</p>
 <div class="section level2">
 <h2 id="methods-compared">Methods compared<a class="anchor" aria-label="anchor" href="#methods-compared"></a>
 </h2>
-<p>We compare <code><a href="../reference/mspca.html">msPCA::mspca()</a></code> against seven competing
-packages/eight competing functions. Each entry below names the exact
-function called, not merely the package, since some packages expose more
-than one sparse PCA routine.</p>
+<p>We compare <code><a href="../reference/mspca.html">msPCA::mspca()</a></code> against eight functions drawn
+from seven competing packages. Each entry below names the exact function
+called, not merely the package, since some packages expose more than one
+sparse PCA routine.</p>
 <table class="table">
 <colgroup>
 <col width="25%">
@@ -190,7 +190,9 @@ penalty</td>
 <td><span class="citation"><span class="nocase">Pedregosa et al.</span>
 (2011)</span></td>
 <td>Python</td>
-<td>dictionary learning</td>
+<td>dictionary learning <span class="citation">(Mairal et al.
+2009)</span>
+</td>
 </tr>
 </tbody>
 </table>
@@ -208,10 +210,10 @@ parameter controls<a class="anchor" aria-label="anchor" href="#how-each-function
 method gets from one sparse component to
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math>
 of them, and what the parameter the user actually turns is doing. The
-second column below states the mechanism; the last two classify the
-parameter we tune as controlling <strong>sparsity</strong>,
-<strong>optimization convergence</strong>, an <strong>orthogonality
-penalty</strong>, or a <strong>feasibility tolerance</strong>.</p>
+second column below states the mechanism; the last two name the
+parameter we tune and classify it as controlling
+<strong>sparsity</strong> or as an <strong>orthogonality
+penalty</strong>.</p>
 <table class="table">
 <colgroup>
 <col width="25%">
@@ -334,29 +336,30 @@ penalty on the loadings</td>
 </tbody>
 </table>
 <p>Compared with <code><a href="../reference/mspca.html">msPCA::mspca()</a></code>:</p>
-<p><strong>Only <code><a href="https://rdrr.io/pkg/nsprcomp/man/nscumcomp.html" class="external-link">nsprcomp::nscumcomp()</a></code> offers any control
-over non-redundancy (orthogonality)</strong>, through the soft penalty
+<p><strong>Among the competitors, only
+<code><a href="https://rdrr.io/pkg/nsprcomp/man/nscumcomp.html" class="external-link">nsprcomp::nscumcomp()</a></code> offers any control over
+non-redundancy (orthogonality)</strong>, through the soft penalty
 <code>gamma</code>, whose default of 0 applies no penalty at all. For a
-fair comparison, we manually tune <code>gamma</code> along a grid: among
-values bringing the orthogonality violation within 1e-4 (our default
+fair comparison, we tune <code>gamma</code> along a grid: among the
+values that bring the orthogonality violation within 1e-4 (our default
 tolerance in <code>msPCA</code>), we keep the one with the highest
 FVE.</p>
 <p><strong>Not all methods control sparsity in the same way.</strong>
-Counting <code><a href="../reference/mspca.html">msPCA::mspca()</a></code>, four methods
-(<code><a href="https://rdrr.io/pkg/elasticnet/man/spca.html" class="external-link">elasticnet::spca()</a></code>, <code><a href="https://rdrr.io/pkg/mixOmics/man/spca.html" class="external-link">mixOmics::spca()</a></code>,
-<code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> and <code><a href="../reference/mspca.html">msPCA::mspca()</a></code>)
-accept an exact cardinality per component. The others either expose a
-penalty parameter that indirectly controls sparsity
-(<code><a href="https://rdrr.io/pkg/sparsepca/man/spca.html" class="external-link">sparsepca::spca()</a></code>, <code><a href="https://rdrr.io/pkg/amanpg/man/spca.amanpg.html" class="external-link">amanpg::spca.amanpg()</a></code>,
-<code>sklearn...SparsePCA()</code>), an
+Four functions — <code><a href="../reference/mspca.html">msPCA::mspca()</a></code>,
+<code><a href="https://rdrr.io/pkg/elasticnet/man/spca.html" class="external-link">elasticnet::spca()</a></code>, <code><a href="https://rdrr.io/pkg/mixOmics/man/spca.html" class="external-link">mixOmics::spca()</a></code> and
+<code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> — accept an exact cardinality per
+component. The others expose either a penalty parameter that controls
+sparsity only indirectly (<code><a href="https://rdrr.io/pkg/sparsepca/man/spca.html" class="external-link">sparsepca::spca()</a></code>,
+<code><a href="https://rdrr.io/pkg/amanpg/man/spca.amanpg.html" class="external-link">amanpg::spca.amanpg()</a></code>, <code>sklearn...SparsePCA()</code>),
+an
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ℓ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\ell_1</annotation></semantics></math>
-bound (<code><a href="https://rdrr.io/pkg/PMA/man/SPC.html" class="external-link">PMA::SPC()</a></code>), or a single cumulative sparisty budget
-for all the components together (<code><a href="https://rdrr.io/pkg/nsprcomp/man/nscumcomp.html" class="external-link">nsprcomp::nscumcomp()</a></code>).
-For these methods, we manually tune the hyperparameter in order to (i)
-generate the same number of non-zero components,
+bound (<code><a href="https://rdrr.io/pkg/PMA/man/SPC.html" class="external-link">PMA::SPC()</a></code>), or a single cumulative sparsity budget
+covering all components together (<code><a href="https://rdrr.io/pkg/nsprcomp/man/nscumcomp.html" class="external-link">nsprcomp::nscumcomp()</a></code>).
+For these methods, we tune the hyperparameter so as to (i) return the
+requested number of non-empty components,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math>,
-and (ii) get as close as possible to the requested total sparsity,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>t</mi></msub><mo stretchy="false" form="postfix">∥</mo><msub><mi mathvariant="bold-italic">𝒖</mi><mi>t</mi></msub><msub><mo stretchy="false" form="postfix">∥</mo><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">\sum_t \| \boldsymbol{u}_t \|_0</annotation></semantics></math>.</p>
+and (ii) come as close as possible to the requested total sparsity,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>t</mi></msub><msub><mi>k</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">\sum_t k_t</annotation></semantics></math>.</p>
 </div>
 </div>
 <div class="section level2">
@@ -400,10 +403,10 @@ applies interchangeably to
 Pitprops and breast cancer.</li>
 <li>
 <strong><code><a href="https://rdrr.io/pkg/PMA/man/SPC.html" class="external-link">PMA::SPC()</a></code></strong> — applied to the
-<strong>data matrix</strong> on all three datasets, as documented
-(<code>x</code> is “a data matrix of dimension
+<strong>data matrix</strong> on mtcars, Pitprops and breast cancer, as
+documented (<code>x</code> is “a data matrix of dimension
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>×</mo><mi>p</mi></mrow><annotation encoding="application/x-tex">n \times p</annotation></semantics></math>”,
-and <code>SPC()</code> centres its columns itself). On Pitprops that
+and <code>SPC()</code> centers its columns itself). On Pitprops that
 means the pseudo-data, since no real data matrix exists.
 <code>sumabsv</code> bounds the
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ℓ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\ell_1</annotation></semantics></math>
@@ -476,7 +479,7 @@ FVE and the orthogonality violation are always evaluated against the
 published Pitprops correlation matrix, never against the covariance of
 the pseudo-data.</p>
 <p>Every tuning parameter is selected by the scripts rather than fixed
-by hand: each is swept over a grid and the value whose realised sparsity
+by hand: each is swept over a grid and the value whose realized sparsity
 comes closest to the target is kept, with ties broken on FVE and
 candidates that leave a component empty discarded. The selected values
 appear beneath each table. Tuning is excluded from all reported runtimes
@@ -498,14 +501,12 @@ embedded CPython heap, neither of which R’s garbage collector observes,
 so an R-level metric would under-report memory usage for those two
 methods. The <strong>Memory</strong> column below reports the working
 set, defined as the size of the matrix handed to the method plus the
-additional peak RSS the method allocates on top of it.
-<!-- It does include whatever a package allocates on its first call --- lazy loading of namespaces, compiled code, S4 method tables --- which is on the order of 4 MB. --></p>
+additional peak RSS the method allocates on top of it.</p>
 <p>Each method is repeated five times with a different seed. All four
-measured quantities are reported as medians. FVE, runtime and memory
-carry a bracketed min–max range wherever the spread is visible at the
-printed precision; the orthogonality violation carries its worst
-repetition instead, since a feasibility claim stands or falls on the
-worst case rather than the best.</p>
+measured quantities are reported as medians. For FVE, runtime, and
+memory, we also report a bracketed min–max range wherever the spread is
+visible at the printed precision; for the orthogonality violation, we
+report the worst (i.e., largest) value.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Representative call pattern; see replication/benchmarking/ for the full scripts.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
@@ -557,8 +558,8 @@ per component.</p>
 <td>(4,4,4)</td>
 <td>0.829</td>
 <td>9.4e-05</td>
-<td>0.193</td>
-<td>0.4 [0.4, 0.6]</td>
+<td>0.189</td>
+<td>0.4 [0.4, 0.7]</td>
 </tr>
 <tr class="even">
 <td>
@@ -569,7 +570,7 @@ per component.</p>
 <td>0.829</td>
 <td>9.4e-05</td>
 <td>0.245</td>
-<td>0.2 [0.2, 0.5]</td>
+<td>0.2</td>
 </tr>
 <tr class="odd">
 <td>
@@ -579,7 +580,7 @@ per component.</p>
 <td>(4,4,4)</td>
 <td>0.753</td>
 <td>0.117</td>
-<td>0.092</td>
+<td>0.093</td>
 <td>21</td>
 </tr>
 <tr class="even">
@@ -591,7 +592,7 @@ per component.</p>
 <td>0.754</td>
 <td>0.117</td>
 <td>0.112</td>
-<td>23</td>
+<td>23 [23, 28]</td>
 </tr>
 <tr class="odd">
 <td><code><a href="https://rdrr.io/pkg/PMA/man/SPC.html" class="external-link">PMA::SPC</a></code></td>
@@ -599,14 +600,14 @@ per component.</p>
 <td>0.551</td>
 <td>0.221</td>
 <td>0.009</td>
-<td>0.6</td>
+<td>0.6 [0.6, 3.6]</td>
 </tr>
 <tr class="even">
 <td><code><a href="https://rdrr.io/pkg/sparsepca/man/spca.html" class="external-link">sparsepca::spca</a></code></td>
 <td>(6,4,1)</td>
 <td>0.581</td>
 <td>0.133</td>
-<td>0.031</td>
+<td>0.032 [0.031, 0.036]</td>
 <td>17</td>
 </tr>
 <tr class="odd">
@@ -614,7 +615,7 @@ per component.</p>
 <td>(4,4,4)</td>
 <td>0.633</td>
 <td>0.133</td>
-<td>0.003 [0.003, 0.004]</td>
+<td>0.003</td>
 <td>0.5</td>
 </tr>
 <tr class="even">
@@ -622,31 +623,31 @@ per component.</p>
 <td>(4,4,4)</td>
 <td>0.832</td>
 <td>0.078</td>
-<td>0.004 [0.004, 0.005]</td>
-<td>0.1 [0.1, 1.2]</td>
+<td>0.004 [0.003, 0.005]</td>
+<td>0.1</td>
 </tr>
 <tr class="odd">
 <td><code><a href="https://rdrr.io/pkg/nsprcomp/man/nscumcomp.html" class="external-link">nsprcomp::nscumcomp</a></code></td>
 <td>(5,5,2)</td>
 <td>0.824 [0.798, 0.825]</td>
 <td>1.1e-05 (max 3.3e-05)</td>
-<td>0.242</td>
-<td>30 [30, 35]</td>
+<td>0.241</td>
+<td>30</td>
 </tr>
 <tr class="even">
 <td><code><a href="https://rdrr.io/pkg/amanpg/man/spca.amanpg.html" class="external-link">amanpg::spca.amanpg</a></code></td>
 <td>(4,4,1)</td>
 <td>0.544</td>
 <td>0.047</td>
-<td>0.008</td>
-<td>1.6</td>
+<td>0.007</td>
+<td>1.5</td>
 </tr>
 <tr class="odd">
 <td><code>sklearn...SparsePCA</code></td>
 <td>(4,3,4)</td>
 <td>0.827</td>
 <td>&lt; 1e-15</td>
-<td>0.013 [0.009, 0.015]</td>
+<td>0.012 [0.010, 0.015]</td>
 <td>0.0 [0.0, 0.1]</td>
 </tr>
 <tr class="even">
@@ -654,7 +655,7 @@ per component.</p>
 <td>(11,11,11)</td>
 <td>0.899</td>
 <td>&lt; 1e-15</td>
-<td>0.001 [0.001, 0.002]</td>
+<td>0.001</td>
 <td>0.5</td>
 </tr>
 </tbody>
@@ -663,16 +664,16 @@ per component.</p>
 (<code>sparsepca</code>), <code>lambda1 = c(4.5, 5.4, 0.1)</code>,
 <code>alpha = 3.2</code> (<code>sklearn</code>),
 <code>gamma = 1e6</code>.</p>
-<p><code>nscumcomp</code> does well here, second only to
-<code>nsprcomp</code> on FVE and comfortably inside the feasibility
-tolerance. However, it achieves a sparsity pattern of (5,5,2) rather
-than the requested (4,4,4) and it is the only method whose FVE varies
-across seeds, over 0.798–0.825 in FVE.</p>
+<p><code>nscumcomp</code> does well here: it is within 0.01 FVE of the
+best sparse method and comfortably inside the feasibility tolerance.
+However, it returns a sparsity pattern of (5,5,2) rather than the
+requested (4,4,4), and it is the only method whose FVE varies across
+seeds, spanning 0.798–0.825.</p>
 <p>Because
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>11</mn></mrow><annotation encoding="application/x-tex">p = 11</annotation></semantics></math>,
 every method’s numerical working set is a few kilobytes, so the memory
-column measures fixed overheads: most methods sit below 1.6 MB, while
-<code>elasticnet</code>, <code>sparsepca</code> and
+column measures fixed overheads: most methods sit at or below 1.5 MB,
+while <code>elasticnet</code>, <code>sparsepca</code> and
 <code>nscumcomp</code> carry a floor of 17–30 MB that is already present
 at this size.</p>
 </div>
@@ -683,7 +684,7 @@ at this size.</p>
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>13</mn></mrow><annotation encoding="application/x-tex">p = 13</annotation></semantics></math>
 physical measurements on
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>180</mn></mrow><annotation encoding="application/x-tex">n = 180</annotation></semantics></math>
-timber specimens) is a classic sparse PCA benchmark <span class="citation">(e.g. Zou et al. 2006)</span>. We extract
+timber specimens) is a classic sparse PCA benchmark <span class="citation">(e.g., Zou et al. 2006)</span>. We extract
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">r = 6</annotation></semantics></math>
 sparse PCs targeting
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">k = 4</annotation></semantics></math>
@@ -715,8 +716,8 @@ nonzero loadings per component, as in <span class="citation">Zou et al.
 <td>(4,4,4,4,4,4)</td>
 <td>0.791 [0.786, 0.822]</td>
 <td>9.7e-05 (max 9.8e-05)</td>
-<td>0.650</td>
-<td>0.6 [0.4, 0.8]</td>
+<td>0.647</td>
+<td>0.7 [0.4, 0.8]</td>
 </tr>
 <tr class="even">
 <td>
@@ -726,8 +727,8 @@ nonzero loadings per component, as in <span class="citation">Zou et al.
 <td>(4,4,4,4,4,4)</td>
 <td>0.794 [0.784, 0.801]</td>
 <td>9.4e-05 (max 9.9e-05)</td>
-<td>3.972</td>
-<td>0.5 [0.3, 0.5]</td>
+<td>3.958</td>
+<td>0.3 [0.3, 0.9]</td>
 </tr>
 <tr class="odd">
 <td>
@@ -738,7 +739,7 @@ nonzero loadings per component, as in <span class="citation">Zou et al.
 <td>0.792</td>
 <td>0.241</td>
 <td>0.070</td>
-<td>21 [21, 27]</td>
+<td>21</td>
 </tr>
 <tr class="even">
 <td>
@@ -749,14 +750,14 @@ nonzero loadings per component, as in <span class="citation">Zou et al.
 <td>0.790</td>
 <td>0.322</td>
 <td>0.158</td>
-<td>78 [70, 83]</td>
+<td>73 [70, 83]</td>
 </tr>
 <tr class="odd">
 <td><code><a href="https://rdrr.io/pkg/PMA/man/SPC.html" class="external-link">PMA::SPC</a></code></td>
 <td>(3,4,4,4,3,4)</td>
 <td>0.714</td>
 <td>0.491</td>
-<td>0.020 [0.020, 0.024]</td>
+<td>0.021</td>
 <td>15</td>
 </tr>
 <tr class="even">
@@ -772,8 +773,8 @@ nonzero loadings per component, as in <span class="citation">Zou et al.
 <td>(4,4,4,4,4,4)</td>
 <td>0.788</td>
 <td>0.215</td>
-<td>0.009</td>
-<td>0.6</td>
+<td>0.010 [0.009, 0.011]</td>
+<td>0.6 [0.5, 0.6]</td>
 </tr>
 <tr class="even">
 <td><code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp</a></code></td>
@@ -781,23 +782,23 @@ nonzero loadings per component, as in <span class="citation">Zou et al.
 <td>0.816 [0.813, 0.833]</td>
 <td>0.563 (max 1.105)</td>
 <td>0.025 [0.023, 0.028]</td>
-<td>33 [32, 39]</td>
+<td>34 [28, 42]</td>
 </tr>
 <tr class="odd">
 <td><code><a href="https://rdrr.io/pkg/nsprcomp/man/nscumcomp.html" class="external-link">nsprcomp::nscumcomp</a></code></td>
 <td>(5,6,5,2,4,2)</td>
 <td>0.819 [0.814, 0.830]</td>
 <td>5.1e-05 (max 1.0e-04)</td>
-<td>1.086</td>
-<td>65 [64, 129]</td>
+<td>1.098</td>
+<td>68 [64, 129]</td>
 </tr>
 <tr class="even">
 <td><code><a href="https://rdrr.io/pkg/amanpg/man/spca.amanpg.html" class="external-link">amanpg::spca.amanpg</a></code></td>
 <td>(3,3,4,3,4,6)</td>
 <td>0.863</td>
 <td>1.654</td>
-<td>0.011</td>
-<td>4.5 [4.5, 7.2]</td>
+<td>0.011 [0.011, 0.013]</td>
+<td>4.5</td>
 </tr>
 <tr class="odd">
 <td><code>sklearn...SparsePCA</code></td>
@@ -805,11 +806,11 @@ nonzero loadings per component, as in <span class="citation">Zou et al.
 <td>0.907</td>
 <td>0.815</td>
 <td>0.061</td>
-<td>0.1 [0.1, 0.4]</td>
+<td>0.1</td>
 </tr>
 <tr class="even">
 <td>PCA (dense)</td>
-<td>(13,13,13,…)</td>
+<td>(13, …, 13)</td>
 <td>0.877</td>
 <td>&lt; 1e-15</td>
 <td>0.001</td>
@@ -825,15 +826,17 @@ nonzero loadings per component, as in <span class="citation">Zou et al.
 <p>This dataset is the one where the feasibility differences are
 starkest. With
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>13</mn></mrow><annotation encoding="application/x-tex">p = 13</annotation></semantics></math>
-and 24 nonzeros coordinates in total, disjoint-support solutions do not
-exist, so methods (like deflation-based methods) that do not explicitly
-enforce orthogonality struggle: at the requested cardinality
-<code>elasticnet</code>, <code>mixOmics</code> and <code>nsprcomp</code>
-return violations of 0.215–0.563 against 9.7e-05 for <code>msPCA</code>.
-<code>nscumcomp</code> also reaches the tolerance (with
+and 24 nonzero coordinates in total, disjoint-support solutions do not
+exist, so methods that do not explicitly enforce orthogonality — the
+deflation-based ones in particular — struggle: at the requested
+cardinality <code>elasticnet</code>, <code>mixOmics</code> and
+<code>nsprcomp</code> return violations of 0.215–0.563 against 9.7e-05
+for <code>msPCA</code>. <code>nscumcomp</code> also reaches the
+tolerance (with
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mo>=</mo><msup><mn>10</mn><mn>7</mn></msup></mrow><annotation encoding="application/x-tex">\gamma = 10^7</annotation></semantics></math>
-against a default of 0), but experiences a fortyfold slowdown and fails
-to achieve the desired sparsity.</p>
+against a default of 0), but at a fortyfold slowdown relative to
+<code>nsprcomp</code> (1.098 s against 0.025 s) and without achieving
+the requested sparsity.</p>
 <p>Pitprops is also the one case where <code>type = "X"</code> is the
 wrong choice: with
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>500</mn></mrow><annotation encoding="application/x-tex">n = 500</annotation></semantics></math>
@@ -841,8 +844,8 @@ pseudo-observations and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>13</mn></mrow><annotation encoding="application/x-tex">p = 13</annotation></semantics></math>
 the data matrix is larger than the correlation matrix, and runtime is
 roughly six times worse. Across seeds <code>msPCA</code> ranges over
-0.786–0.822 in FVE, the one dataset where its random restarts are
-visible; the orthogonality violation stays below 1e-04 throughout.</p>
+0.786–0.822 in FVE, the widest spread it shows on any of the four
+datasets; the orthogonality violation stays below 1e-04 throughout.</p>
 </div>
 <div class="section level3">
 <h3 id="breast-cancer-gene-expression">Breast cancer gene expression<a class="anchor" aria-label="anchor" href="#breast-cancer-gene-expression"></a>
@@ -884,8 +887,8 @@ nonzero loadings per component.</p>
 <td>(20,20,20)</td>
 <td>0.093 [0.088, 0.095]</td>
 <td>7.5e-05 (max 9.8e-05)</td>
-<td>27.208 [14.083, 27.549]</td>
-<td>7.1 [6.5, 9.0]</td>
+<td>27.244 [14.119, 27.602]</td>
+<td>9.4 [6.6, 11.3]</td>
 </tr>
 <tr class="even">
 <td>
@@ -895,8 +898,8 @@ nonzero loadings per component.</p>
 <td>(20,20,20)</td>
 <td>0.095 [0.088, 0.095]</td>
 <td>7.5e-05 (max 9.8e-05)</td>
-<td>13.232 [6.808, 13.320]</td>
-<td>3.1 [2.9, 4.2]</td>
+<td>13.268 [6.790, 13.399]</td>
+<td>3.2 [2.8, 4.4]</td>
 </tr>
 <tr class="odd">
 <td>
@@ -906,8 +909,8 @@ nonzero loadings per component.</p>
 <td>(20,20,20)</td>
 <td>0.043</td>
 <td>0.040</td>
-<td>16.180</td>
-<td>209 [202, 255]</td>
+<td>16.104</td>
+<td>192 [149, 220]</td>
 </tr>
 <tr class="even">
 <td>
@@ -917,24 +920,24 @@ nonzero loadings per component.</p>
 <td>(20,20,20)</td>
 <td>0.043</td>
 <td>0.021</td>
-<td>0.812</td>
-<td>79 [77, 152]</td>
+<td>0.816</td>
+<td>79 [79, 127]</td>
 </tr>
 <tr class="odd">
 <td><code><a href="https://rdrr.io/pkg/PMA/man/SPC.html" class="external-link">PMA::SPC</a></code></td>
 <td>(20,22,13)</td>
 <td>0.042</td>
 <td>0.008</td>
-<td>0.042</td>
-<td>34 [33, 39]</td>
+<td>0.041</td>
+<td>33</td>
 </tr>
 <tr class="even">
 <td><code><a href="https://rdrr.io/pkg/sparsepca/man/spca.html" class="external-link">sparsepca::spca</a></code></td>
 <td>(43,14,22)</td>
 <td>0.082</td>
 <td>&lt; 1e-15</td>
-<td>4.770</td>
-<td>92 [49, 124]</td>
+<td>4.841</td>
+<td>142 [46, 176]</td>
 </tr>
 <tr class="odd">
 <td><code><a href="https://rdrr.io/pkg/mixOmics/man/spca.html" class="external-link">mixOmics::spca</a></code></td>
@@ -942,23 +945,23 @@ nonzero loadings per component.</p>
 <td>0.077</td>
 <td>&lt; 1e-15</td>
 <td>0.032</td>
-<td>7.0</td>
+<td>7.0 [6.9, 27.6]</td>
 </tr>
 <tr class="even">
 <td><code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp</a></code></td>
 <td>(20,20,20)</td>
 <td>0.083 [0.070, 0.084]</td>
 <td>&lt; 1e-15</td>
-<td>0.033 [0.030, 0.037]</td>
-<td>48 [48, 58]</td>
+<td>0.032 [0.030, 0.035]</td>
+<td>48</td>
 </tr>
 <tr class="odd">
 <td><code><a href="https://rdrr.io/pkg/nsprcomp/man/nscumcomp.html" class="external-link">nsprcomp::nscumcomp</a></code></td>
 <td>(29,23,8)</td>
 <td>0.081 [0.080, 0.085]</td>
 <td>&lt; 1e-15</td>
-<td>0.232 [0.220, 0.264]</td>
-<td>57</td>
+<td>0.229 [0.219, 0.261]</td>
+<td>55</td>
 </tr>
 <tr class="even">
 <td><code><a href="https://rdrr.io/pkg/amanpg/man/spca.amanpg.html" class="external-link">amanpg::spca.amanpg</a></code></td>
@@ -966,7 +969,7 @@ nonzero loadings per component.</p>
 <td>0.045</td>
 <td>&lt; 1e-15</td>
 <td>0.071</td>
-<td>50</td>
+<td>50 [49, 65]</td>
 </tr>
 <tr class="odd">
 <td><code>sklearn...SparsePCA</code></td>
@@ -974,7 +977,7 @@ nonzero loadings per component.</p>
 <td>0.020 [0.020, 0.032]</td>
 <td>&lt; 1e-15</td>
 <td>0.079</td>
-<td>0.6 [0.6, 0.7]</td>
+<td>0.6 [0.5, 1.3]</td>
 </tr>
 <tr class="even">
 <td>PCA (dense)</td>
@@ -982,7 +985,7 @@ nonzero loadings per component.</p>
 <td>0.352</td>
 <td>&lt; 1e-15</td>
 <td>0.010</td>
-<td>2.6</td>
+<td>2.6 [2.5, 3.6]</td>
 </tr>
 </tbody>
 </table>
@@ -991,22 +994,25 @@ nonzero loadings per component.</p>
 <code>alpha = 15</code> (<code>sklearn</code>),
 <code>gamma = 316</code>.</p>
 <p>This is where the penalty-parameterized methods break down most
-clearly in terms of achieved sparisty. Against a request of (20,20,20),
+clearly in terms of achieved sparsity. Against a request of (20,20,20),
 <code>amanpg</code> returns (68,1,2), <code>sklearn</code> (22,3,1) and
 <code>sparsepca</code> (43,14,22); no value on their grids does better.
 Only the four functions taking a per-component cardinality budget return
-the desired sparisty levels. Feasibility, by contrast, is uninformative
+the desired sparsity levels. Feasibility, by contrast, is uninformative
 here: with 60 nonzeros over
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>500</mn></mrow><annotation encoding="application/x-tex">p = 500</annotation></semantics></math>
-disjoint supports are easy to find, and most methods retunrs solutions
-that are trivially orthogonal.</p>
+disjoint supports are easy to find, and most methods return solutions
+that are trivially orthogonal. <code>msPCA</code> is the exception, at
+7.5e-05: it stops once the violation is inside its 1e-4 tolerance rather
+than driving it to zero.</p>
 <p>This is the smallest dataset at which the memory column measures the
-algorithms rather than fixed overheads, and <code>msPCA</code> is the
-lightest method that meets the budget: 3.1 MB on the data matrix and 7.1
-MB on the correlation matrix, against 79 and 209 MB for
-<code>elasticnet</code>, 92 MB for <code>sparsepca</code>, and 48–57 MB
-for <code>nsprcomp</code> and <code>nscumcomp</code>. The
-<code>type = "X"</code> saving is modest because
+algorithms rather than fixed overheads, and <code>msPCA</code> on the
+data matrix is the lightest of the methods that meet the budget: 3.2 MB,
+against 7.0 MB for <code>mixOmics</code>, 9.4 MB for <code>msPCA</code>
+on the correlation matrix, 48 MB for <code>nsprcomp</code>, and 79 and
+192 MB for <code>elasticnet</code>. (<code>sparsepca</code> at 142 MB
+and <code>nscumcomp</code> at 55 MB do not meet the budget.) The
+<code>type = "X"</code> saving is modest in absolute terms because
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold">𝚺</mi><annotation encoding="application/x-tex">\boldsymbol{\Sigma}</annotation></semantics></math>
 is only about 2 MB at this size.</p>
 </div>
@@ -1055,8 +1061,8 @@ budgets.</p>
 <td>(20,20)</td>
 <td>0.008 [0.008, 0.009]</td>
 <td>&lt; 1e-15</td>
-<td>59.504 [50.630, 99.328]</td>
-<td>641</td>
+<td>57.226 [41.791, 87.700]</td>
+<td>640</td>
 </tr>
 <tr class="even">
 <td>
@@ -1066,8 +1072,8 @@ budgets.</p>
 <td>(20,20)</td>
 <td>0.008 [0.008, 0.009]</td>
 <td>&lt; 1e-15</td>
-<td>1.842 [0.891, 2.563]</td>
-<td>45</td>
+<td>1.557 [0.777, 2.177]</td>
+<td>44</td>
 </tr>
 <tr class="odd">
 <td>
@@ -1077,24 +1083,24 @@ budgets.</p>
 <td>(20,20)</td>
 <td>0.004</td>
 <td>&lt; 1e-15</td>
-<td>6.894</td>
-<td>309 [307, 426]</td>
+<td>6.303</td>
+<td>512 [421, 577]</td>
 </tr>
 <tr class="even">
 <td><code><a href="https://rdrr.io/pkg/mixOmics/man/spca.html" class="external-link">mixOmics::spca</a></code></td>
 <td>(20,20)</td>
 <td>0.006</td>
 <td>&lt; 1e-15</td>
-<td>0.334</td>
-<td>24 [20, 24]</td>
+<td>0.335</td>
+<td>24 [24, 50]</td>
 </tr>
 <tr class="odd">
 <td><code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp</a></code></td>
 <td>(20,20)</td>
 <td>0.009</td>
 <td>&lt; 1e-15</td>
-<td>0.353 [0.266, 0.371]</td>
-<td>59</td>
+<td>0.370 [0.265, 0.391]</td>
+<td>61 [57, 124]</td>
 </tr>
 <tr class="even">
 <td>PCA (dense)</td>
@@ -1119,20 +1125,20 @@ with the
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mi>p</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(np)</annotation></semantics></math>
 two-pass product
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi mathvariant="bold-italic">𝑿</mi><mi>⊤</mi></msup><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑿</mi><mi mathvariant="bold-italic">𝜷</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\boldsymbol{X}^\top(\boldsymbol{X}\boldsymbol{\beta})/(n-1)</annotation></semantics></math>
-and never forms the covariance matrix: the working set falls from 641 MB
-to 45 MB and median runtime from 59.5 seconds to 1.8, at identical FVE
-and feasibility. The correlation matrix accounts for 128 MB of the
-difference, the rest being the <code>Eigen</code> copy of it and the
-dense intermediates the
+and never forms the covariance matrix: the working set falls from 640 MB
+to 44 MB and median runtime from 57.2 seconds to 1.6 seconds, at
+identical FVE and feasibility. The correlation matrix accounts for 128
+MB of the difference, the rest being the <code>Eigen</code> copy of it
+and the dense intermediates the
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>p</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(p^2)</annotation></semantics></math>
 path requires. Both rows vary by a factor of two or more in runtime
 across seeds, so those ratios are good to one significant figure at
 most.</p>
 <p>The memory figures are far steadier: <code>msPCA</code>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold">𝚺</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\boldsymbol{\Sigma})</annotation></semantics></math>
-spans 639–642 MB over the same repetitions, whereas
-<code>elasticnet</code>’s median has landed anywhere between 309 and 570
-MB on repeated runs of the identical script. <code>msPCA</code>
+spans 639–641 MB over the same repetitions, whereas
+<code>elasticnet</code>’s five repetitions span 421–577 MB and its
+median moves between runs of the identical script. <code>msPCA</code>
 allocates in <code>Eigen</code>, where the footprint follows from the
 algorithm; the pure-R methods allocate on R’s heap, where the peak
 depends on garbage-collector timing. Together with the Pitprops result
@@ -1150,10 +1156,12 @@ the rule is just the relative size of the two inputs:
 <code><a href="https://rdrr.io/pkg/sparsepca/man/spca.html" class="external-link">sparsepca::spca()</a></code>, <code><a href="https://rdrr.io/pkg/nsprcomp/man/nscumcomp.html" class="external-link">nsprcomp::nscumcomp()</a></code>,
 <code><a href="https://rdrr.io/pkg/amanpg/man/spca.amanpg.html" class="external-link">amanpg::spca.amanpg()</a></code> and
 <code>sklearn.decomposition.SparsePCA()</code> give no direct control
-over the sparsity of each loading vector. <code><a href="https://rdrr.io/pkg/PMA/man/SPC.html" class="external-link">PMA::SPC()</a></code> and
-<code>sklearn</code> expose only a global
+over the sparsity of each loading vector. <code><a href="https://rdrr.io/pkg/PMA/man/SPC.html" class="external-link">PMA::SPC()</a></code>
+exposes only a global
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ℓ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\ell_1</annotation></semantics></math>
-bound; <code><a href="https://rdrr.io/pkg/sparsepca/man/spca.html" class="external-link">sparsepca::spca()</a></code>, <code>nscumcomp()</code> and
+bound and <code>sklearn</code> only a global
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ℓ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\ell_1</annotation></semantics></math>
+penalty; <code><a href="https://rdrr.io/pkg/sparsepca/man/spca.html" class="external-link">sparsepca::spca()</a></code>, <code>nscumcomp()</code> and
 <code>amanpg</code> tend to return unbalanced components, with one PC
 carrying most of the budget. None can be calibrated to an exact
 per-component target, which is what makes an apples-to-apples comparison
@@ -1176,11 +1184,12 @@ differences appear.</p>
 <p>There, <code><a href="../reference/mspca.html">msPCA::mspca()</a></code> reaches 1e-4 while returning the
 requested cardinality exactly, and does so at every repetition: the
 largest violation it produced anywhere in the benchmark is 9.9e-05. Two
-other methods reach the tolerance on one dataset each, both with
-qualifications. <code><a href="https://rdrr.io/pkg/nsprcomp/man/nscumcomp.html" class="external-link">nsprcomp::nscumcomp()</a></code> reaches it on both,
-but only with <code>gamma</code> driven to 10<sup>6–10</sup>7, returning
-(5,5,2) and (5,6,5,2,4,2) against budgets of (4,4,4) and (4,4,4,4,4,4),
-and its worst Pitprops repetition is 1.03e-04.
+other methods reach the tolerance, both with qualifications.
+<code><a href="https://rdrr.io/pkg/nsprcomp/man/nscumcomp.html" class="external-link">nsprcomp::nscumcomp()</a></code> reaches it on both datasets, but only
+with <code>gamma</code> driven to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mn>6</mn></msup><annotation encoding="application/x-tex">10^6</annotation></semantics></math>–<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mn>7</mn></msup><annotation encoding="application/x-tex">10^7</annotation></semantics></math>,
+returning (5,5,2) and (5,6,5,2,4,2) against budgets of (4,4,4) and
+(4,4,4,4,4,4), and its worst Pitprops repetition is 1.03e-04.
 <code>sklearn...SparsePCA()</code> reaches it on mtcars by returning 11
 nonzeros in total rather than the requested 12, which at
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>11</mn></mrow><annotation encoding="application/x-tex">p = 11</annotation></semantics></math>
@@ -1188,15 +1197,19 @@ admits a disjoint solution and so makes orthogonality free. Every other
 method, at the requested cardinality, returns violations between 0.08
 and 0.56 on these two datasets.</p>
 <p>The claim supported by this is narrower than “only <code>msPCA</code>
-can be feasible”, and more useful: it is the only method that delivers
-feasibility and the requested sparsity together, without a search over a
-penalty parameter to get there.</p>
+can be feasible”, and more useful: on the two datasets where feasibility
+actually binds, it is the only method that delivers feasibility and the
+requested sparsity together, without a search over a penalty parameter
+to get there.</p>
 <p><strong>Variance explained.</strong> Among the methods that meet the
 requested cardinality, <code><a href="../reference/mspca.html">msPCA::mspca()</a></code> and
 <code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> are generally the best performers,
 followed by <code><a href="https://rdrr.io/pkg/mixOmics/man/spca.html" class="external-link">mixOmics::spca()</a></code> and
-<code><a href="https://rdrr.io/pkg/elasticnet/man/spca.html" class="external-link">elasticnet::spca()</a></code>. <code>msPCA</code> does not appear to
-sacrifice variance explained in order to achieve feasibility.</p>
+<code><a href="https://rdrr.io/pkg/elasticnet/man/spca.html" class="external-link">elasticnet::spca()</a></code>. The FVE cost of enforcing feasibility
+therefore looks small: the largest gap between <code>msPCA</code> and
+the best budget-respecting competitor is about 0.025 FVE, on Pitprops,
+where <code>nsprcomp</code> reaches 0.816 at an orthogonality violation
+of 0.563.</p>
 <p>Several methods post higher FVE while missing the budget, and those
 figures should be read in that light: <code>sklearn...SparsePCA()</code>
 reaches 0.907 on Pitprops at (7,3,4,3,5,4) with a violation of 0.815,
@@ -1205,40 +1218,39 @@ The exception is <code>nscumcomp</code> at 0.824 on mtcars with (5,5,2),
 which is both high and feasible, and is the most substantive competition
 in the comparison.</p>
 <p><strong>Reproducibility.</strong> Repeating each method under several
-seeds separates the deterministic implementations
-(<code>elasticnet</code>, <code>PMA</code>, <code>sparsepca</code>,
-<code>mixOmics</code>, <code>amanpg</code>, dense PCA) from the rest.
-<code>nsprcomp</code> and <code>nscumcomp</code> use random
-initialisation and move between runs; <code>nsprcomp</code>’s
-orthogonality violation on Pitprops spans 0.56–1.10. <code>msPCA</code>
-uses random restarts and is likewise not bit-reproducible across seeds,
-but its variation is confined to the objective. The feasibility
-guarantee holds at every seed on every dataset, the largest violation
-observed anywhere being 9.9e-05.</p>
+seeds separates the implementations that returned identical results at
+every seed (<code>elasticnet</code>, <code>PMA</code>,
+<code>sparsepca</code>, <code>mixOmics</code>, <code>amanpg</code>,
+dense PCA) from the rest. <code>nsprcomp</code> and
+<code>nscumcomp</code> use random initialization and move between runs;
+<code>nsprcomp</code>’s orthogonality violation on Pitprops spans
+0.56–1.10. <code>sklearn...SparsePCA()</code>, seeded from the
+repetition’s seed, also moves (0.020–0.032 FVE on breast cancer).
+<code>msPCA</code> uses random restarts and is likewise not
+bit-reproducible across seeds, but its variation is confined to the
+objective: the feasibility target was met at every seed on every
+dataset, the largest violation observed anywhere being 9.9e-05.</p>
 <p><strong>Memory.</strong> On the two high-dimensional datasets, where
 the memory column reflects the algorithms rather than fixed overheads,
-<code>msPCA</code> is the lightest of the sparse methods that respect an
-exact cardinality budget. On breast cancer it uses 3.1 MB on the data
-matrix against 79 MB for <code>elasticnet</code> on the same input and
-209 MB in Gram mode, with <code>sparsepca</code> at 92 MB and
-<code>nsprcomp</code> and <code>nscumcomp</code> at 48–57 MB. On
-riboflavin it uses 45 MB against 309 MB for <code>elasticnet</code>.
-Within <code>msPCA</code>, the
+<code>msPCA</code> is among the lightest of the sparse methods that
+respect an exact cardinality budget. On breast cancer it uses 3.2 MB on
+the data matrix against 79 MB for <code>elasticnet</code> on the same
+input and 192 MB in Gram mode, 7.0 MB for <code>mixOmics</code> and 48
+MB for <code>nsprcomp</code> (with <code>sparsepca</code> at 142 MB and
+<code>nscumcomp</code> at 55 MB, neither meeting the budget). On
+riboflavin it uses 44 MB against 512 MB for <code>elasticnet</code> and
+61 MB for <code>nsprcomp</code>, though <code>mixOmics</code> is lighter
+still at 24 MB. Within <code>msPCA</code>, the
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold">𝚺</mi><annotation encoding="application/x-tex">\boldsymbol{\Sigma}</annotation></semantics></math>-versus-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝑿</mi><annotation encoding="application/x-tex">\boldsymbol{X}</annotation></semantics></math>
-choice matters more than the choice of package does between packages:
-the same function spans 641 MB to 45 MB on riboflavin depending on the
-interface.</p>
-<p>Those figures are also more stable than the competitors’, for the
-reason given in the riboflavin section. For anyone sizing a job, a
-predictable memory requirement is worth as much as a small one, and the
-competing figures quoted here should be read as order-of-magnitude.</p>
+choice matters more than the choice of package: the same function spans
+640 MB to 44 MB on riboflavin depending on the interface.</p>
 <p><strong>Scalability.</strong> <code><a href="../reference/mspca.html">msPCA::mspca()</a></code> scales to
 datasets with
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>
 in the thousands in reasonable time, and the <code>type = "X"</code>
 interface yields substantial runtime and memory gains when
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>≪</mo><mi>p</mi></mrow><annotation encoding="application/x-tex">n \ll p</annotation></semantics></math>:
-roughly 30x faster and 14x lighter on riboflavin. When
+roughly 35x faster and 15x lighter on riboflavin. When
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>&gt;</mo><mi>p</mi></mrow><annotation encoding="application/x-tex">n &gt; p</annotation></semantics></math>,
 as in the Pitprops pseudo-data, the ordering reverses and
 <code>type = "Sigma"</code> is preferable.</p>
@@ -1266,8 +1278,8 @@ to Breast Cancer Pathophysiologies.”</span> <em>Cancer Cell</em> 10 (6):
 529–41.
 </div>
 <div id="ref-erichson2020sparse" class="csl-entry">
-Erichson, N Benjamin, Peng Zheng, Krithika Manohar, Steven L Brunton, J
-Nathan Kutz, and Aleksandr Y Aravkin. 2020. <span>“Sparse Principal
+Erichson, N. Benjamin, Peng Zheng, Krithika Manohar, Steven L. Brunton,
+J. Nathan Kutz, and Aleksandr Y. Aravkin. 2020. <span>“Sparse Principal
 Component Analysis via Variable Projection.”</span> <em>SIAM Journal on
 Applied Mathematics</em> 80 (2): 977–1002.
 </div>
@@ -1277,43 +1289,50 @@ Principal Component Analysis.”</span> <em>Applied Statistics</em> 16
 (3): 225–36.
 </div>
 <div id="ref-mackey2008deflation" class="csl-entry">
-Mackey, Lester. 2008. <span>“Deflation Methods for Sparse PCA.”</span>
-<em>Advances in Neural Information Processing Systems</em> 21.
+Mackey, Lester. 2008. <span>“Deflation Methods for Sparse
+<span>PCA</span>.”</span> <em>Advances in Neural Information Processing
+Systems</em> 21.
+</div>
+<div id="ref-mairal2009online" class="csl-entry">
+Mairal, Julien, Francis Bach, Jean Ponce, and Guillermo Sapiro. 2009.
+<span>“<span class="nocase">Online dictionary learning for sparse
+coding</span>.”</span> <em>Proceedings of the 26th International
+Conference on Machine Learning</em>, 689–96.
 </div>
 <div id="ref-pedregosa2011scikit" class="csl-entry">
 <span class="nocase">Pedregosa, Fabian, Gaël Varoquaux, Alexandre
-Gramfort, et al.</span> 2011. <span>“Scikit-Learn: Machine Learning in
+Gramfort, et al.</span> 2011. <span>“<span class="nocase">Scikit-learn</span>: Machine Learning in
 <span>P</span>ython.”</span> <em>Journal of Machine Learning
 Research</em> 12: 2825–30.
 </div>
 <div id="ref-rohart2017mixomics" class="csl-entry">
 Rohart, Florian, Benoît Gautier, Amrit Singh, and Kim-Anh Lê Cao. 2017.
-<span>“<span class="nocase">mixOmics</span>: An Package for ‘Omics
-Feature Selection and Multiple Data Integration.”</span> <em>PLOS
-Computational Biology</em> 13 (11): e1005752.
+<span>“<span class="nocase">mixOmics</span>: An <span>R</span> Package
+for ’Omics Feature Selection and Multiple Data Integration.”</span>
+<em>PLOS Computational Biology</em> 13 (11): e1005752.
 </div>
 <div id="ref-shen2008sparse" class="csl-entry">
-Shen, Haipeng, and Jianhua Z Huang. 2008. <span>“Sparse Principal
+Shen, Haipeng, and Jianhua Z. Huang. 2008. <span>“Sparse Principal
 Component Analysis via Regularized Low Rank Matrix
 Approximation.”</span> <em>Journal of Multivariate Analysis</em> 99 (6):
 1015–34.
 </div>
 <div id="ref-sigg2019nsprcomp" class="csl-entry">
 Sigg, Christian D. 2019. <em><span class="nocase">nsprcomp</span>:
-Non-Negative and Sparse PCA</em>. <a href="https://CRAN.R-project.org/package=nsprcomp" class="external-link">https://CRAN.R-project.org/package=nsprcomp</a>.
+Non-Negative and Sparse <span>PCA</span></em>. <a href="https://CRAN.R-project.org/package=nsprcomp" class="external-link">https://CRAN.R-project.org/package=nsprcomp</a>.
 </div>
 <div id="ref-sigg2008expectation" class="csl-entry">
-Sigg, Christian D, and Joachim M Buhmann. 2008.
-<span>“Expectation-Maximization for Sparse and Non-Negative PCA.”</span>
-<em>Proceedings of the 25th International Conference on Machine
-Learning</em>, 960–67.
+Sigg, Christian D., and Joachim M. Buhmann. 2008.
+<span>“Expectation-Maximization for Sparse and Non-Negative
+<span>PCA</span>.”</span> <em>Proceedings of the 25th International
+Conference on Machine Learning</em>, 960–67.
 </div>
 <div id="ref-ushey2023reticulate" class="csl-entry">
-Ushey, Kevin, J. J. Allaire, and Yuan Tang. 2025. <em>: Interface to
-</em>. <a href="https://CRAN.R-project.org/package=reticulate" class="external-link">https://CRAN.R-project.org/package=reticulate</a>.
+Ushey, Kevin, J. J. Allaire, and Yuan Tang. 2025. <em><span class="nocase">reticulate</span>: Interface to <span>Python</span></em>.
+<a href="https://CRAN.R-project.org/package=reticulate" class="external-link">https://CRAN.R-project.org/package=reticulate</a>.
 </div>
 <div id="ref-witten2009penalized" class="csl-entry">
-Witten, Daniela M, Robert Tibshirani, and Trevor Hastie. 2009. <span>“A
+Witten, Daniela M., Robert Tibshirani, and Trevor Hastie. 2009. <span>“A
 Penalized Matrix Decomposition, with Applications to Sparse Principal
 Components and Canonical Correlation Analysis.”</span>
 <em>Biostatistics</em> 10 (3): 515–34.

@@ -42,7 +42,7 @@ correlation matrix (p x p) when \code{type = "Sigma"}, or a raw data matrix
 
 \item{maxIter}{(optional) An integer. Maximum number of iterations of the algorithm. Default 200.}
 
-\item{feasibilityTolerance}{(optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to \code{feasibilityConstraintType}). Under uncorrelatedness the violation is normalized by the average variance \code{tr(Sigma)/p}, so the tolerance carries the same meaning whether \code{M} is a covariance or a correlation matrix. Default 1e-4.}
+\item{feasibilityTolerance}{(optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to \code{feasibilityConstraintType}). Under uncorrelatedness the violation is normalized by the total variance \code{tr(Sigma)}, so the tolerance carries the same meaning whether \code{M} is a covariance or a correlation matrix. Default 1e-4.}
 
 \item{stallingTolerance}{(optional) A float. Controls the objective improvement below which the algorithm is considered to have stalled. Default 1e-8.}
 
@@ -77,19 +77,20 @@ a full per-PC breakdown.
 
 \code{nonredundancy} is a list of two r x r matrices, \code{orthogonality}
 (\eqn{|u_t^\top u_s|}) and \code{uncorrelatedness}
-(\eqn{|u_t^\top \Sigma u_s| / (\mathrm{tr}(\Sigma)/p)}), computed once at
+(\eqn{|u_t^\top \Sigma u_s| / \mathrm{tr}(\Sigma)}), computed once at
 fit time from the sorted loadings. Only the strict upper triangle is
 populated; the diagonal and lower triangle are \code{NA}. Both are stored
 regardless of which constraint was enforced, so a summary under either
 definition is available without the covariance matrix and without
 refitting.
 
-The uncorrelatedness terms are normalized by the average variance
-\eqn{\mathrm{tr}(\Sigma)/p}. The loadings being unit-norm,
+The uncorrelatedness terms are normalized by the total variance
+\eqn{\mathrm{tr}(\Sigma)}. The loadings being unit-norm,
 \eqn{|u_t^\top \Sigma u_s|} scales linearly with \eqn{\Sigma}, so the raw
 quantity - and hence its comparison against \code{feasibilityTolerance} -
 would otherwise depend on the units of the data. After normalization the
-measure is invariant to a rescaling of \eqn{\Sigma}, and a covariance and
+measure is invariant to a rescaling of \eqn{\Sigma} - each pairwise term
+is expressed as a fraction of the total variance - and a covariance and
 a correlation input are on the same footing.
 
 Note that \code{feasibility_violation} (returned by the solver) and the

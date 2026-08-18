@@ -208,44 +208,44 @@ fits run under the zero-correlation constraint.</caption>
 <td align="right">5</td>
 <td align="right">0.0347</td>
 <td align="right">0.0155</td>
-<td align="right">0.0231</td>
-<td align="right">0.0403</td>
-<td align="right">0.0409</td>
+<td align="right">0.0250</td>
+<td align="right">0.2331</td>
+<td align="right">0.0417</td>
 <td align="right">0.0000</td>
 </tr>
 <tr class="even">
 <td align="right">10</td>
 <td align="right">0.0639</td>
 <td align="right">0.0001</td>
-<td align="right">0.0412</td>
-<td align="right">0.4018</td>
-<td align="right">0.0650</td>
+<td align="right">0.0383</td>
+<td align="right">0.3327</td>
+<td align="right">0.0660</td>
 <td align="right">0.0000</td>
 </tr>
 <tr class="odd">
 <td align="right">15</td>
 <td align="right">0.0758</td>
 <td align="right">0.0001</td>
-<td align="right">0.0511</td>
-<td align="right">0.3083</td>
-<td align="right">0.0820</td>
+<td align="right">0.0493</td>
+<td align="right">0.3470</td>
+<td align="right">0.0832</td>
 <td align="right">0.0000</td>
 </tr>
 <tr class="even">
 <td align="right">20</td>
 <td align="right">0.0930</td>
 <td align="right">0.0001</td>
-<td align="right">0.0531</td>
-<td align="right">0.1306</td>
-<td align="right">0.0893</td>
+<td align="right">0.0596</td>
+<td align="right">0.2998</td>
+<td align="right">0.0986</td>
 <td align="right">0.0000</td>
 </tr>
 <tr class="odd">
 <td align="right">25</td>
 <td align="right">0.0953</td>
 <td align="right">0.0001</td>
-<td align="right">0.0593</td>
-<td align="right">0.3229</td>
+<td align="right">0.0658</td>
+<td align="right">0.2780</td>
 <td align="right">0.1083</td>
 <td align="right">0.0148</td>
 </tr>
@@ -253,19 +253,19 @@ fits run under the zero-correlation constraint.</caption>
 <td align="right">30</td>
 <td align="right">0.1113</td>
 <td align="right">0.0001</td>
-<td align="right">0.0686</td>
-<td align="right">0.3632</td>
-<td align="right">0.1026</td>
-<td align="right">0.1285</td>
+<td align="right">0.0783</td>
+<td align="right">0.4033</td>
+<td align="right">0.1025</td>
+<td align="right">0.1168</td>
 </tr>
 <tr class="odd">
 <td align="right">35</td>
 <td align="right">0.1142</td>
 <td align="right">0.0001</td>
-<td align="right">0.0751</td>
-<td align="right">0.4014</td>
-<td align="right">0.0949</td>
-<td align="right">0.0205</td>
+<td align="right">0.0795</td>
+<td align="right">0.3180</td>
+<td align="right">0.1051</td>
+<td align="right">0.2349</td>
 </tr>
 </tbody>
 </table>
@@ -290,15 +290,19 @@ correlation constraints (green, dashed), and
 orthogonal loading vectors for small-to-moderate sparsity budgets
 (<code>k &lt;= 20</code>), reflecting the effectiveness of the deflation
 procedure when component supports can easily be disjoint. Beyond that
-orthogonality breaks: the violation is 0.015 at <code>k = 25</code>,
-0.13 at <code>k = 30</code> and 0.020 at <code>k = 35</code>, and is not
-monotone in <code>k</code>.</p>
+orthogonality breaks down, and does so steeply: the violation is 0.015
+at <code>k = 25</code>, 0.12 at <code>k = 30</code> and 0.23 at
+<code>k = 35</code>.</p>
 <p>By contrast, <code>msPCA</code> with orthogonality constraints holds
 the violation at or below 1e-4 — the default feasibility tolerance — at
 every budget from <code>k = 10</code> upward, because the penalty on
 constraint violation is explicitly tightened throughout the algorithm.
-In terms of FVE, both methods are comparable with a small edge for
-<code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code>.</p>
+In terms of FVE the two methods are comparable, with a small edge for
+<code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> up to <code>k = 25</code>. At
+<code>k = 30</code> and <code>k = 35</code> — precisely the budgets
+where <code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> gives up orthogonality —
+<code>msPCA</code> overtakes it, reaching an FVE of 0.111 and 0.114
+against 0.102 and 0.105 while keeping the violation below tolerance.</p>
 <p>Neither <code><a href="https://rdrr.io/pkg/nsprcomp/man/nsprcomp.html" class="external-link">nsprcomp::nsprcomp()</a></code> nor
 orthogonality-constrained <code>msPCA</code> yields uncorrelated PCs
 here. To obtain uncorrelated PCs we run <code>msPCA</code> with pairwise
@@ -373,29 +377,30 @@ variance respectively.</p>
 <p>The components are more sector-diverse, and their supports overlap
 rather than partitioning the universe — Consolidated Edison (ED) appears
 in all four. Variance is also far more concentrated in the leading
-component: 2.28%, 0.67%, 0.61% and 0.55%, against a much flatter profile
+component: 2.28%, 0.64%, 0.63% and 0.45%, against a much flatter profile
 under orthogonality.</p>
 <ul>
 <li>
 <strong>PC1</strong> consolidates the entire utility sector into a
-single broad component (AEP, CMS, DTE, DUK, ED, ES, PNW, SO, WEC, XEL),
-merging stocks that the orthogonality constraint split across three
-separate PCs.</li>
+single broad component (AEP, CMS, DTE, DUK, ED, ES, PNW, SO, WEC, XEL,
+all loading between -0.30 and -0.34), merging stocks that the
+orthogonality constraint split across three separate PCs.</li>
 <li>
-<strong>PC2</strong> is an energy component: oil and gas exploration
-(APA, DVN) and oilfield services (BKR, HAL, SLB) load together at around
-0.40–0.44, alongside ED at 0.29, against small negative loadings on
-Dollar General (DG), State Street (STT) and Teradyne (TER).</li>
+<strong>PC2</strong> is a REIT component set against a single
+utility: residential apartment REITs (AVB, EQR, UDR, ESS, CPT at
+0.30–0.33, MAA at 0.24) together with retail (FRT, 0.12) and healthcare
+REITs (DOC, 0.08; WELL, 0.05), against ED at -0.65.</li>
 <li>
-<strong>PC3</strong> identifies pharmaceutical distribution
-—McKesson (MCK), Cardinal Health (CAH) and Cencora (COR) all load above
-0.51— extended by generics (VTRS) and diagnostics (LH), against Best Buy
-(BBY) and, more weakly, KLA (KLAC) and Air Products (APD).</li>
+<strong>PC3</strong> identifies packaged food and household staples
+—General Mills (GIS, 0.47), Kellanova (K, 0.45), Smucker (SJM, 0.41),
+Campbell’s (CPB, 0.41), Conagra (CAG, 0.21) and Kimberly-Clark (KMB,
+0.16)— against the utilities WEC (-0.31) and ED (-0.28).</li>
 <li>
-<strong>PC4</strong> is a mega-cap technology component: Alphabet’s
-two share classes (GOOG, GOOGL) load at about -0.60, with Amazon (AMZN)
-at -0.38 and Microsoft (MSFT) at -0.22, against positive loadings on
-Best Buy (BBY) and Quanta Services (PWR).</li>
+<strong>PC4</strong> is a casino and resort component: Wynn (WYNN)
+and Las Vegas Sands (LVS) load at 0.60 and 0.56, MGM at 0.40, with ED at
+0.16 and GIS at 0.12, against Biogen (BIIB) at -0.30 and smaller
+negative loadings on Snap-on (SNA), UPS, Genuine Parts (GPC) and
+Packaging Corporation (PKG).</li>
 </ul>
 <p>Signs are arbitrary up to a global flip within each component; what
 matters is the contrast between the positively and negatively loaded
@@ -408,17 +413,18 @@ groups.</p>
 <p>Orthogonality and zero pairwise correlation are not interchangeable.
 On strongly correlated data they recover qualitatively different factor
 structures. On this stock return data, orthogonality returns disjoint
-supports spends all four components inside two sectors: three separate
-utility clusters and one REIT basket. Zero pairwise correlation, on the
-other hand, returns overlapping supports and recovers four distinct
-themes instead —utilities, energy, pharmaceutical distribution and
-mega-cap technology— each expressed as a contrast between positively and
-negatively loaded groups. We also observe a difference in the
-distribution of variance explained by each PC: under zero correlation
-the leading component carries most of the explained variance (2.28%
-against 0.55–0.67% for the others), whereas orthogonality spreads it
-more evenly (2.13% down to 1.21%), and total FVE is markedly lower with
-zero-correlation constraints at every sparsity budget.</p>
+supports and spends all four components inside two sectors: three
+separate utility clusters and one REIT basket. Zero pairwise
+correlation, on the other hand, returns overlapping supports and
+recovers four distinct themes instead —utilities, REITs, packaged food
+and household staples, and casino operators— each expressed as a
+contrast between positively and negatively loaded groups. We also
+observe a difference in the distribution of variance explained by each
+PC: under zero correlation the leading component carries most of the
+explained variance (2.28% against 0.45–0.64% for the others), whereas
+orthogonality spreads it more evenly (2.13% down to 1.21%), and total
+FVE is markedly lower with zero-correlation constraints at every
+sparsity budget.</p>
 </div>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
@@ -430,7 +436,7 @@ Classification Standard</span> (<span>GICS</span>)</em>. <a href="https://www.ms
 </div>
 <div id="ref-sigg2019nsprcomp" class="csl-entry">
 Sigg, Christian D. 2019. <em><span class="nocase">nsprcomp</span>:
-Non-Negative and Sparse PCA</em>. <a href="https://CRAN.R-project.org/package=nsprcomp" class="external-link">https://CRAN.R-project.org/package=nsprcomp</a>.
+Non-Negative and Sparse <span>PCA</span></em>. <a href="https://CRAN.R-project.org/package=nsprcomp" class="external-link">https://CRAN.R-project.org/package=nsprcomp</a>.
 </div>
 </div>
 </div>

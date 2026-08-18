@@ -34,7 +34,7 @@ Invisibly returns a list of class \code{"summary.mspca"} with fields:
 of that PC against any other PC).}
 \item{\code{feasibility_mat}}{r x r matrix of pairwise violations
 (\eqn{|u_i^\top u_j|} or
-\eqn{|u_i^\top \Sigma u_j| \big/ (\mathrm{tr}(\Sigma)/p)}).
+\eqn{|u_i^\top \Sigma u_j| \big/ \mathrm{tr}(\Sigma)}).
 Diagonal and lower triangle are \code{NA}.}
 \item{\code{feasibility}}{Scalar total violation (sum of the upper triangle
 of \code{feasibility_mat}). Strictly off-diagonal, and therefore not
