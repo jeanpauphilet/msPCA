@@ -248,6 +248,58 @@ test_that("invalid feasibilityConstraintType is rejected", {
                      verbose = FALSE), regexp = "must be 0")
 })
 
+test_that("fractional feasibilityConstraintType is rejected, not truncated", {
+  # The old order of operations -- as.integer() first, membership test second --
+  # accepted anything in (-1, 2): 0.5, 0.9 and -0.5 all truncate to 0 and 1.7
+  # truncates to 1, so the solver silently enforced a constraint that was never
+  # requested. Each value below must error rather than be rounded into range.
+  for (bad_val in list(0.5, 0.9, 1.5, 1.7, -0.5)) {
+    expect_error(mspca(Sigma_ok, r = 1L, ks = 2L,
+                       feasibilityConstraintType = bad_val, verbose = FALSE),
+                 regexp = "must be 0")
+  }
+})
+
+test_that("non-numeric, missing and non-finite constraint types are rejected", {
+  for (bad_val in list("0", "orthogonality", NA, NA_real_, NaN, Inf, -Inf,
+                       NULL, c(0L, 1L), TRUE)) {
+    expect_error(mspca(Sigma_ok, r = 1L, ks = 2L,
+                       feasibilityConstraintType = bad_val, verbose = FALSE),
+                 regexp = "must be 0")
+  }
+})
+
+test_that("valid constraint types are accepted in either numeric type", {
+  for (good_val in list(0L, 1L, 0, 1)) {
+    expect_error(mspca(Sigma_ok, r = 2L, ks = c(2L, 2L),
+                       feasibilityConstraintType = good_val, verbose = FALSE), NA)
+  }
+})
+
+test_that("summary.mspca applies the same rule, and still accepts NULL", {
+  res <- mspca(Sigma_ok, r = 2L, ks = c(2L, 2L), verbose = FALSE)
+  for (bad_val in list(0.5, 1.5, -0.5, NA, Inf, "1", c(0L, 1L))) {
+    expect_error(
+      capture.output(summary(res, feasibilityConstraintType = bad_val)),
+      regexp = "must be 0"
+    )
+  }
+  # NULL means "report under the type used to fit", and must keep working.
+  expect_error(capture.output(summary(res, feasibilityConstraintType = NULL)), NA)
+  expect_error(capture.output(summary(res)), NA)
+})
+
+test_that("the constraint-type error mentions NULL only where NULL is allowed", {
+  res <- mspca(Sigma_ok, r = 2L, ks = c(2L, 2L), verbose = FALSE)
+  e_fit <- tryCatch(mspca(Sigma_ok, r = 1L, ks = 2L, feasibilityConstraintType = 0.5,
+                          verbose = FALSE),
+                    error = conditionMessage)
+  e_sum <- tryCatch(capture.output(summary(res, feasibilityConstraintType = 0.5)),
+                    error = conditionMessage)
+  expect_false(grepl("NULL", e_fit))
+  expect_true(grepl("or NULL", e_sum))
+})
+
 # ---------- On/off switches ---------------------------------------------------
 #
 # `isTRUE()` is deliberately strict: isTRUE(1) is FALSE. Using it to read a

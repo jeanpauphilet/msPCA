@@ -158,6 +158,31 @@
        call. = FALSE)
 }
 
+# The feasibility constraint type: exactly 0 (orthogonality) or 1
+# (uncorrelatedness), optionally NULL for summary.mspca(), where NULL means "use
+# the type recorded at fit time". Returns an integer (or NULL).
+#
+# The check has to happen *before* any integer conversion. Coercing first and
+# testing membership afterwards -- `as.integer(x) %in% c(0L, 1L)` -- accepts
+# anything in (-1, 2): 0.5, 0.9 and -0.5 all truncate to 0, and 1.7 truncates to
+# 1, so the fit silently enforces a constraint the user did not ask for.
+.validate_constraint_type <- function(x, allow_null = FALSE) {
+  if (allow_null && is.null(x)) {
+    return(NULL)
+  }
+  if (!is.numeric(x) || length(x) != 1L || !is.finite(x) || !.is_whole(x) ||
+      !x %in% c(0, 1)) {
+    stop(sprintf(paste0("`feasibilityConstraintType` must be 0 (orthogonality) or 1 ",
+                        "(uncorrelatedness)%s, exactly -- values are not rounded. Got: %s."),
+                 if (allow_null) ", or NULL" else "",
+                 if (is.null(x)) "NULL"
+                 else if (length(x) != 1L) sprintf("%s of length %d", class(x)[1L], length(x))
+                 else paste0(class(x)[1L], " ", format(x))),
+         call. = FALSE)
+  }
+  as.integer(x)
+}
+
 # Centralized validation of the solver arguments, shared by mspca() and tpm().
 #
 # `nPC` is the requested number of components, or NULL for tpm(), which fits a
@@ -355,7 +380,10 @@
 #'   `r`; if it is shorter than `r`, a warning is issued and the algorithm is run
 #'   for `length(ks)` PCs.
 #' @param type (optional) Either "Sigma" (default; `M` is a covariance/correlation matrix) or "X" (`M` is a raw data matrix).
-#' @param feasibilityConstraintType (optional) An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. Default 0.
+#' @param feasibilityConstraintType (optional) An integer. Type of feasibility
+#'   constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness
+#'   constraints. Must be exactly 0 or 1; fractional values are rejected rather
+#'   than rounded. Default 0.
 #' @param verbose (optional) A Boolean. Controls console output. `TRUE`/`FALSE`
 #'   or the numbers 0/1; any other value is an error. Default TRUE.
 #' @param maxIter (optional) An integer. Maximum number of iterations of the
@@ -428,16 +456,7 @@ mspca <- function(M, r, ks, type = c("Sigma", "X"),
                   center = TRUE, scale = TRUE, divisor = c("n-1", "n"),
                   checkPSD = TRUE, symTolerance = 1e-8, psdTolerance = 1e-8) {
   type <- match.arg(type)
-  if (!is.numeric(feasibilityConstraintType) || length(feasibilityConstraintType) != 1L ||
-      !is.finite(feasibilityConstraintType)) {
-    stop("`feasibilityConstraintType` must be 0 (orthogonality) or 1 (uncorrelatedness).",
-         call. = FALSE)
-  }
-  feasibilityConstraintType <- as.integer(feasibilityConstraintType)
-  if (!feasibilityConstraintType %in% c(0L, 1L)) {
-    stop("`feasibilityConstraintType` must be 0 (orthogonality) or 1 (uncorrelatedness).",
-         call. = FALSE)
-  }
+  feasibilityConstraintType <- .validate_constraint_type(feasibilityConstraintType)
   .validate_solver_args(
     cardinality = ks, cardinalityName = "ks", nPC = r,
     maxIter = maxIter, timeLimit = timeLimitTPM, timeLimitName = "timeLimitTPM",
@@ -716,7 +735,8 @@ print.mspca <- function(x, C = NULL, digits = NULL, ...) {
 #'   will be removed in a future release.
 #' @param feasibilityConstraintType (optional) An integer or `NULL`. Type of
 #'   constraint used to compute the violations reported in the summary. `0`
-#'   for orthogonality; `1` for zero pairwise correlation. When `NULL` (the
+#'   for orthogonality; `1` for zero pairwise correlation. Must be exactly 0 or
+#'   1; fractional values are rejected rather than rounded. When `NULL` (the
 #'   default) the type stored in `object` at fit time is used.
 #' @param digits An integer or `NULL`. Number of significant digits for
 #'   display. When `NULL` (the default), \code{getOption("digits")} is used.
@@ -766,17 +786,15 @@ summary.mspca <- function(object, C = NULL,
   r  <- ncol(v)
 
   ## -- Which constraint definition to report --
+  feasibilityConstraintType <- .validate_constraint_type(feasibilityConstraintType,
+                                                         allow_null = TRUE)
   fitted_type <- object$feasibilityConstraintType
   if (is.null(feasibilityConstraintType)) {
     # Default: whatever was enforced at fit time. Objects fitted with
     # msPCA 0.5.0 or earlier do not record it; fall back to the historical default.
     ctype <- if (!is.null(fitted_type)) as.integer(fitted_type) else 0L
   } else {
-    ctype <- as.integer(feasibilityConstraintType)
-    if (!ctype %in% c(0L, 1L)) {
-      stop("`feasibilityConstraintType` must be 0 (orthogonality), 1 (uncorrelatedness), or NULL.",
-           call. = FALSE)
-    }
+    ctype <- feasibilityConstraintType
     if (!is.null(fitted_type) && ctype != as.integer(fitted_type)) {
       warning(sprintf(paste0("Reporting %s violations, but the model was fitted under %s ",
                              "constraints. The reported figures do not describe a constraint ",
