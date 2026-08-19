@@ -98,8 +98,7 @@ The same convention is used inside the solver, and for the
 ## Lagrangian alternating maximization
 
 The key algorithmic idea is to handle the coupling constraints in (1) via a quadratic penalty
-in the objective, which causes the problem to decompose into $r$ independent single-component
-sparse PCA subproblems. Introducing non-negative penalty parameters $\lambda_{t,t'}$ for each
+in the objective. Introducing non-negative penalty parameters $\lambda_{t,t'}$ for each
 pair $t \neq t'$ (with $\lambda_{t,t'} = \lambda_{t',t}$) gives the penalized objective
 
 $$\max_{\boldsymbol{U}} \ \sum_{t=1}^r \boldsymbol{u}_t^\top \boldsymbol{\Sigma} \boldsymbol{u}_t
