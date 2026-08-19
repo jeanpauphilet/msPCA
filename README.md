@@ -10,6 +10,10 @@ The `msPCA` package computes sparse loading vectors that explain a high fraction
 - orthogonality of loading vectors,
 - zero pairwise correlation of components.
 
+The package is listed in two CRAN Task Views:
+[Machine Learning and Statistical Learning](https://cran.r-project.org/view=MachineLearning)
+and [Chemometrics and Computational Physics](https://cran.r-project.org/view=ChemPhys).
+
 ## Installation
 
 Install from CRAN:
