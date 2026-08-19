@@ -80,7 +80,8 @@ will be removed in a future release.</p></dd>
 <dt id="arg-feasibilityconstrainttype">feasibilityConstraintType<a class="anchor" aria-label="anchor" href="#arg-feasibilityconstrainttype"></a></dt>
 <dd><p>(optional) An integer or <code>NULL</code>. Type of
 constraint used to compute the violations reported in the summary. <code>0</code>
-for orthogonality; <code>1</code> for zero pairwise correlation. When <code>NULL</code> (the
+for orthogonality; <code>1</code> for zero pairwise correlation. Must be exactly 0 or
+1; fractional values are rejected rather than rounded. When <code>NULL</code> (the
 default) the type stored in <code>object</code> at fit time is used.</p></dd>
 
 
@@ -179,7 +180,7 @@ resulting figure does not describe a constraint the solver enforced.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> msPCA summary: 2 sparse PC(s)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Input type   : Sigma </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Runtime (s)  : 0.619 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Runtime (s)  : 0.347 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Constraint   : uncorrelatedness (as fitted) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Per-component statistics:</span>

@@ -17,7 +17,8 @@ will be removed in a future release.}
 
 \item{feasibilityConstraintType}{(optional) An integer or \code{NULL}. Type of
 constraint used to compute the violations reported in the summary. \code{0}
-for orthogonality; \code{1} for zero pairwise correlation. When \code{NULL} (the
+for orthogonality; \code{1} for zero pairwise correlation. Must be exactly 0 or
+1; fractional values are rejected rather than rounded. When \code{NULL} (the
 default) the type stored in \code{object} at fit time is used.}
 
 \item{digits}{An integer or \code{NULL}. Number of significant digits for

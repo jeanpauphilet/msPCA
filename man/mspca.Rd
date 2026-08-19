@@ -41,7 +41,10 @@ for \code{length(ks)} PCs.}
 
 \item{type}{(optional) Either "Sigma" (default; \code{M} is a covariance/correlation matrix) or "X" (\code{M} is a raw data matrix).}
 
-\item{feasibilityConstraintType}{(optional) An integer. Type of feasibility constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness constraints. Default 0.}
+\item{feasibilityConstraintType}{(optional) An integer. Type of feasibility
+constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness
+constraints. Must be exactly 0 or 1; fractional values are rejected rather
+than rounded. Default 0.}
 
 \item{verbose}{(optional) A Boolean. Controls console output. \code{TRUE}/\code{FALSE}
 or the numbers 0/1; any other value is an error. Default TRUE.}
