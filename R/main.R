@@ -611,7 +611,7 @@ fraction_variance_explained_perPC <- function(C, U){
 
 #' Fraction of Variance Explained
 #'
-#' Computes the sum of marginal component variances divided by tr(Σ). 
+#' Computes the sum of marginal component variances divided by \eqn{tr(\Sigma)}. 
 #' This equals the variance explained by projection onto the span of U when the columns of U are orthonormal; otherwise it is the normalized sparse-PCA objective.
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. The matrix containing the r PCs (p x r).

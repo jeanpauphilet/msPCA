@@ -2,6 +2,7 @@
 ^\.Rproj\.user$
 ^cran-comments\.md$
 ^\.vscode$
+^\.github$
 ^test$
 ^XXX --- data$
 ^msPCA_.*\.tar\.gz$
@@ -15,3 +16,10 @@
 ^msPCA\.worktrees$
 ^check_output\.log$
 ^SUBMISSION_CHECKLIST\.md$
+
+^CONTRIBUTING\.md$
+^data-raw$
+^notebooks$
+^pkgdown$
+^replication$
+^vignettes/articles$

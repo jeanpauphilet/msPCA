@@ -15,7 +15,7 @@ fraction_variance_explained(C, U)
 A float.
 }
 \description{
-Computes the sum of marginal component variances divided by tr(Σ).
+Computes the sum of marginal component variances divided by \eqn{tr(\Sigma)}.
 This equals the variance explained by projection onto the span of U when the columns of U are orthonormal; otherwise it is the normalized sparse-PCA objective.
 }
 \examples{
