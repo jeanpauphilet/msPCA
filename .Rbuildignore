@@ -4,7 +4,6 @@
 ^\.vscode$
 ^\.github$
 ^test$
-^XXX --- data$
 ^msPCA_.*\.tar\.gz$
 ^msPCA_.*\.pdf$
 ^msPCA_.*\.csv$
@@ -12,11 +11,8 @@
 ^docs$
 ^Meta$
 ^_pkgdown\.yml$
-^plan_dual_input_api\.md$
 ^msPCA\.worktrees$
 ^check_output\.log$
-^SUBMISSION_CHECKLIST\.md$
-
 ^CONTRIBUTING\.md$
 ^data-raw$
 ^notebooks$
