@@ -20,35 +20,42 @@ tpm(
 )
 }
 \arguments{
-\item{M}{A matrix. The data, interpreted according to \code{type}: a covariance/
+\item{M}{A numeric matrix, or a data.frame whose columns are all numeric
+(converted with \code{as.matrix()}; a data.frame with any non-numeric column is
+an error). The data, interpreted according to \code{type}: a covariance/
 correlation matrix (p x p) when \code{type = "Sigma"}, or a raw data matrix
-(n x p) when \code{type = "X"}.}
+(n x p) when \code{type = "X"}. Missing or non-finite values are an error: no
+imputation is performed. To handle missing data, compute a covariance
+matrix with the method of your choice (for example
+\code{cov(X, use = "pairwise.complete.obs")}, or a rank-based estimator) and pass
+it with \code{type = "Sigma"}. Row names are not used; column names
+(variable names) are carried onto the rows of the returned loadings.}
 
 \item{k}{An integer. Target sparsity of the PC. Must be a single whole number
 greater than or equal to 1.}
 
-\item{type}{(optional) Either "Sigma" (default; \code{M} is a covariance/correlation
-matrix) or "X" (\code{M} is a raw data matrix).}
+\item{type}{(optional) Either \code{"Sigma"} (default; \code{M} is a covariance/correlation
+matrix) or \code{"X"} (\code{M} is a raw data matrix). Matching is case-insensitive.}
 
 \item{maxIter}{(optional) An integer. Maximum number of iterations of the
 algorithm. Must be a whole number greater than or equal to 1. Default 200.}
 
-\item{verbose}{(optional) A Boolean. Controls console output. \code{TRUE}/\code{FALSE}
-or the numbers 0/1; any other value is an error. Default TRUE.}
+\item{verbose}{(optional) A Boolean. Controls console output. Must be
+\code{TRUE} or \code{FALSE}. Default TRUE.}
 
 \item{timeLimit}{(optional) An integer. Maximum time in seconds. Must be a
 finite, non-negative whole number; \code{Inf} is not accepted. Default 10.}
 
 \item{center}{(optional, type = "X") A Boolean. Center the columns of \code{M}.
-\code{TRUE}/\code{FALSE} or the numbers 0/1. Default TRUE.}
+Must be \code{TRUE} or \code{FALSE}. Default TRUE.}
 
 \item{scale}{(optional, type = "X") A Boolean. Scale the columns of \code{M} to unit
-variance. \code{TRUE}/\code{FALSE} or the numbers 0/1. Default TRUE.}
+variance. Must be \code{TRUE} or \code{FALSE}. Default TRUE.}
 
-\item{divisor}{(optional, type = "X") Either "n-1" (default) or "n".}
+\item{divisor}{(optional, type = "X") Either "n-1" (default) or "n". Matching is case-insensitive.}
 
 \item{checkPSD}{(optional, type = "Sigma") A Boolean. Verify \code{M} is PSD.
-\code{TRUE}/\code{FALSE} or the numbers 0/1; any other value is an error. Default TRUE.}
+Must be \code{TRUE} or \code{FALSE}. Default TRUE.}
 
 \item{symTolerance}{(optional, type = "Sigma") A float. Symmetry-check
 tolerance. Must be non-negative. Default 1e-8.}
@@ -58,8 +65,8 @@ Must be non-negative. Default 1e-8.}
 }
 \value{
 An object of class \code{"tpm"} (a list) with fields: \code{x_best} (p x 1
-matrix containing the sparse PC loading), \code{objective_value}, and \code{runtime}.
-With \code{type = "X"} it additionally records \code{inputType}, \code{center}, \code{scale},
+matrix containing the sparse PC loading), \code{objective_value}, \code{runtime}, and
+\code{control} (a list with \code{k}, \code{maxIter} and \code{timeLimit}). With \code{type = "X"} it additionally records \code{inputType}, \code{center}, \code{scale},
 \code{divisor}, \code{nObs}, and \code{p}.
 }
 \description{
@@ -71,7 +78,13 @@ raw-data preprocessing controls.
 }
 \examples{
 TestMat <- cor(mtcars)
-tpm(TestMat, 4)
+set.seed(42)
+tpm(TestMat, 4, type = "Sigma", maxIter = 20, verbose = FALSE,
+    timeLimit = 1, checkPSD = TRUE, symTolerance = 1e-8,
+    psdTolerance = 1e-8)
+tpm(as.matrix(mtcars), 4, type = "X", center = TRUE,
+    scale = TRUE, divisor = "n-1", maxIter = 20,
+    timeLimit = 1, verbose = FALSE)
 }
 \references{
 Yuan, X. T., & Zhang, T. (2013). Truncated power method for

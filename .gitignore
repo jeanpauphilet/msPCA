@@ -12,3 +12,6 @@ inst/doc
 /doc/
 /Meta/
 check_output.log
+
+.DS_Store
+.vscode/

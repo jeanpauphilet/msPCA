@@ -31,9 +31,13 @@ total variance \eqn{\mathrm{tr}(C)}. Because the PCs are unit-norm,
 unnormalized quantity depends on the units of the data; dividing by
 \eqn{\mathrm{tr}(C)} makes it invariant to a rescaling of \code{C}. This matches the
 definition used internally by \code{\link[=mspca]{mspca()}} against \code{feasibilityTolerance}.
+
+\code{feasibilityConstraintType} must be exactly \code{0} or \code{1}; nearby
+floating-point values are not interpreted as either constraint type.
 }
 \examples{
 TestMat <- cor(mtcars)
 mspcares <- mspca(TestMat, r = 2, ks = c(4, 4), verbose = FALSE)
 feasibility_violation_off(TestMat, mspcares$x_best, 0)
+feasibility_violation_off(TestMat, mspcares$x_best, 1)
 }

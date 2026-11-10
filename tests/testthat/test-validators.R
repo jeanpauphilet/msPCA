@@ -6,6 +6,9 @@
 # argument validators (.validate_solver_args() and friends), all exercised
 # indirectly through mspca() and tpm().
 
+#' @srrstats {G5.2, G5.2b} Every validator error is triggered by a test below and its message compared with an expected pattern.
+#' @srrstats {G2.2} Multivariate input to scalar parameters is rejected.
+
 set.seed(99)
 p <- 6L
 
@@ -71,6 +74,42 @@ test_that("non-numeric M with type='X' raises an error", {
   bad <- matrix(as.character(1:(10 * p)), 10, p)
   expect_error(mspca(bad, r = 1L, ks = 2L, type = "X", verbose = FALSE),
                regexp = "numeric matrix")
+})
+
+test_that("type selectors are case-insensitive", {
+  expect_error(
+    mspca(Sigma_ok, r = 1L, ks = 2L, type = "sigma", verbose = FALSE),
+    NA
+  )
+  expect_error(
+    tpm(Sigma_ok, k = 2L, type = "x", verbose = FALSE),
+    NA
+  )
+})
+
+test_that("Sigma tolerances must be scalar even with type='X'", {
+  X_ok <- matrix(rnorm(20 * p), 20, p)
+
+  expect_error(
+    mspca(X_ok, r = 1L, ks = 2L, type = "X",
+          symTolerance = c(1e-8, 1e-8), verbose = FALSE),
+    regexp = "symTolerance.*single number"
+  )
+  expect_error(
+    mspca(X_ok, r = 1L, ks = 2L, type = "X",
+          psdTolerance = c(1e-8, 1e-8), verbose = FALSE),
+    regexp = "psdTolerance.*single number"
+  )
+  expect_error(
+    tpm(X_ok, k = 2L, type = "X",
+        symTolerance = c(1e-8, 1e-8), verbose = FALSE),
+    regexp = "symTolerance.*single number"
+  )
+  expect_error(
+    tpm(X_ok, k = 2L, type = "X",
+        psdTolerance = c(1e-8, 1e-8), verbose = FALSE),
+    regexp = "psdTolerance.*single number"
+  )
 })
 
 test_that("M with NA values with type='X' raises an error", {
@@ -248,12 +287,12 @@ test_that("invalid feasibilityConstraintType is rejected", {
                      verbose = FALSE), regexp = "must be 0")
 })
 
-test_that("fractional feasibilityConstraintType is rejected, not truncated", {
+test_that("non-enum feasibilityConstraintType values are rejected, not rounded", {
   # The old order of operations -- as.integer() first, membership test second --
   # accepted anything in (-1, 2): 0.5, 0.9 and -0.5 all truncate to 0 and 1.7
-  # truncates to 1, so the solver silently enforced a constraint that was never
-  # requested. Each value below must error rather than be rounded into range.
-  for (bad_val in list(0.5, 0.9, 1.5, 1.7, -0.5)) {
+  # truncates to 1. A floating-point tolerance also incorrectly accepts values
+  # close to 0 or 1, so all values below must error rather than be rounded.
+  for (bad_val in list(0.5, 0.9, 1.5, 1.7, -0.5, 1e-9, 1 - 1e-9)) {
     expect_error(mspca(Sigma_ok, r = 1L, ks = 2L,
                        feasibilityConstraintType = bad_val, verbose = FALSE),
                  regexp = "must be 0")
@@ -273,6 +312,19 @@ test_that("valid constraint types are accepted in either numeric type", {
   for (good_val in list(0L, 1L, 0, 1)) {
     expect_error(mspca(Sigma_ok, r = 2L, ks = c(2L, 2L),
                        feasibilityConstraintType = good_val, verbose = FALSE), NA)
+  }
+})
+
+test_that("feasibility_violation_off rejects non-enum constraint types", {
+  U <- diag(p)[, 1:2]
+  for (good_val in list(0L, 1L, 0, 1)) {
+    expect_error(feasibility_violation_off(Sigma_ok, U, good_val), NA)
+  }
+  for (bad_val in list(0.5, 1.5, 1e-9, 1 - 1e-9, NA_real_, Inf)) {
+    expect_error(
+      feasibility_violation_off(Sigma_ok, U, bad_val),
+      regexp = "must be 0"
+    )
   }
 })
 
@@ -304,35 +356,37 @@ test_that("the constraint-type error mentions NULL only where NULL is allowed", 
 #
 # `isTRUE()` is deliberately strict: isTRUE(1) is FALSE. Using it to read a
 # user-supplied switch meant that `checkPSD = 1` silently skipped the PSD check,
-# i.e. failed in the unsafe direction with no message. .validate_flag() coerces
-# an unambiguous 0/1 and rejects everything else.
+# i.e. failed in the unsafe direction with no message. .validate_flag() now
+# rejects non-logical values explicitly.
 
-test_that("checkPSD = 1 runs the PSD check rather than silently skipping it", {
+test_that("checkPSD = 1 is rejected explicitly", {
   bad      <- Sigma_ok
   diag(bad) <- diag(bad) - max(diag(bad)) - 1
   bad      <- (bad + t(bad)) / 2            # force negative eigenvalues
   expect_error(mspca(bad, r = 1L, ks = 2L, checkPSD = 1, verbose = FALSE),
-               regexp = "positive semidefinite")
+               regexp = "`checkPSD` must be a single TRUE or FALSE")
   expect_error(tpm(bad, k = 2L, checkPSD = 1, verbose = FALSE),
-               regexp = "positive semidefinite")
-  # and 0 still means "skip", as FALSE does
-  expect_error(mspca(bad, r = 1L, ks = 2L, checkPSD = 0, verbose = FALSE), NA)
+               regexp = "`checkPSD` must be a single TRUE or FALSE")
 })
 
-test_that("scale = 1 standardizes rather than being read as FALSE", {
-  # With scale read as FALSE the zero-variance guard never fires; with it read as
-  # TRUE the column is caught. The error is the observable difference.
+test_that("non-logical scale is rejected", {
   bad      <- matrix(rnorm(30 * p), 30, p)
   bad[, 1] <- 0
   expect_error(mspca(bad, r = 1L, ks = 2L, type = "X", scale = 1, verbose = FALSE),
-               regexp = "zero-variance")
+               regexp = "`scale` must be a single TRUE or FALSE")
 })
 
-test_that("0/1 are accepted wherever a Boolean is expected", {
-  expect_error(mspca(Sigma_ok, r = 1L, ks = 2L, verbose = 0), NA)
-  expect_error(tpm(Sigma_ok, k = 2L, verbose = 0), NA)
+test_that("numeric aliases are rejected wherever a Boolean is expected", {
+  expect_error(mspca(Sigma_ok, r = 1L, ks = 2L, verbose = 0),
+               regexp = "`verbose` must be a single TRUE or FALSE")
+  expect_error(tpm(Sigma_ok, k = 2L, verbose = 0),
+               regexp = "`verbose` must be a single TRUE or FALSE")
   expect_error(mspca(matrix(rnorm(30 * p), 30, p), r = 1L, ks = 2L, type = "X",
-                     center = 1, scale = 0, verbose = 0), NA)
+                     center = 1, scale = 0, verbose = FALSE),
+               regexp = "`center` must be a single TRUE or FALSE")
+  expect_error(tpm(matrix(rnorm(30 * p), 30, p), k = 2L, type = "X",
+                   center = 1, scale = 0, verbose = FALSE),
+               regexp = "`center` must be a single TRUE or FALSE")
 })
 
 test_that("ambiguous or missing flag values are rejected", {

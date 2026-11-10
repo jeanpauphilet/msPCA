@@ -17,3 +17,8 @@ A numeric vector of length \code{ncol(U)}.
 \description{
 Computes the variance explained by each PC.
 }
+\examples{
+C <- diag(c(3, 2, 1))
+U <- diag(3)[, 1:2]
+variance_explained_perPC(C, U)
+}

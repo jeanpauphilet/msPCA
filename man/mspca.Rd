@@ -26,9 +26,16 @@ mspca(
 )
 }
 \arguments{
-\item{M}{A matrix. The data, interpreted according to \code{type}: a covariance/
+\item{M}{A numeric matrix, or a data.frame whose columns are all numeric
+(converted with \code{as.matrix()}; a data.frame with any non-numeric column is
+an error). The data, interpreted according to \code{type}: a covariance/
 correlation matrix (p x p) when \code{type = "Sigma"}, or a raw data matrix
-(n x p) when \code{type = "X"}.}
+(n x p) when \code{type = "X"}. Missing or non-finite values are an error: no
+imputation is performed. To handle missing data, compute a covariance
+matrix with the method of your choice (for example
+\code{cov(X, use = "pairwise.complete.obs")}, or a rank-based estimator) and pass
+it with \code{type = "Sigma"}. Row names are not used; column names
+(variable names) are carried onto the rows of the returned loadings.}
 
 \item{r}{An integer. Number of principal components (PCs) to be computed.
 Must be a single whole number greater than or equal to 1.}
@@ -39,15 +46,16 @@ does not define a component and is rejected). \code{length(ks)} must not exceed
 \code{r}; if it is shorter than \code{r}, a warning is issued and the algorithm is run
 for \code{length(ks)} PCs.}
 
-\item{type}{(optional) Either "Sigma" (default; \code{M} is a covariance/correlation matrix) or "X" (\code{M} is a raw data matrix).}
+\item{type}{(optional) Either \code{"Sigma"} (default; \code{M} is a covariance/correlation
+matrix) or \code{"X"} (\code{M} is a raw data matrix). Matching is case-insensitive.}
 
 \item{feasibilityConstraintType}{(optional) An integer. Type of feasibility
 constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness
 constraints. Must be exactly 0 or 1; fractional values are rejected rather
 than rounded. Default 0.}
 
-\item{verbose}{(optional) A Boolean. Controls console output. \code{TRUE}/\code{FALSE}
-or the numbers 0/1; any other value is an error. Default TRUE.}
+\item{verbose}{(optional) A Boolean. Controls console output. Must be
+\code{TRUE} or \code{FALSE}. Default TRUE.}
 
 \item{maxIter}{(optional) An integer. Maximum number of iterations of the
 algorithm. Must be a whole number greater than or equal to 1. Default 200.}
@@ -71,17 +79,19 @@ truncated power method (inner iteration) for outer iterations >= 2. Must be a
 whole number greater than or equal to 0. Default 20.}
 
 \item{center}{(optional, type = "X") A Boolean. Center the columns of \code{M}
-before computing the covariance. \code{TRUE}/\code{FALSE} or the numbers 0/1. Default TRUE.}
+before computing the covariance. Must be \code{TRUE} or \code{FALSE}. Default TRUE.}
 
 \item{scale}{(optional, type = "X") A Boolean. Scale the columns of \code{M} to unit
-variance, i.e. operate on the correlation matrix. \code{TRUE}/\code{FALSE} or the
-numbers 0/1. Default TRUE.}
+variance, i.e. operate on the correlation matrix. Must be \code{TRUE} or
+\code{FALSE}. Default TRUE. Sparse PCA is not scale invariant: with
+\code{scale = FALSE} high-variance variables dominate the components, whereas
+with \code{scale = TRUE} every variable contributes on an equal footing. Choose
+according to whether the units of the variables are comparable.}
 
-\item{divisor}{(optional, type = "X") Either "n-1" (default, sample covariance, matches \code{cov}/\code{cor}) or "n" (population covariance). Default "n-1".}
+\item{divisor}{(optional, type = "X") Either "n-1" (default, sample covariance, matches \code{cov}/\code{cor}) or "n" (population covariance). Matching is case-insensitive. Default "n-1".}
 
 \item{checkPSD}{(optional, type = "Sigma") A Boolean. Verify that \code{M} is
-positive semidefinite. \code{TRUE}/\code{FALSE} or the numbers 0/1; any other value is
-an error. Default TRUE.}
+positive semidefinite. Must be \code{TRUE} or \code{FALSE}. Default TRUE.}
 
 \item{symTolerance}{(optional, type = "Sigma") A float. Tolerance for the
 symmetry check on \code{M}. Must be non-negative. Default 1e-8.}
@@ -95,7 +105,12 @@ matrix of sparse PC loadings), \code{objective_value}, \code{feasibility_violati
 \code{runtime}, \code{variance_explained} (per-PC explained variance),
 \code{total_variance} (trace of the covariance matrix),
 \code{feasibilityConstraintType} (the value used to fit, reused as the default
-for all diagnostics), and \code{nonredundancy}. With \code{type = "X"} it
+for all diagnostics), \code{nonredundancy}, and \code{control} (a list of the
+algorithmic parameters used: \code{r}, \code{ks}, \code{maxIter}, \code{feasibilityTolerance},
+\code{stallingTolerance}, \code{timeLimitTPM}, \code{maxRestartTPM}, \code{minRestartTPM}).
+Columns of \code{x_best} are ordered by decreasing variance explained. Input
+attributes other than the column names of \code{M} (which label the rows of
+\code{x_best}) are not transferred to the result. With \code{type = "X"} it
 additionally records \code{inputType}, \code{center}, \code{scale}, \code{divisor}, \code{nObs},
 and \code{p}. Use \code{\link[=print]{print()}} to display the sparse loadings and \code{\link[=summary]{summary()}} for
 a full per-PC breakdown.
@@ -130,10 +145,39 @@ and never forms the p x p matrix, which is substantially more scalable when
 \examples{
 # From a covariance/correlation matrix (the default type):
 TestMat <- cor(mtcars)
-res <- mspca(TestMat, r = 2, ks = c(4, 4), verbose = FALSE)
+set.seed(42)
+res <- mspca(TestMat, r = 2, ks = c(4, 4),
+             feasibilityConstraintType = 0, maxIter = 200,
+             feasibilityTolerance = 1e-4, stallingTolerance = 1e-8,
+             timeLimitTPM = 20, maxRestartTPM = 30, minRestartTPM = 20,
+             verbose = FALSE, checkPSD = TRUE,
+             symTolerance = 1e-8, psdTolerance = 1e-8)
 print(res)
 summary(res)
 # Equivalent call from the raw data matrix:
-res_X <- mspca(as.matrix(mtcars), r = 2, ks = c(4, 4), type = "X", verbose = FALSE)
+res_X <- mspca(as.matrix(mtcars), r = 2, ks = c(4, 4), type = "X",
+               center = TRUE, scale = TRUE, divisor = "n-1",
+               verbose = FALSE)
 print(res_X)
+# `scale = TRUE` above works on the correlation matrix, so each variable has
+# unit variance and contributes equally. With `scale = FALSE` the covariance
+# matrix is used and the high-variance variables (disp, hp) dominate:
+res_cov <- mspca(as.matrix(mtcars), r = 2, ks = c(4, 4), type = "X",
+                 scale = FALSE, verbose = FALSE)
+print(res_cov)
+# Any covariance estimator can be used by passing its output with
+# type = "Sigma", e.g. a rank-based (Spearman) correlation matrix:
+res_spearman <- mspca(cor(mtcars, method = "spearman"), r = 2, ks = c(4, 4),
+                      verbose = FALSE)
+# Component scores for new observations are obtained by projecting them
+# (after the same centering/scaling) on the loadings:
+scores <- scale(as.matrix(mtcars)) \%*\% res_X$x_best
+# Tune the solver for one component. Since this correlation matrix is known
+# to be positive semidefinite, the optional PSD check can be skipped.
+tuned <- mspca(TestMat, r = 1, ks = 4,
+               feasibilityConstraintType = 1, maxIter = 100,
+               feasibilityTolerance = 1e-3, stallingTolerance = 1e-7,
+               timeLimitTPM = 5, maxRestartTPM = 10, minRestartTPM = 5,
+               verbose = FALSE, checkPSD = FALSE,
+               symTolerance = 1e-7, psdTolerance = 1e-7)
 }

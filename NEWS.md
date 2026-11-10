@@ -1,3 +1,14 @@
+# msPCA (development version)
+
+* `mspca()` and `tpm()` now accept an all-numeric `data.frame` as `M` (converted with `as.matrix()`); a `data.frame` with non-numeric columns is an error.
+* `type` and `divisor` are matched case-insensitively. Boolean arguments (`verbose`, `center`, `scale`, `checkPSD`) must be `TRUE` or `FALSE`; the numeric aliases 0/1 are no longer accepted.
+* `feasibilityConstraintType` must be exactly 0 or 1, in `mspca()`, `summary.mspca()` and `feasibility_violation_off()`.
+* Empty inputs (zero rows/columns) are rejected with an informative error, and constant columns are detected relative to their scale rather than by exact equality.
+* Fitted objects gain a `control` field recording the algorithmic parameters used.
+* Messages of the matrix validators are now unique to each input type.
+* Documented the scale sensitivity of sparse PCA, the handling of missing data (supply a covariance matrix estimated with `cov(use = ...)`) and the use of alternative covariance estimators.
+* Internal helpers are documented in roxygen format (`@noRd`); added `CODE_OF_CONDUCT.md`, a life cycle statement and the `srr` statistical-software standards annotations.
+
 # msPCA 0.5.1
 
 * `mspca()` now records `feasibilityConstraintType` and `nonredundancy` in the returned object. `nonredundancy` holds two r x r matrices, `orthogonality` (\eqn{|u_t^\top u_s|}) and `uncorrelatedness` (\eqn{|u_t^\top \Sigma u_s| / \mathrm{tr}(\Sigma)}).

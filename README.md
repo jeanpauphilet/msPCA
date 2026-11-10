@@ -209,6 +209,14 @@ Reference paper:
 }
 ```
 
+## Life cycle
+
+`msPCA` is **actively maintained** and its user-facing API (`mspca()`, `tpm()` and the diagnostic helpers) is considered stable. Future work is expected to be backward compatible and may include: further scalability improvements for very large `p`, additional diagnostics and plotting of the sparse loadings, and support for sparse-matrix inputs. Breaking changes, should they become necessary, will be announced in `NEWS.md` one release ahead where possible.
+
+## Code of conduct
+
+Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.
+
 ## Development
 
 Package structure overview:

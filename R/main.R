@@ -23,14 +23,16 @@
 # `ks = c(4, 4)` are doubles in R, and are the form used in the documentation and
 # examples, so requiring an integer type would reject the package's own usage.
 
-# Is `x` a whole number, up to floating-point slack? Vectorized; NA/NaN/Inf give
-# NA, so callers must screen for finiteness first.
+#' Is `x` a whole number, up to floating-point slack? Vectorized; NA/NaN/Inf give
+#' NA, so callers must screen for finiteness first.
+#' @noRd
 .is_whole <- function(x, tol = .Machine$double.eps^0.5) {
   abs(x - round(x)) < tol
 }
 
-# A single count: numeric, length 1, finite, whole, >= `min`, and representable
-# as an int (the C++ layer's parameter type). Returns the value as an integer.
+#' A single count: numeric, length 1, finite, whole, >= `min`, and representable
+#' as an int (the C++ layer's parameter type). Returns the value as an integer.
+#' @noRd
 .validate_count <- function(x, name, min = 1L) {
   if (!is.numeric(x) || length(x) != 1L) {
     stop(sprintf("`%s` must be a single number.", name), call. = FALSE)
@@ -51,9 +53,10 @@
   invisible(as.integer(round(x)))
 }
 
-# A vector of target sparsity levels: numeric, non-empty, all finite, all whole,
-# all >= 1, all representable as int. `len`, when given, fixes the required
-# length. Returns the values as integers.
+#' A vector of target sparsity levels: numeric, non-empty, all finite, all whole,
+#' all >= 1, all representable as int. `len`, when given, fixes the required
+#' length. Returns the values as integers.
+#' @noRd
 .validate_cardinality <- function(x, name, len = NULL) {
   if (!is.numeric(x) || length(x) == 0L) {
     stop(sprintf("`%s` must be a numeric vector with at least one element.", name),
@@ -87,10 +90,11 @@
   invisible(as.integer(round(x)))
 }
 
-# A tolerance: numeric, length 1, not NA, non-negative. `Inf` is accepted and
-# meaningful -- `feasibilityTolerance = Inf` accepts any solution as feasible,
-# `stallingTolerance = Inf` stops after the first outer iteration -- because both
-# reach C++ as a `double`.
+#' A tolerance: numeric, length 1, not NA, non-negative. `Inf` is accepted and
+#' meaningful -- `feasibilityTolerance = Inf` accepts any solution as feasible,
+#' `stallingTolerance = Inf` stops after the first outer iteration -- because both
+#' reach C++ as a `double`.
+#' @noRd
 .validate_tolerance <- function(x, name) {
   if (!is.numeric(x) || length(x) != 1L) {
     stop(sprintf("`%s` must be a single number.", name), call. = FALSE)
@@ -104,12 +108,13 @@
   invisible(as.numeric(x))
 }
 
-# A time limit in seconds: numeric, length 1, finite, non-negative, representable
-# as an int. Unlike the tolerances, `Inf` is NOT accepted: the C++ parameter is an
-# `int`, so `Inf` would arrive as NA_INTEGER (INT_MIN) and silently disable the
-# random restarts entirely -- the opposite of "no time limit". Use a large finite
-# value instead. Fractional seconds are rejected for the same reason: they would
-# be truncated toward zero without notice.
+#' A time limit in seconds: numeric, length 1, finite, non-negative, representable
+#' as an int. Unlike the tolerances, `Inf` is NOT accepted: the C++ parameter is an
+#' `int`, so `Inf` would arrive as NA_INTEGER (INT_MIN) and silently disable the
+#' random restarts entirely -- the opposite of "no time limit". Use a large finite
+#' value instead. Fractional seconds are rejected for the same reason: they would
+#' be truncated toward zero without notice.
+#' @noRd
 .validate_time_limit <- function(x, name) {
   if (!is.numeric(x) || length(x) != 1L) {
     stop(sprintf("`%s` must be a single number.", name), call. = FALSE)
@@ -133,45 +138,51 @@
   invisible(as.integer(round(x)))
 }
 
-# An on/off switch: a single, non-NA TRUE/FALSE, or the numeric 0/1 that users
-# reasonably expect to work. Returns a real logical, so callers can branch on the
-# result directly.
-#
-# This exists because `isTRUE()` is the wrong tool for a user-supplied switch. It
-# is deliberately strict -- `isTRUE(1)` and `isTRUE(1L)` are both FALSE -- so
-# `if (isTRUE(checkPSD))` silently *skips* the check when the user writes
-# `checkPSD = 1`, i.e. it fails in the unsafe direction with no message. Anything
-# that is neither a logical nor an unambiguous 0/1 (a string, a longer vector, NA,
-# 2) is rejected outright rather than being quietly read as FALSE.
+#' An on/off switch: a single, non-NA TRUE/FALSE only. Returns a real logical, so
+#' callers can branch on the result directly.
+#'
+#' This exists because `isTRUE()` is the wrong tool for a user-supplied switch. It
+#' is deliberately strict -- `isTRUE(1)` and `isTRUE(1L)` are both FALSE -- so
+#' `if (isTRUE(checkPSD))` silently *skips* the check when the user writes
+#' `checkPSD = 1`, i.e. it fails in the unsafe direction with no message. Numeric
+#' aliases are therefore rejected explicitly with a clear message.
+#' @noRd
 .validate_flag <- function(x, name) {
   if (is.logical(x) && length(x) == 1L && !is.na(x)) {
     return(x)
   }
-  if (is.numeric(x) && length(x) == 1L && !is.na(x) && (x == 0 || x == 1)) {
-    return(x == 1)
-  }
-  stop(sprintf(paste0("`%s` must be a single TRUE or FALSE (the numbers 0 and 1 are also ",
-                      "accepted). Got: %s."),
+  stop(sprintf("`%s` must be a single TRUE or FALSE. Got: %s.",
                name,
                if (length(x) != 1L) sprintf("%s of length %d", class(x)[1L], length(x))
                else paste0(class(x)[1L], " ", format(x))),
        call. = FALSE)
 }
 
-# The feasibility constraint type: exactly 0 (orthogonality) or 1
-# (uncorrelatedness), optionally NULL for summary.mspca(), where NULL means "use
-# the type recorded at fit time". Returns an integer (or NULL).
-#
-# The check has to happen *before* any integer conversion. Coercing first and
-# testing membership afterwards -- `as.integer(x) %in% c(0L, 1L)` -- accepts
-# anything in (-1, 2): 0.5, 0.9 and -0.5 all truncate to 0, and 1.7 truncates to
-# 1, so the fit silently enforces a constraint the user did not ask for.
+#' Input selector used by mspca()/tpm(): accepts Sigma/X in any capitalization and
+#' canonicalizes to "Sigma" or "X" for downstream checks/messages.
+#' @noRd
+.validate_input_type <- function(x) {
+  val <- match.arg(tolower(x), c("sigma", "x"))
+  if (identical(val, "sigma")) "Sigma" else "X"
+}
+
+#' The feasibility constraint type: exactly 0 (orthogonality) or 1
+#' (uncorrelatedness), optionally NULL for summary.mspca(), where NULL means "use
+#' the type recorded at fit time". Returns an integer (or NULL).
+#'
+#' The check has to happen *before* any integer conversion. Coercing first and
+#' testing membership afterwards -- `as.integer(x) %in% c(0L, 1L)` -- accepts
+#' anything in (-1, 2): 0.5, 0.9 and -0.5 all truncate to 0, and 1.7 truncates to
+#' 1, so the fit silently enforces a constraint the user did not ask for. These
+#' are discrete labels, not approximate numeric values, so near-integers are
+#' rejected as well.
+#' @noRd
 .validate_constraint_type <- function(x, allow_null = FALSE) {
   if (allow_null && is.null(x)) {
     return(NULL)
   }
-  if (!is.numeric(x) || length(x) != 1L || !is.finite(x) || !.is_whole(x) ||
-      !x %in% c(0, 1)) {
+  if (!is.numeric(x) || length(x) != 1L || !is.finite(x) ||
+      !(x %in% c(0, 1))) {
     stop(sprintf(paste0("`feasibilityConstraintType` must be 0 (orthogonality) or 1 ",
                         "(uncorrelatedness)%s, exactly -- values are not rounded. Got: %s."),
                  if (allow_null) ", or NULL" else "",
@@ -183,16 +194,17 @@
   as.integer(x)
 }
 
-# Centralized validation of the solver arguments, shared by mspca() and tpm().
-#
-# `nPC` is the requested number of components, or NULL for tpm(), which fits a
-# single one. `restarts` and `tolerances` are named lists so that the message
-# names the argument the user actually typed (`timeLimitTPM` in mspca(),
-# `timeLimit` in tpm()) rather than an internal one.
-#
-# Note on lengths: `length(ks) < r` is deliberately left to the solver, which
-# warns and runs for `length(ks)` components. Only `length(ks) > r` is rejected
-# here, because those entries are currently dropped without any message.
+#' Centralized validation of the solver arguments, shared by mspca() and tpm().
+#'
+#' `nPC` is the requested number of components, or NULL for tpm(), which fits a
+#' single one. `restarts` and `tolerances` are named lists so that the message
+#' names the argument the user actually typed (`timeLimitTPM` in mspca(),
+#' `timeLimit` in tpm()) rather than an internal one.
+#'
+#' Note on lengths: `length(ks) < r` is deliberately left to the solver, which
+#' warns and runs for `length(ks)` components. Only `length(ks) > r` is rejected
+#' here, because those entries are currently dropped without any message.
+#' @noRd
 .validate_solver_args <- function(cardinality, cardinalityName, nPC = NULL,
                                   maxIter, timeLimit, timeLimitName,
                                   restarts = list(), tolerances = list()) {
@@ -218,10 +230,35 @@
 }
 
 
+#' Accept a data.frame whose columns are all numeric by converting it to a matrix;
+#' anything else is passed through unchanged for the matrix validators to judge.
+#' Non-numeric columns are rejected here rather than silently coerced to character.
+#' @noRd
+.coerce_input <- function(M) {
+  if (is.data.frame(M)) {
+    if (!all(vapply(M, is.numeric, logical(1)))) {
+      stop("`M` is a data.frame with non-numeric column(s); supply a numeric matrix or an all-numeric data.frame.", call. = FALSE)
+    }
+    M <- as.matrix(M)
+  }
+  M
+}
+
+#' @srrstats {G2.0, G2.1, G2.2} Lengths and types of all scalar and vector inputs are asserted by `.validate_count()`, `.validate_cardinality()`, `.validate_tolerance()`, `.validate_flag()` and `.validate_constraint_type()`; multivariate input to a scalar parameter is rejected.
+#' @srrstats {G2.13, G2.15, G2.16} Missing, `NaN` and infinite values are detected before any computation, so no base routine with an `na.rm = FALSE` default ever sees them.
+#' @srrstats {G2.4a, G2.4b, G2.9} Conversions are explicit (`as.integer()`, `as.numeric()`, `as.matrix()`), done once at the entry points, and never lossy: fractional counts and non-numeric columns are errors.
+#' @srrstats {G2.11, G2.12} `data.frame` inputs are accepted only if all columns are numeric (see `.coerce_input()`); other column classes, including list columns, are rejected.
+#' @srrstats {G3.0} No floating-point equality comparisons: whole-number checks use a tolerance (`.is_whole()`), zero-variance columns are detected relative to the column scale; the only exact comparisons concern discrete labels (constraint type 0 or 1).
+#' @srrstats {UL1.1} Input checks are performed by dedicated sub-routines (`.validate_sigma_matrix()`, `.validate_x_matrix()`, `.coerce_input()`) with informative error messages.
+#' @srrstats {UL2.0, UL2.1} Pre-processing (centering, scaling, divisor) is documented, controlled by `center`, `scale` and `divisor`, and recorded in the returned object.
+#' @noRd
+NULL
+
 ## 0.2 - Matrix validators ------------------------------------------------------
 
-# Validate a covariance/correlation matrix (type = "Sigma"): square, finite,
-# symmetric, (optionally) PSD.
+#' Validate a covariance/correlation matrix (type = "Sigma"): square, finite,
+#' symmetric, (optionally) PSD.
+#' @noRd
 .validate_sigma_matrix <- function(M, symTolerance = 1e-8, psdTolerance = 1e-8, checkPSD = TRUE) {
   # Coerced here as well as at the entry points, so the helper is safe to call
   # directly. .validate_flag() is idempotent on a proper logical.
@@ -234,8 +271,11 @@
   if (nrow(M) != ncol(M)) {
     stop("With `type = \"Sigma\"`, `M` must be a square matrix.", call. = FALSE)
   }
+  if (nrow(M) < 1L) {
+    stop("With `type = \"Sigma\"`, `M` must have at least one row and column.", call. = FALSE)
+  }
   if (any(!is.finite(M))) {
-    stop("`M` contains non-finite values (NA, NaN or Inf).", call. = FALSE)
+    stop("With `type = \"Sigma\"`, `M` contains non-finite values (NA, NaN or Inf).", call. = FALSE)
   }
   if (max(abs(M - t(M))) > symTolerance) {
     stop("With `type = \"Sigma\"`, `M` is not symmetric within `symTolerance`.", call. = FALSE)
@@ -251,39 +291,48 @@
   invisible(TRUE)
 }
 
-# Validate a raw data matrix (type = "X"): n observations x p variables.
+#' Validate a raw data matrix (type = "X"): n observations x p variables.
+#' @noRd
 .validate_x_matrix <- function(M, scale = FALSE) {
   scale <- .validate_flag(scale, "scale")
   if (!is.matrix(M) || !is.numeric(M)) {
     stop("With `type = \"X\"`, `M` must be a numeric matrix (rows = observations, columns = variables).", call. = FALSE)
   }
   if (any(!is.finite(M))) {
-    stop("`M` contains non-finite values (NA, NaN or Inf).", call. = FALSE)
+    stop("With `type = \"X\"`, `M` contains non-finite values (NA, NaN or Inf).", call. = FALSE)
+  }
+  if (ncol(M) < 1L) {
+    stop("With `type = \"X\"`, `M` must have at least one column (variable).", call. = FALSE)
   }
   if (nrow(M) < 2L) {
     stop("With `type = \"X\"`, `M` must have at least 2 rows (observations).", call. = FALSE)
   }
   if (scale) {
-    col_var <- apply(M, 2, stats::var)
-    if (any(col_var == 0)) {
+    # A column is "constant" if its spread is negligible relative to its magnitude;
+    # an exact `var == 0` test would miss columns that are constant up to rounding.
+    col_sd    <- apply(M, 2, stats::sd)
+    col_scale <- apply(abs(M), 2, max)
+    if (any(col_sd <= sqrt(.Machine$double.eps) * col_scale)) {
       stop("`M` has zero-variance column(s); cannot scale to a correlation matrix. Set `scale = FALSE` or drop these columns.", call. = FALSE)
     }
   }
   invisible(TRUE)
 }
 
-# Center/scale the data matrix (cheap O(np) operations on the data, never the
-# p x p matrix) and return the processed matrix together with the covariance
-# divisor 1/(n-1) or 1/n. With center = TRUE, scale = FALSE, divisor = "n-1" the
-# implicit covariance invDivisor * Xproc^T Xproc equals cov(M); with scale = TRUE
-# it equals cor(M).
+#' Center/scale the data matrix (cheap O(np) operations on the data, never the
+#' p x p matrix) and return the processed matrix together with the covariance
+#' divisor 1/(n-1) or 1/n. With center = TRUE, scale = FALSE, divisor = "n-1" the
+#' implicit covariance invDivisor * Xproc^T Xproc equals cov(M); with scale = TRUE
+#' it equals cor(M).
+#' @noRd
 .preprocess_x <- function(M, center = TRUE, scale = FALSE, divisor = c("n-1", "n")) {
   # base::scale() reads a numeric `center`/`scale` as a per-column vector, so an
   # uncoerced 0/1 would either error about column counts or silently divide by 1
   # instead of standardizing. Coerce to logical first.
   center  <- .validate_flag(center, "center")
   scale   <- .validate_flag(scale,  "scale")
-  divisor <- match.arg(divisor)
+  if (identical(divisor, c("n-1", "n"))) divisor <- "n-1"
+  divisor <- match.arg(tolower(divisor), c("n-1", "n"))
   nObs <- nrow(M)
   Xproc <- base::scale(M, center = center, scale = scale)
   # Drop the attributes added by scale() and ensure a plain numeric matrix.
@@ -293,32 +342,35 @@
   list(Xproc = Xproc, invDivisor = invDivisor, divisor = divisor)
 }
 
-# Human-readable name of a feasibility constraint type, for messages and output.
+#' Human-readable name of a feasibility constraint type, for messages and output.
+#' @noRd
 .ctype_label <- function(ctype) {
   if (identical(as.integer(ctype), 0L)) "orthogonality" else "uncorrelatedness"
 }
 
-# Total variance tr(Sigma), used to normalize the uncorrelatedness violation.
-# Guarded so that a degenerate (zero-trace) input leaves the unnormalized
-# quantity untouched rather than producing Inf/NaN.
+#' Total variance tr(Sigma), used to normalize the uncorrelatedness violation.
+#' Guarded so that a degenerate (zero-trace) input leaves the unnormalized
+#' quantity untouched rather than producing Inf/NaN.
+#' @noRd
 .total_variance <- function(C) {
   a <- sum(diag(C))
   if (is.finite(a) && a > 0) a else 1
 }
 
-# Build the pairwise non-redundancy matrices for a set of loadings.
-#
-# `v` is the p x r matrix of loadings and `Sv` the p x r product Sigma %*% v.
-# Two matrices are returned, one per constraint type, so that diagnostics never
-# need the (possibly very large) covariance matrix again:
-#   orthogonality    : |u_t^T u_s|
-#   uncorrelatedness : |u_t^T Sigma u_s| / tr(Sigma)
-# The uncorrelatedness entries are normalized by the total variance
-# `traceSigma` = tr(Sigma).
-# Only the strict upper triangle is meaningful; the diagonal and lower triangle
-# are set to NA. Both matrices are computed here, after the columns of `v` have
-# been sorted by explained variance, so row/column indices always match the PC
-# order reported by print() and summary().
+#' Build the pairwise non-redundancy matrices for a set of loadings.
+#'
+#' `v` is the p x r matrix of loadings and `Sv` the p x r product Sigma %*% v.
+#' Two matrices are returned, one per constraint type, so that diagnostics never
+#' need the (possibly very large) covariance matrix again:
+#'   orthogonality    : |u_t^T u_s|
+#'   uncorrelatedness : |u_t^T Sigma u_s| / tr(Sigma)
+#' The uncorrelatedness entries are normalized by the total variance
+#' `traceSigma` = tr(Sigma).
+#' Only the strict upper triangle is meaningful; the diagonal and lower triangle
+#' are set to NA. Both matrices are computed here, after the columns of `v` have
+#' been sorted by explained variance, so row/column indices always match the PC
+#' order reported by print() and summary().
+#' @noRd
 .nonredundancy <- function(v, Sv, traceSigma = 1) {
   r    <- ncol(v)
   labs <- paste0("PC", seq_len(r))
@@ -334,16 +386,18 @@
        uncorrelatedness = mask(crossprod(v, Sv) / traceSigma))
 }
 
-# Total non-redundancy violation: sum of the strict upper triangle.
-# Zero by convention when r = 1 (no pairs).
+#' Total non-redundancy violation: sum of the strict upper triangle.
+#' Zero by convention when r = 1 (no pairs).
+#' @noRd
 .nr_total <- function(M) {
   if (ncol(M) < 2L) return(0)
   sum(M[upper.tri(M)])
 }
 
-# Per-PC non-redundancy: for each PC, the largest violation against any other
-# PC. A max (rather than a sum) is used so that a single badly aligned pair is
-# not diluted by r - 2 well-behaved ones.
+#' Per-PC non-redundancy: for each PC, the largest violation against any other
+#' PC. A max (rather than a sum) is used so that a single badly aligned pair is
+#' not diluted by r - 2 well-behaved ones.
+#' @noRd
 .nr_perPC <- function(M) {
   r <- ncol(M)
   if (r < 2L) {
@@ -369,9 +423,16 @@
 #' algorithm operates on the data directly via the products \eqn{X^\top(X\beta)}
 #' and never forms the p x p matrix, which is substantially more scalable when
 #' \eqn{n \ll p}.
-#' @param M A matrix. The data, interpreted according to `type`: a covariance/
+#' @param M A numeric matrix, or a data.frame whose columns are all numeric
+#'   (converted with `as.matrix()`; a data.frame with any non-numeric column is
+#'   an error). The data, interpreted according to `type`: a covariance/
 #'   correlation matrix (p x p) when `type = "Sigma"`, or a raw data matrix
-#'   (n x p) when `type = "X"`.
+#'   (n x p) when `type = "X"`. Missing or non-finite values are an error: no
+#'   imputation is performed. To handle missing data, compute a covariance
+#'   matrix with the method of your choice (for example
+#'   `cov(X, use = "pairwise.complete.obs")`, or a rank-based estimator) and pass
+#'   it with `type = "Sigma"`. Row names are not used; column names
+#'   (variable names) are carried onto the rows of the returned loadings.
 #' @param r An integer. Number of principal components (PCs) to be computed.
 #'   Must be a single whole number greater than or equal to 1.
 #' @param ks An integer vector. Target sparsity of each PC. Every element must be
@@ -379,13 +440,14 @@
 #'   does not define a component and is rejected). `length(ks)` must not exceed
 #'   `r`; if it is shorter than `r`, a warning is issued and the algorithm is run
 #'   for `length(ks)` PCs.
-#' @param type (optional) Either "Sigma" (default; `M` is a covariance/correlation matrix) or "X" (`M` is a raw data matrix).
+#' @param type (optional) Either `"Sigma"` (default; `M` is a covariance/correlation
+#'   matrix) or `"X"` (`M` is a raw data matrix). Matching is case-insensitive.
 #' @param feasibilityConstraintType (optional) An integer. Type of feasibility
 #'   constraints to be enforced. 0: orthogonality constraints; 1: uncorrelatedness
 #'   constraints. Must be exactly 0 or 1; fractional values are rejected rather
 #'   than rounded. Default 0.
-#' @param verbose (optional) A Boolean. Controls console output. `TRUE`/`FALSE`
-#'   or the numbers 0/1; any other value is an error. Default TRUE.
+#' @param verbose (optional) A Boolean. Controls console output. Must be
+#'   `TRUE` or `FALSE`. Default TRUE.
 #' @param maxIter (optional) An integer. Maximum number of iterations of the
 #'   algorithm. Must be a whole number greater than or equal to 1. Default 200.
 #' @param feasibilityTolerance (optional) A float. Tolerance for constraint violation (orthogonality/uncorrelatedness, according to `feasibilityConstraintType`). Under uncorrelatedness the violation is normalized by the total variance `tr(Sigma)`. Must be non-negative; `Inf` is allowed and accepts any solution as feasible. Default 1e-4.
@@ -402,14 +464,16 @@
 #'   truncated power method (inner iteration) for outer iterations >= 2. Must be a
 #'   whole number greater than or equal to 0. Default 20.
 #' @param center (optional, type = "X") A Boolean. Center the columns of `M`
-#'   before computing the covariance. `TRUE`/`FALSE` or the numbers 0/1. Default TRUE.
+#'   before computing the covariance. Must be `TRUE` or `FALSE`. Default TRUE.
 #' @param scale (optional, type = "X") A Boolean. Scale the columns of `M` to unit
-#'   variance, i.e. operate on the correlation matrix. `TRUE`/`FALSE` or the
-#'   numbers 0/1. Default TRUE.
-#' @param divisor (optional, type = "X") Either "n-1" (default, sample covariance, matches `cov`/`cor`) or "n" (population covariance). Default "n-1".
+#'   variance, i.e. operate on the correlation matrix. Must be `TRUE` or
+#'   `FALSE`. Default TRUE. Sparse PCA is not scale invariant: with
+#'   `scale = FALSE` high-variance variables dominate the components, whereas
+#'   with `scale = TRUE` every variable contributes on an equal footing. Choose
+#'   according to whether the units of the variables are comparable.
+#' @param divisor (optional, type = "X") Either "n-1" (default, sample covariance, matches `cov`/`cor`) or "n" (population covariance). Matching is case-insensitive. Default "n-1".
 #' @param checkPSD (optional, type = "Sigma") A Boolean. Verify that `M` is
-#'   positive semidefinite. `TRUE`/`FALSE` or the numbers 0/1; any other value is
-#'   an error. Default TRUE.
+#'   positive semidefinite. Must be `TRUE` or `FALSE`. Default TRUE.
 #' @param symTolerance (optional, type = "Sigma") A float. Tolerance for the
 #'   symmetry check on `M`. Must be non-negative. Default 1e-8.
 #' @param psdTolerance (optional, type = "Sigma") A float. Tolerance (on the
@@ -419,7 +483,12 @@
 #'   `runtime`, `variance_explained` (per-PC explained variance),
 #'   `total_variance` (trace of the covariance matrix),
 #'   `feasibilityConstraintType` (the value used to fit, reused as the default
-#'   for all diagnostics), and `nonredundancy`. With `type = "X"` it
+#'   for all diagnostics), `nonredundancy`, and `control` (a list of the
+#'   algorithmic parameters used: `r`, `ks`, `maxIter`, `feasibilityTolerance`,
+#'   `stallingTolerance`, `timeLimitTPM`, `maxRestartTPM`, `minRestartTPM`).
+#'   Columns of `x_best` are ordered by decreasing variance explained. Input
+#'   attributes other than the column names of `M` (which label the rows of
+#'   `x_best`) are not transferred to the result. With `type = "X"` it
 #'   additionally records `inputType`, `center`, `scale`, `divisor`, `nObs`,
 #'   and `p`. Use [print()] to display the sparse loadings and [summary()] for
 #'   a full per-PC breakdown.
@@ -443,19 +512,49 @@
 #' @examples
 #' # From a covariance/correlation matrix (the default type):
 #' TestMat <- cor(mtcars)
-#' res <- mspca(TestMat, r = 2, ks = c(4, 4), verbose = FALSE)
+#' set.seed(42)
+#' res <- mspca(TestMat, r = 2, ks = c(4, 4),
+#'              feasibilityConstraintType = 0, maxIter = 200,
+#'              feasibilityTolerance = 1e-4, stallingTolerance = 1e-8,
+#'              timeLimitTPM = 20, maxRestartTPM = 30, minRestartTPM = 20,
+#'              verbose = FALSE, checkPSD = TRUE,
+#'              symTolerance = 1e-8, psdTolerance = 1e-8)
 #' print(res)
 #' summary(res)
 #' # Equivalent call from the raw data matrix:
-#' res_X <- mspca(as.matrix(mtcars), r = 2, ks = c(4, 4), type = "X", verbose = FALSE)
+#' res_X <- mspca(as.matrix(mtcars), r = 2, ks = c(4, 4), type = "X",
+#'                center = TRUE, scale = TRUE, divisor = "n-1",
+#'                verbose = FALSE)
 #' print(res_X)
+#' # `scale = TRUE` above works on the correlation matrix, so each variable has
+#' # unit variance and contributes equally. With `scale = FALSE` the covariance
+#' # matrix is used and the high-variance variables (disp, hp) dominate:
+#' res_cov <- mspca(as.matrix(mtcars), r = 2, ks = c(4, 4), type = "X",
+#'                  scale = FALSE, verbose = FALSE)
+#' print(res_cov)
+#' # Any covariance estimator can be used by passing its output with
+#' # type = "Sigma", e.g. a rank-based (Spearman) correlation matrix:
+#' res_spearman <- mspca(cor(mtcars, method = "spearman"), r = 2, ks = c(4, 4),
+#'                       verbose = FALSE)
+#' # Component scores for new observations are obtained by projecting them
+#' # (after the same centering/scaling) on the loadings:
+#' scores <- scale(as.matrix(mtcars)) %*% res_X$x_best
+#' # Tune the solver for one component. Since this correlation matrix is known
+#' # to be positive semidefinite, the optional PSD check can be skipped.
+#' tuned <- mspca(TestMat, r = 1, ks = 4,
+#'                feasibilityConstraintType = 1, maxIter = 100,
+#'                feasibilityTolerance = 1e-3, stallingTolerance = 1e-7,
+#'                timeLimitTPM = 5, maxRestartTPM = 10, minRestartTPM = 5,
+#'                verbose = FALSE, checkPSD = FALSE,
+#'                symTolerance = 1e-7, psdTolerance = 1e-7)
 mspca <- function(M, r, ks, type = c("Sigma", "X"),
                   feasibilityConstraintType = 0, verbose = TRUE, maxIter = 200,
                   feasibilityTolerance = 1e-4, stallingTolerance = 1e-8,
                   timeLimitTPM = 20, maxRestartTPM = 30, minRestartTPM = 20,
                   center = TRUE, scale = TRUE, divisor = c("n-1", "n"),
                   checkPSD = TRUE, symTolerance = 1e-8, psdTolerance = 1e-8) {
-  type <- match.arg(type)
+  type <- .validate_input_type(type)
+  M <- .coerce_input(M)
   feasibilityConstraintType <- .validate_constraint_type(feasibilityConstraintType)
   .validate_solver_args(
     cardinality = ks, cardinalityName = "ks", nPC = r,
@@ -471,6 +570,8 @@ mspca <- function(M, r, ks, type = c("Sigma", "X"),
   center   <- .validate_flag(center,   "center")
   scale    <- .validate_flag(scale,    "scale")
   checkPSD <- .validate_flag(checkPSD, "checkPSD")
+  .validate_tolerance(symTolerance, "symTolerance")
+  .validate_tolerance(psdTolerance, "psdTolerance")
   if (type == "Sigma") {
     .validate_sigma_matrix(M, symTolerance, psdTolerance, checkPSD)
     res <- iterativeDeflationHeuristic(M, r, ks, feasibilityConstraintType,
@@ -503,6 +604,11 @@ mspca <- function(M, r, ks, type = c("Sigma", "X"),
   # Record how the model was fitted, and the diagnostics that depend on the
   # covariance, so that no downstream method needs `M` again.
   res$feasibilityConstraintType <- feasibilityConstraintType
+  res$control <- list(r = r, ks = ks, maxIter = maxIter,
+                      feasibilityTolerance = feasibilityTolerance,
+                      stallingTolerance = stallingTolerance,
+                      timeLimitTPM = timeLimitTPM,
+                      maxRestartTPM = maxRestartTPM, minRestartTPM = minRestartTPM)
   # tr(Sigma), the scale by which the uncorrelatedness violations are
   # normalized. `total_variance` is tr(Sigma) as computed by the solver, so this
   # holds for both input types without reforming Sigma.
@@ -518,45 +624,59 @@ mspca <- function(M, r, ks, type = c("Sigma", "X"),
 #' interpretation is set by `type`: `"Sigma"` (default) for a covariance/correlation
 #' matrix (p x p) or `"X"` for a raw data matrix (n x p). See [mspca()] for the
 #' raw-data preprocessing controls.
-#' @param M A matrix. The data, interpreted according to `type`: a covariance/
+#' @param M A numeric matrix, or a data.frame whose columns are all numeric
+#'   (converted with `as.matrix()`; a data.frame with any non-numeric column is
+#'   an error). The data, interpreted according to `type`: a covariance/
 #'   correlation matrix (p x p) when `type = "Sigma"`, or a raw data matrix
-#'   (n x p) when `type = "X"`.
+#'   (n x p) when `type = "X"`. Missing or non-finite values are an error: no
+#'   imputation is performed. To handle missing data, compute a covariance
+#'   matrix with the method of your choice (for example
+#'   `cov(X, use = "pairwise.complete.obs")`, or a rank-based estimator) and pass
+#'   it with `type = "Sigma"`. Row names are not used; column names
+#'   (variable names) are carried onto the rows of the returned loadings.
 #' @param k An integer. Target sparsity of the PC. Must be a single whole number
 #'   greater than or equal to 1.
-#' @param type (optional) Either "Sigma" (default; `M` is a covariance/correlation
-#'   matrix) or "X" (`M` is a raw data matrix).
+#' @param type (optional) Either `"Sigma"` (default; `M` is a covariance/correlation
+#'   matrix) or `"X"` (`M` is a raw data matrix). Matching is case-insensitive.
 #' @param maxIter (optional) An integer. Maximum number of iterations of the
 #'   algorithm. Must be a whole number greater than or equal to 1. Default 200.
-#' @param verbose (optional) A Boolean. Controls console output. `TRUE`/`FALSE`
-#'   or the numbers 0/1; any other value is an error. Default TRUE.
+#' @param verbose (optional) A Boolean. Controls console output. Must be
+#'   `TRUE` or `FALSE`. Default TRUE.
 #' @param timeLimit (optional) An integer. Maximum time in seconds. Must be a
 #'   finite, non-negative whole number; `Inf` is not accepted. Default 10.
 #' @param center (optional, type = "X") A Boolean. Center the columns of `M`.
-#'   `TRUE`/`FALSE` or the numbers 0/1. Default TRUE.
+#'   Must be `TRUE` or `FALSE`. Default TRUE.
 #' @param scale (optional, type = "X") A Boolean. Scale the columns of `M` to unit
-#'   variance. `TRUE`/`FALSE` or the numbers 0/1. Default TRUE.
-#' @param divisor (optional, type = "X") Either "n-1" (default) or "n".
+#'   variance. Must be `TRUE` or `FALSE`. Default TRUE.
+#' @param divisor (optional, type = "X") Either "n-1" (default) or "n". Matching is case-insensitive.
 #' @param checkPSD (optional, type = "Sigma") A Boolean. Verify `M` is PSD.
-#'   `TRUE`/`FALSE` or the numbers 0/1; any other value is an error. Default TRUE.
+#'   Must be `TRUE` or `FALSE`. Default TRUE.
 #' @param symTolerance (optional, type = "Sigma") A float. Symmetry-check
 #'   tolerance. Must be non-negative. Default 1e-8.
 #' @param psdTolerance (optional, type = "Sigma") A float. PSD-check tolerance.
 #'   Must be non-negative. Default 1e-8.
 #' @return An object of class `"tpm"` (a list) with fields: `x_best` (p x 1
-#'   matrix containing the sparse PC loading), `objective_value`, and `runtime`.
-#'   With `type = "X"` it additionally records `inputType`, `center`, `scale`,
+#'   matrix containing the sparse PC loading), `objective_value`, `runtime`, and
+#'   `control` (a list with `k`, `maxIter` and `timeLimit`). With `type = "X"` it additionally records `inputType`, `center`, `scale`,
 #'   `divisor`, `nObs`, and `p`.
 #' @references Yuan, X. T., & Zhang, T. (2013). Truncated power method for
 #'   sparse eigenvalue problems. \emph{The Journal of Machine Learning
 #'   Research}, \bold{14}(1), 899--925.
 #' @examples
 #' TestMat <- cor(mtcars)
-#' tpm(TestMat, 4)
+#' set.seed(42)
+#' tpm(TestMat, 4, type = "Sigma", maxIter = 20, verbose = FALSE,
+#'     timeLimit = 1, checkPSD = TRUE, symTolerance = 1e-8,
+#'     psdTolerance = 1e-8)
+#' tpm(as.matrix(mtcars), 4, type = "X", center = TRUE,
+#'     scale = TRUE, divisor = "n-1", maxIter = 20,
+#'     timeLimit = 1, verbose = FALSE)
 tpm <- function(M, k, type = c("Sigma", "X"),
                 maxIter = 200, verbose = TRUE, timeLimit = 10,
                 center = TRUE, scale = TRUE, divisor = c("n-1", "n"),
                 checkPSD = TRUE, symTolerance = 1e-8, psdTolerance = 1e-8) {
-  type <- match.arg(type)
+  type <- .validate_input_type(type)
+  M <- .coerce_input(M)
   .validate_solver_args(
     cardinality = k, cardinalityName = "k", nPC = NULL,
     maxIter = maxIter, timeLimit = timeLimit, timeLimitName = "timeLimit"
@@ -565,6 +685,8 @@ tpm <- function(M, k, type = c("Sigma", "X"),
   center   <- .validate_flag(center,   "center")
   scale    <- .validate_flag(scale,    "scale")
   checkPSD <- .validate_flag(checkPSD, "checkPSD")
+  .validate_tolerance(symTolerance, "symTolerance")
+  .validate_tolerance(psdTolerance, "psdTolerance")
   if (type == "Sigma") {
     .validate_sigma_matrix(M, symTolerance, psdTolerance, checkPSD)
     res <- truncatedPowerMethod(M, k, maxIter, verbose, timeLimit)
@@ -581,6 +703,7 @@ tpm <- function(M, k, type = c("Sigma", "X"),
     res$nObs <- nrow(M)
     res$p <- ncol(M)
   }
+  res$control <- list(k = k, maxIter = maxIter, timeLimit = timeLimit)
   class(res) <- "tpm"
   res
 }
@@ -593,6 +716,10 @@ tpm <- function(M, k, type = c("Sigma", "X"),
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. The matrix containing the r PCs (p x r).
 #' @return A numeric vector of length `ncol(U)`.
+#' @examples
+#' C <- diag(c(3, 2, 1))
+#' U <- diag(3)[, 1:2]
+#' variance_explained_perPC(C, U)
 variance_explained_perPC <- function(C, U){
   colSums(U * (C %*% U))
 }
@@ -603,6 +730,10 @@ variance_explained_perPC <- function(C, U){
 #' @param C A matrix. The correlation or covariance matrix (p x p).
 #' @param U A matrix. The matrix containing the r PCs (p x r).
 #' @return A numeric vector of length `ncol(U)`.
+#' @examples
+#' C <- diag(c(3, 2, 1))
+#' U <- diag(3)[, 1:2]
+#' fraction_variance_explained_perPC(C, U)
 fraction_variance_explained_perPC <- function(C, U){
   fve <- variance_explained_perPC(C, U)
   fve <- fve / sum(diag(C))
@@ -647,8 +778,12 @@ fraction_variance_explained <- function(C, U){
 #' TestMat <- cor(mtcars)
 #' mspcares <- mspca(TestMat, r = 2, ks = c(4, 4), verbose = FALSE)
 #' feasibility_violation_off(TestMat, mspcares$x_best, 0)
+#' feasibility_violation_off(TestMat, mspcares$x_best, 1)
+#' @details `feasibilityConstraintType` must be exactly `0` or `1`; nearby
+#'   floating-point values are not interpreted as either constraint type.
 feasibility_violation_off <- function(C, U, feasibilityConstraintType){
-  M = if (feasibilityConstraintType == 0) {
+  feasibilityConstraintType <- .validate_constraint_type(feasibilityConstraintType)
+  M <- if (feasibilityConstraintType == 0L) {
     crossprod(U)
   } else {
    crossprod(U, C %*% U) / .total_variance(C)
