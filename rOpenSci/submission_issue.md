@@ -53,13 +53,16 @@ Language: <!--language-->en<!--end-language-->
 
     msPCA is **the first implementation of a novel algorithm**. It implements the method of Cory-Wright and Pauphilet, "Sparse PCA with Multiple Components", *Operations Research* (2026), [doi:10.1287/opre.2023.0598](https://doi.org/10.1287/opre.2023.0598). The method uses an iterative deflation heuristic with a truncated power method at each step.
 
-    Related software (compared in the [benchmarking article](https://jeanpauphilet.github.io/msPCA/articles/benchmarking.html)):
-    - [`elasticnet`](https://cran.r-project.org/package=elasticnet): sparse PCA with elastic-net regression; accepts a cardinality budget per component, but orthonormality is imposed on an auxiliary factor, not on the returned sparse loadings
-    - [`PMA`](https://cran.r-project.org/package=PMA): penalized matrix decomposition; an l1 bound rather than a cardinality, with sequential deflation
-    - [`sparsepca`](https://cran.r-project.org/package=sparsepca): variable projection with an l1 penalty; no per-component control
-    - [`irlba`](https://cran.r-project.org/package=irlba)
+    Related software, all compared against msPCA in the [accompanying paper (arXiv:2607.05229)](https://arxiv.org/abs/2607.05229) and in the [benchmarking article](https://jeanpauphilet.github.io/msPCA/articles/benchmarking.html):
+    - R: [`elasticnet`](https://cran.r-project.org/package=elasticnet) (Zou et al., 2006; elastic-net regularization, LARS-like)
+    - R: [`PMA`](https://cran.r-project.org/package=PMA) (Witten et al., 2009; penalized matrix decomposition, sequential deflation)
+    - R: [`sparsepca`](https://cran.r-project.org/package=sparsepca) (Erichson et al., 2020; variable projection with an l1 penalty)
+    - R: [`mixOmics`](https://cran.r-project.org/package=mixOmics) (Rohart et al., 2017; regularized SVD after Shen and Huang, 2008)
+    - R: [`nsprcomp`](https://cran.r-project.org/package=nsprcomp) (Sigg, 2019; EM with deflation, or a cumulative formulation)
+    - R: [`amanpg`](https://cran.r-project.org/package=amanpg) (Chen et al., 2020; alternating manifold proximal gradient)
+    - Python: [`scikit-learn` `SparsePCA`](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.SparsePCA.html) (Pedregosa et al., 2011; dictionary learning)
 
-    [Please check this list and the article link.] msPCA fixes the number of non-zeros of each component exactly and enforces non-redundancy (orthogonality or uncorrelatedness) across the returned sparse loadings up to an explicit tolerance.
+    msPCA sets an exact cardinality on each component and is the only one of these packages that supports both orthogonal loadings and uncorrelated PCs as non-redundancy constraints. It can also work directly on the data matrix, without forming the covariance matrix.
 
 -   Versioning: version 0.5.1 is submitted. The post-review release will be 0.6.0, because the development version contains small API changes made while preparing for review: logical flags are now strictly logical, `type` and `divisor` are case-insensitive, `mspca()`/`tpm()` accept all-numeric data.frames, and results include a `control` field. See `NEWS.md`.
 
