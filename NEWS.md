@@ -1,7 +1,9 @@
 # msPCA (development version)
 
+This version will be released as 0.6.0 after rOpenSci statistical software review.
+
 * `mspca()` and `tpm()` now accept an all-numeric `data.frame` as `M` (converted with `as.matrix()`); a `data.frame` with non-numeric columns is an error.
-* `type` and `divisor` are matched case-insensitively. Boolean arguments (`verbose`, `center`, `scale`, `checkPSD`) must be `TRUE` or `FALSE`; the numeric aliases 0/1 are no longer accepted.
+* **Breaking:** `type` and `divisor` are matched case-insensitively. Boolean arguments (`verbose`, `center`, `scale`, `checkPSD`) must be `TRUE` or `FALSE`; the numeric aliases 0/1 are no longer accepted.
 * `feasibilityConstraintType` must be exactly 0 or 1, in `mspca()`, `summary.mspca()` and `feasibility_violation_off()`.
 * Empty inputs (zero rows/columns) are rejected with an informative error, and constant columns are detected relative to their scale rather than by exact equality.
 * Fitted objects gain a `control` field recording the algorithmic parameters used.
