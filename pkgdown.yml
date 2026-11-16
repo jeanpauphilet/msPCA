@@ -1,0 +1,12 @@
+pandoc: 3.8.3
+pkgdown: 2.2.1
+pkgdown_sha: ~
+articles:
+  algorithm-and-implementation: algorithm-and-implementation.html
+  articles/benchmarking: benchmarking.html
+  case-study-snp500: case-study-snp500.html
+  msPCA: msPCA.html
+last_built: 2026-11-16T11:38Z
+urls:
+  reference: https://jeanpauphilet.github.io/msPCA/reference
+  article: https://jeanpauphilet.github.io/msPCA/articles
