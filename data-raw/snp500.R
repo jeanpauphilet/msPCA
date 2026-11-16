@@ -63,12 +63,8 @@ usethis::use_data(snp500, overwrite = TRUE, compress = "xz")
 
 if (FALSE) {
 
-  library("readr")
-  library("dplyr")
-  library("RSpectra")
-
-  df_returns <- read_csv("SnP_returns_cleaned.csv") |>
-    filter(Date < "2020-01-01")
+  df_returns <- readr::read_csv("SnP_returns_cleaned.csv") |>
+    dplyr::filter(Date < "2020-01-01")
 
   X <- as.matrix(df_returns[, -1])          # 2515 x 423 daily log-returns
   Sigma <- cor(X)
@@ -76,7 +72,7 @@ if (FALSE) {
   ## S&P 500 returns are dominated by a market factor loading positively on
   ## nearly every stock. Remove it so the sparse components describe
   ## cross-sectional (sector and style) structure instead.
-  v1 <- eigs_sym(Sigma, k = 1, which = "LA")$vectors[, 1]
+  v1 <- RSpectra::eigs_sym(Sigma, k = 1, which = "LA")$vectors[, 1]
   v1 <- v1 / sqrt(sum(v1^2))
   P  <- diag(length(v1)) - tcrossprod(v1)
 

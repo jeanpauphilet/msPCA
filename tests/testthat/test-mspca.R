@@ -57,7 +57,8 @@ test_that("mspca (Sigma) objective_value is non-negative", {
 
 test_that("mspca (Sigma) runtime is a non-negative number", {
   res <- mspca(Sigma, r = 2L, ks = c(3L, 3L), verbose = FALSE)
-  expect_true(is.numeric(res$runtime) && res$runtime >= 0)
+  expect_true(is.numeric(res$runtime))
+  expect_gte(res$runtime, 0)
 })
 
 test_that("mspca (Sigma) supports uncorrelatedness constraints", {
@@ -101,9 +102,9 @@ test_that("mspca verbose output reports algorithm progress", {
           feasibilityTolerance = Inf, verbose = TRUE)
   )
 
-  expect_true(any(grepl("Iterative deflation algorithm", output)))
-  expect_true(any(grepl("Iteration", output)))
-  expect_true(any(grepl("Feasibility Violation", output)))
+  expect_true(any(grepl("Iterative deflation algorithm", output, fixed = TRUE)))
+  expect_true(any(grepl("Iteration", output, fixed = TRUE)))
+  expect_true(any(grepl("Feasibility Violation", output, fixed = TRUE)))
 })
 
 test_that("mspca warns when no feasible solution is found", {
@@ -136,7 +137,8 @@ test_that("infeasibility warning reports numeric values, not truncated integers"
     }
   )
 
-  hit <- grep("terminated without finding a feasible solution", msgs, value = TRUE)
+  hit <- grep("terminated without finding a feasible solution", msgs,
+              value = TRUE, fixed = TRUE)
   expect_length(hit, 1L)
   msg <- hit[[1L]]
 

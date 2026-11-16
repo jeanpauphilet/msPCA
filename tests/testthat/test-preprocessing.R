@@ -51,7 +51,7 @@ test_that("mspca (X) centered and scaled data matches the correlation scale", {
                      verbose = FALSE)
 
   expect_equal(dim(res_x$x_best), dim(res_sigma$x_best))
-  expect_equal(colSums(res_x$x_best^2), c(1), tolerance = 1e-6)
+  expect_equal(colSums(res_x$x_best^2), 1, tolerance = 1e-6)
   expect_equal(res_x$variance_explained, res_sigma$variance_explained,
                tolerance = 1e-6)
   expect_equal(res_x$total_variance, res_sigma$total_variance,

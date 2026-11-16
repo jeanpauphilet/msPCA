@@ -348,8 +348,8 @@ test_that("the constraint-type error mentions NULL only where NULL is allowed", 
                     error = conditionMessage)
   e_sum <- tryCatch(capture.output(summary(res, feasibilityConstraintType = 0.5)),
                     error = conditionMessage)
-  expect_false(grepl("NULL", e_fit))
-  expect_true(grepl("or NULL", e_sum))
+  expect_false(grepl("NULL", e_fit, fixed = TRUE))
+  expect_true(grepl("or NULL", e_sum, fixed = TRUE))
 })
 
 # ---------- On/off switches ---------------------------------------------------

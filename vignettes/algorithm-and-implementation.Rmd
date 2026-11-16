@@ -281,11 +281,11 @@ library("msPCA")
 Sigma <- cor(datasets::mtcars)
 
 ks_grid <- seq(2, 10, by = 1)
-trade_off <- sapply(ks_grid, function(k) {
+trade_off <- vapply(ks_grid, function(k) {
   set.seed(42)
   res <- mspca(Sigma, r = 3, ks = rep(k, 3), verbose = FALSE)
   fraction_variance_explained(Sigma, res$x_best)
-})
+}, numeric(1))
 plot(ks_grid, trade_off, type = "b",
      xlab = "sparsity budget k", ylab = "fraction of variance explained")
 ```

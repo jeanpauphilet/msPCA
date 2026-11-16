@@ -20,7 +20,7 @@ test_that("print.mspca returns x invisibly", {
 
 test_that("print.mspca produces output containing 'msPCA solution'", {
   txt <- capture.output(print(res, Cm))
-  expect_true(any(grepl("msPCA solution", txt)))
+  expect_true(any(grepl("msPCA solution", txt, fixed = TRUE)))
 })
 
 test_that("print.mspca works with type='X' result without C argument", {
@@ -232,8 +232,8 @@ test_that("summary() reports the uncorrelatedness figure, not the orthogonality 
 
 test_that("summary() prints the constraint definition it is reporting", {
   txt <- capture.output(summary(resU))
-  expect_true(any(grepl("uncorrelatedness", txt)))
-  expect_true(any(grepl("as fitted", txt)))
+  expect_true(any(grepl("uncorrelatedness", txt, fixed = TRUE)))
+  expect_true(any(grepl("as fitted", txt, fixed = TRUE)))
 })
 
 test_that("summary() warns when asked for a type other than the fitted one", {

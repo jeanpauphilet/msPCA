@@ -274,7 +274,7 @@ NULL
   if (nrow(M) < 1L) {
     stop("With `type = \"Sigma\"`, `M` must have at least one row and column.", call. = FALSE)
   }
-  if (any(!is.finite(M))) {
+  if (!all(is.finite(M))) {
     stop("With `type = \"Sigma\"`, `M` contains non-finite values (NA, NaN or Inf).", call. = FALSE)
   }
   if (max(abs(M - t(M))) > symTolerance) {
@@ -298,7 +298,7 @@ NULL
   if (!is.matrix(M) || !is.numeric(M)) {
     stop("With `type = \"X\"`, `M` must be a numeric matrix (rows = observations, columns = variables).", call. = FALSE)
   }
-  if (any(!is.finite(M))) {
+  if (!all(is.finite(M))) {
     stop("With `type = \"X\"`, `M` contains non-finite values (NA, NaN or Inf).", call. = FALSE)
   }
   if (ncol(M) < 1L) {
@@ -833,9 +833,9 @@ print.mspca <- function(x, C = NULL, digits = NULL, ...) {
     fve <- x$variance_explained / x$total_variance
     rn  <- rownames(v)
   } else {
-    stop(paste("Provide the covariance/correlation matrix `C`,",
-               "or a result object that contains `variance_explained`",
-               "and `total_variance`."), call. = FALSE)
+    stop("Provide the covariance/correlation matrix `C`, ",
+         "or a result object that contains `variance_explained` ",
+         "and `total_variance`.", call. = FALSE)
   }
   rownames(v) <- if (!is.null(rn)) rn else seq_len(nrow(v))
 
@@ -947,9 +947,9 @@ summary.mspca <- function(object, C = NULL,
     var_pc    <- variance_explained_perPC(C, v)
     total_var <- sum(diag(C))
   } else {
-    stop(paste("Provide the covariance/correlation matrix `C`,",
-               "or a result object that contains `variance_explained`",
-               "and `total_variance`."), call. = FALSE)
+    stop("Provide the covariance/correlation matrix `C`, ",
+         "or a result object that contains `variance_explained` ",
+         "and `total_variance`.", call. = FALSE)
   }
   fve     <- var_pc / total_var
   cum_fve <- cumsum(fve)
@@ -963,10 +963,10 @@ summary.mspca <- function(object, C = NULL,
   } else {
     # Legacy object (msPCA 0.5.0 or earlier): recompute, which does need `C` for type 1.
     if (ctype == 1L && is.null(C)) {
-      stop(paste("This object predates msPCA 0.5.1 and does not store the",
-                 "non-redundancy matrices, so uncorrelatedness violations cannot",
-                 "be computed without the covariance/correlation matrix `C`.",
-                 "Pass `C`, or refit with the current version."), call. = FALSE)
+      stop("This object predates msPCA 0.5.1 and does not store the ",
+           "non-redundancy matrices, so uncorrelatedness violations cannot ",
+           "be computed without the covariance/correlation matrix `C`. ",
+           "Pass `C`, or refit with the current version.", call. = FALSE)
     }
     Sv         <- if (ctype == 0L) v else C %*% v
     traceSigma <- if (ctype == 0L) 1 else .total_variance(C)
