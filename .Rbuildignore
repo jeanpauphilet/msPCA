@@ -21,4 +21,4 @@
 ^vignettes/articles$
 ^\.DS_Store$
 ^.*/\.DS_Store$
-^CODE_OF_CONDUCT\.md$^rOpenSci$
+^CODE_OF_CONDUCT\.md$

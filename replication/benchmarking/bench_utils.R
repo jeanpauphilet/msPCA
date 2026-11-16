@@ -228,7 +228,9 @@ if (!requireNamespace("callr", quietly = TRUE))
   baseline <- peak_rss_bytes()
 
   set.seed(seed)
-  tt  <- system.time(res <- do.call(fun, inputs))
+  tt <- system.time({
+    res <- do.call(fun, inputs)
+  })
 
   peak  <- peak_rss_bytes()
   gcmax <- sum(gc()[, "max used"] * c(56, 8))  # Ncells, Vcells -> bytes

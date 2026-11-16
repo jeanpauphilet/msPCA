@@ -93,7 +93,7 @@ msPCA::fraction_variance_explained(S,pma_results$v)
 ############################################################
 library(sparsepca)
 
-sparsepca <- sparsepca::spca(S, k=2, alpha=0.01, verbose=F)
+sparsepca <- sparsepca::spca(S, k=2, alpha=0.01, verbose=FALSE)
 
 #Sparsity
 colSums(abs(sparsepca$loadings) > 0)
@@ -109,7 +109,7 @@ msPCA::fraction_variance_explained(S,sparsepca$loadings)
 
 
 #randomized PCA -> rpca
-sparsepca <- sparsepca::rspca(S, k=2, alpha=0.01, verbose=F)
+sparsepca <- sparsepca::rspca(S, k=2, alpha=0.01, verbose=FALSE)
 
 #Sparsity
 colSums(abs(sparsepca$loadings) > 0)
@@ -125,7 +125,7 @@ msPCA::fraction_variance_explained(S,sparsepca$loadings)
 
 
 #robust PCA -> robpca
-sparsepca <- sparsepca::robspca(S, k=2, alpha=0.01, verbose=F)
+sparsepca <- sparsepca::robspca(S, k=2, alpha=0.01, verbose=FALSE)
 
 #Sparsity
 colSums(abs(sparsepca$loadings) > 0)
@@ -138,4 +138,3 @@ diag( t(sparsepca$loadings) %*% sparsepca$loadings )
 msPCA::feasibility_violation_off(S, sparsepca$loadings, 0)
 #Fraction of variance explained
 msPCA::fraction_variance_explained(S,sparsepca$loadings)
-

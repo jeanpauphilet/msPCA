@@ -34,8 +34,8 @@ b = 2 #Signal strength
 
 #Construct random -1,0,+1 vectors with disjoint supports (use 1/sqrt(k) to ensure norm 1)
 xtrue <- matrix(0,p,r)
-xtrue[1:k,1] <- sign(runif(k) - .5)/sqrt(k)
-xtrue[(k+1):(2*k),2] <- sign(runif(k) - .5)/sqrt(k)
+xtrue[1:k,1] <- sign(runif(k) - 0.5)/sqrt(k)
+xtrue[(k+1):(2*k),2] <- sign(runif(k) - 0.5)/sqrt(k)
 
 shufflecoords <- sample(1:p) #Shuffle coordinates
 xtrue <- xtrue[shufflecoords,]
@@ -54,7 +54,8 @@ Strue <- b*outer(xtrue[,1],xtrue[,1]) + b*outer(xtrue[,2],xtrue[,2]) +diag(p)
 ## We comare the algorithms on varying
 resdf <- data.frame(n=numeric(), package=character(),
                    sparsity=numeric(), accuracy=numeric(),
-                   ortho_viol=numeric(), varexplained=numeric())
+                   ortho_viol=numeric(), varexplained=numeric(),
+                   stringsAsFactors=FALSE)
 icol <- 1
 for (iter in 1:5){ #Number of replications
 
@@ -162,4 +163,3 @@ p_fve <- sumdf %>%
 
 print(p_fve)
 ggsave(filename = fig_fve, plot = p_fve, width = 8, height = 5, dpi = 300)
-

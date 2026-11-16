@@ -151,7 +151,8 @@ if (file.exists(returns_file) && have_nsprcomp) {
       fve            = fraction_variance_explained(SigmaR, fit$rotation),
       orth_violation = feasibility_violation_off(SigmaR, fit$rotation, 0),
       total_pwcorr   = feasibility_violation_off(SigmaR, fit$rotation, 1),
-      nnz            = sum(abs(fit$rotation) > 0)
+      nnz            = sum(abs(fit$rotation) > 0),
+      stringsAsFactors = FALSE
     )
   }))
 

@@ -57,13 +57,14 @@ usethis::use_data(snp500, overwrite = TRUE, compress = "xz")
 
 
 ## ---- (B) Full provenance: rebuild from raw Kaggle prices --------------------
-## Not run. Download SnP_returns_cleaned.csv from the Kaggle link above (or
-## regenerate it with code/case_study/, which converts adjusted closes to daily
-## log-returns and drops tickers without a complete history over the window).
+## Optional. Download SnP_returns_cleaned.csv from the Kaggle link above (or
+## regenerate it with replication/case_study/, which converts adjusted closes
+## to daily log-returns and drops tickers without a complete history).
+## After sourcing this file, call rebuild_snp500_from_raw("path/to/file.csv").
 
-if (FALSE) {
+rebuild_snp500_from_raw <- function(path) {
 
-  df_returns <- readr::read_csv("SnP_returns_cleaned.csv") |>
+  df_returns <- readr::read_csv(path) |>
     dplyr::filter(Date < "2020-01-01")
 
   X <- as.matrix(df_returns[, -1])          # 2515 x 423 daily log-returns

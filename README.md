@@ -215,7 +215,7 @@ Reference paper:
 
 ## Code of conduct
 
-Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.
+Please note that this project is released with a [Contributor Code of Conduct](https://github.com/jeanpauphilet/msPCA/blob/main/CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.
 
 ## Development
 
@@ -250,4 +250,3 @@ For interface changes, regenerate exports and documentation with `Rcpp::compileA
 ## License
 
 See `LICENSE`.
-
