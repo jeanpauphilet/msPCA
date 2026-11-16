@@ -10,6 +10,7 @@ inst/doc
 *.tar.gz
 *.pdf
 /doc/
+/docs/
 /Meta/
 check_output.log
 

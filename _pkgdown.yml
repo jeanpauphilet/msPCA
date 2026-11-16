@@ -1,6 +1,9 @@
 url: https://jeanpauphilet.github.io/msPCA/
 llm-docs: false
 
+redirects:
+- [reference/print_mspca.html, reference/print.mspca.html]
+
 template:
   bootstrap: 5
 
